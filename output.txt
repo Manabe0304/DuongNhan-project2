@@ -1,0 +1,122 @@
+Folder PATH listing
+Volume serial number is B4C6-EC78
+C:.
+¦   .gitattributes
+¦   .gitignore
+¦   DuongNhan-project2.slnx
+¦   output.txt
+¦   
++---.github
+¦   +---workflows
+¦           ci.yml
+¦           release.yml
+¦           
++---DuongNhan-project2.ApiService
+¦   ¦   appsettings.Development.json
+¦   ¦   appsettings.json
+¦   ¦   DuongNhan-project2.ApiService.csproj
+¦   ¦   DuongNhan-project2.ApiService.http
+¦   ¦   Program.cs
+¦   ¦   
+¦   +---Properties
+¦           launchSettings.json
+¦           
++---DuongNhan-project2.AppHost
+¦   ¦   AppHost.cs
+¦   ¦   appsettings.Development.json
+¦   ¦   appsettings.json
+¦   ¦   DuongNhan-project2.AppHost.csproj
+¦   ¦   
+¦   +---Properties
+¦           launchSettings.json
+¦           
++---DuongNhan-project2.ServiceDefaults
+¦       DuongNhan-project2.ServiceDefaults.csproj
+¦       Extensions.cs
+¦       
++---DuongNhan-project2.Tests
+¦       DuongNhan-project2.Tests.csproj
+¦       WebTests.cs
+¦       
++---DuongNhan-project2.Web
+    ¦   appsettings.Development.json
+    ¦   appsettings.json
+    ¦   DuongNhan-project2.Web.csproj
+    ¦   Program.cs
+    ¦   WeatherApiClient.cs
+    ¦   
+    +---Components
+    ¦   ¦   App.razor
+    ¦   ¦   Routes.razor
+    ¦   ¦   _Imports.razor
+    ¦   ¦   
+    ¦   +---Layout
+    ¦   ¦       MainLayout.razor
+    ¦   ¦       MainLayout.razor.css
+    ¦   ¦       NavMenu.razor
+    ¦   ¦       NavMenu.razor.css
+    ¦   ¦       
+    ¦   +---Pages
+    ¦           Counter.razor
+    ¦           Error.razor
+    ¦           Home.razor
+    ¦           Weather.razor
+    ¦           
+    +---Properties
+    ¦       launchSettings.json
+    ¦       
+    +---wwwroot
+        ¦   app.css
+        ¦   favicon.png
+        ¦   
+        +---lib
+            +---bootstrap
+                +---dist
+                    +---css
+                    ¦       bootstrap-grid.css
+                    ¦       bootstrap-grid.css.map
+                    ¦       bootstrap-grid.min.css
+                    ¦       bootstrap-grid.min.css.map
+                    ¦       bootstrap-grid.rtl.css
+                    ¦       bootstrap-grid.rtl.css.map
+                    ¦       bootstrap-grid.rtl.min.css
+                    ¦       bootstrap-grid.rtl.min.css.map
+                    ¦       bootstrap-reboot.css
+                    ¦       bootstrap-reboot.css.map
+                    ¦       bootstrap-reboot.min.css
+                    ¦       bootstrap-reboot.min.css.map
+                    ¦       bootstrap-reboot.rtl.css
+                    ¦       bootstrap-reboot.rtl.css.map
+                    ¦       bootstrap-reboot.rtl.min.css
+                    ¦       bootstrap-reboot.rtl.min.css.map
+                    ¦       bootstrap-utilities.css
+                    ¦       bootstrap-utilities.css.map
+                    ¦       bootstrap-utilities.min.css
+                    ¦       bootstrap-utilities.min.css.map
+                    ¦       bootstrap-utilities.rtl.css
+                    ¦       bootstrap-utilities.rtl.css.map
+                    ¦       bootstrap-utilities.rtl.min.css
+                    ¦       bootstrap-utilities.rtl.min.css.map
+                    ¦       bootstrap.css
+                    ¦       bootstrap.css.map
+                    ¦       bootstrap.min.css
+                    ¦       bootstrap.min.css.map
+                    ¦       bootstrap.rtl.css
+                    ¦       bootstrap.rtl.css.map
+                    ¦       bootstrap.rtl.min.css
+                    ¦       bootstrap.rtl.min.css.map
+                    ¦       
+                    +---js
+                            bootstrap.bundle.js
+                            bootstrap.bundle.js.map
+                            bootstrap.bundle.min.js
+                            bootstrap.bundle.min.js.map
+                            bootstrap.esm.js
+                            bootstrap.esm.js.map
+                            bootstrap.esm.min.js
+                            bootstrap.esm.min.js.map
+                            bootstrap.js
+                            bootstrap.js.map
+                            bootstrap.min.js
+                            bootstrap.min.js.map
+                            
