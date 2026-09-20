@@ -1,7 +1,0 @@
-<Solution>
-  <Project Path="DuongNhan-project2.ApiService/DuongNhan-project2.ApiService.csproj" />
-  <Project Path="DuongNhan-project2.AppHost/DuongNhan-project2.AppHost.csproj" />
-  <Project Path="DuongNhan-project2.ServiceDefaults/DuongNhan-project2.ServiceDefaults.csproj" />
-  <Project Path="DuongNhan-project2.Tests/DuongNhan-project2.Tests.csproj" />
-  <Project Path="DuongNhan-project2.Web/DuongNhan-project2.Web.csproj" />
-</Solution>

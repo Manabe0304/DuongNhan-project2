@@ -1,4 +1,4 @@
-namespace DuongNhan_project2.Web;
+namespace DuongNhan.Web;
 
 public class WeatherApiClient(HttpClient httpClient)
 {

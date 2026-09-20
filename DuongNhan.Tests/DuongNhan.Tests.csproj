@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DuongNhan-project2.AppHost\DuongNhan-project2.AppHost.csproj" />
+    <ProjectReference Include="..\DuongNhan.AppHost\DuongNhan.AppHost.csproj" />
   </ItemGroup>
 
   <ItemGroup>

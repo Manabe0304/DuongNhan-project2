@@ -15,7 +15,7 @@ concurrency:
 env:
   DOTNET_VERSION: '10.0.x'
   CONFIGURATION: Release
-  SOLUTION_FILE: DuongNhan-project2.slnx
+  SOLUTION_FILE: DuongNhan.slnx
   DOTNET_NOLOGO: 'true'
   DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 'true'
@@ -110,5 +110,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: web-build
-          path: DuongNhan-project2.Web/bin/${{ env.CONFIGURATION }}/net10.0/
+          path: DuongNhan.Web/bin/${{ env.CONFIGURATION }}/net10.0/
           if-no-files-found: ignore

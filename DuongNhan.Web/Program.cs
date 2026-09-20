@@ -1,5 +1,5 @@
-using DuongNhan_project2.Web;
-using DuongNhan_project2.Web.Components;
+using DuongNhan.Web;
+using DuongNhan.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.1.0">
+<Project Sdk="Aspire.AppHost.Sdk/13.5.4">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -6,11 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>91b024fd-fa6f-46f2-881b-d02a89a7078f</UserSecretsId>
+    <NoWarn>$(NoWarn);ASPIRE010</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\DuongNhan-project2.ApiService\DuongNhan-project2.ApiService.csproj" />
-    <ProjectReference Include="..\DuongNhan-project2.Web\DuongNhan-project2.Web.csproj" />
+    <ProjectReference Include="..\DuongNhan.ApiService\DuongNhan.ApiService.csproj" />
+    <ProjectReference Include="..\DuongNhan.Web\DuongNhan.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
