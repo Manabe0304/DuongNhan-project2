@@ -93,9 +93,11 @@ jobs:
           dotnet test "$SOLUTION_FILE"
           --configuration $CONFIGURATION
           --no-build
-          --logger "trx;LogFileName=test-results.trx"
           --results-directory ./TestResults
-          --collect:"XPlat Code Coverage"
+          --report-trx
+          --report-trx-filename test-results.trx
+          --coverage
+          --coverage-output-format cobertura
 
       - name: Upload test results
         if: always()

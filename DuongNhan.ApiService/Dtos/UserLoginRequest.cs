@@ -1,4 +1,4 @@
-namespace Dtos;
+namespace DuongNhan.ApiService.Dtos;
 
 public sealed record UserLoginRequest
 (

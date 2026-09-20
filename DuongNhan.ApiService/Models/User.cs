@@ -1,4 +1,4 @@
-﻿namespace Models;
+﻿namespace DuongNhan.ApiService.Models;
 
 public sealed class User
 {

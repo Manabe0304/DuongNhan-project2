@@ -1,5 +1,5 @@
+using DuongNhan.ApiService.Models;
 using Microsoft.EntityFrameworkCore;
-using Models; // <-- add this
 
 namespace DuongNhan.ApiService.Data;
 
