@@ -1,6 +1,0 @@
-root = false
-
-[*.cs]
-# "Shared" is a Visual Basic keyword, but this project is internal
-# and never consumed from VB, so CA1716 is not relevant here.
-dotnet_diagnostic.CA1716.severity = none
