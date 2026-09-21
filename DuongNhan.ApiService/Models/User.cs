@@ -14,7 +14,7 @@ internal sealed class User : IAuditable, ISoftDeletable
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
-
+    public DateTimeOffset? TokensInvalidatedAt { get; set; }
     public ICollection<RefreshToken> RefreshTokens { get; init; } = [];
     public ICollection<SkinImage> SkinImages { get; init; } = [];
 }

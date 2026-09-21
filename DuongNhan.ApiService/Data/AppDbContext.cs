@@ -12,6 +12,8 @@ internal sealed class AppDbContext(
     public DbSet<SkinImage> SkinImages => Set<SkinImage>();
     public DbSet<Diagnosis> Diagnoses => Set<Diagnosis>();
     public DbSet<DiagnosisCondition> DiagnosisConditions => Set<DiagnosisCondition>();
+    public DbSet<LoginAttempt> LoginAttempts => Set<LoginAttempt>();
+    public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

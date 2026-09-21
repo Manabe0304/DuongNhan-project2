@@ -19,12 +19,14 @@
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.19.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.19.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Runtime" Version="1.19.0" />
-    <PackageVersion Include="ErrorOr" Version="2.1.0" />
-    <PackageVersion Include="FastEndpoints" Version="5.35.0" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.16.10" />
+    <PackageVersion Include="ErrorOr" Version="2.1.1" />
+    <PackageVersion Include="FastEndpoints" Version="8.3.0" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="2.17.7" />
     <PackageVersion Include="FluentValidation" Version="12.1.1" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageVersion Include="Riok.Mapperly" Version="4.3.1" />
+    <PackageVersion Include="HaveIBeenPwned.Client" Version="10.0.1" />
+    <PackageVersion Include="libphonenumber-csharp" Version="9.0.39" />
     <PackageVersion Include="Refit" Version="9.0.2" />
     <PackageVersion Include="Refit.HttpClientFactory" Version="9.0.2" />
     <PackageVersion Include="MSTest" Version="4.4.1" />
