@@ -1,6 +1,5 @@
-﻿namespace DuongNhan.ApiService.Services
+﻿namespace DuongNhan.ApiService.Services;
+
+public class OpenAiDiagnosisService
 {
-    public class OpenAiDiagnosisService
-    {
-    }
 }

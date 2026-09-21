@@ -1,6 +1,5 @@
-﻿namespace DuongNhan.ApiService.Features.Skin.Diagnose
+﻿namespace DuongNhan.ApiService.Features.Skin.Diagnose;
+
+public class DiagnoseEndpoint
 {
-    public class DiagnoseEndpoint
-    {
-    }
 }

@@ -1,6 +1,5 @@
-﻿namespace DuongNhan.ApiService.Features.Auth.Login
+﻿namespace DuongNhan.ApiService.Features.Auth.Login;
+
+public class LoginEndpoint
 {
-    public class LoginEndpoint
-    {
-    }
 }

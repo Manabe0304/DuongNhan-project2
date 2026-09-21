@@ -1,6 +1,5 @@
-﻿namespace DuongNhan.ApiService.Mappers
+﻿namespace DuongNhan.ApiService.Mappers;
+
+public class DiagnosisMapper
 {
-    public class DiagnosisMapper
-    {
-    }
 }

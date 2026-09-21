@@ -1,5 +1,4 @@
-﻿using DuongNhan.Shared.Contracts;
-using DuongNhan.Shared.Dtos.Auth;
+﻿using DuongNhan.Shared.Dtos.Auth;
 using FastEndpoints;
 using FluentValidation;
 
@@ -23,11 +22,13 @@ internal sealed class RegisterValidator : Validator<RegisterRequest>
             .Matches("[0-9]").WithMessage("Password must contain a digit.");
 
         RuleFor(r => r.DisplayName)
+            .NotEmpty()
             .MaximumLength(100)
             .When(r => !string.IsNullOrWhiteSpace(r.DisplayName));
 
         RuleFor(r => r.PhoneNumber)
             .MaximumLength(30)
+            .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Phone number must be in E.164 format.")
             .When(r => !string.IsNullOrWhiteSpace(r.PhoneNumber));
     }
 }
