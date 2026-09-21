@@ -1,5 +1,10 @@
-﻿namespace DuongNhan.Shared.Dtos.Auth;
+﻿using DuongNhan.Shared.Dtos.Users;
 
-public sealed record AuthResponse
-(
+namespace DuongNhan.Shared.Dtos.Auth;
+
+public sealed record AuthResponse(
+    string AccessToken,
+    string RefreshToken,
+    DateTimeOffset ExpiresAt,
+    UserDto User
 );
