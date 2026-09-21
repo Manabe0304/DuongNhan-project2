@@ -1,14 +1,23 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-var postgres = builder.AddPostgres("postgres")
-    .WithDataVolume("duongnhan-postgres-data", isReadOnly: false)
-    .WithLifetime(ContainerLifetime.Persistent)
-    .WithImage("postgres:17-alpine")
-    .WithPgAdmin(pgAdmin => pgAdmin
-        .WithLifetime(ContainerLifetime.Persistent)
-        .WithImage("dpage/pgadmin4", "9.17"));
+var isTestOrCi = builder.Environment.IsEnvironment("Testing")
+    || builder.Configuration.GetValue<bool>("UseEphemeralContainers");
 
-var postgresdb = postgres.AddDatabase("postgresdb");
+var postgresBuilder = builder.AddPostgres("postgres")
+    .WithImage("postgres:17-alpine");
+
+if (!isTestOrCi)
+{
+    postgresBuilder
+        .WithDataVolume("duongnhan-postgres-data", isReadOnly: false)
+        .WithLifetime(ContainerLifetime.Persistent)
+        .WithPgAdmin(pgAdmin => pgAdmin.WithLifetime(ContainerLifetime.Persistent));
+}
+
+var postgresdb = postgresBuilder.AddDatabase("postgresdb");
 
 var apiService = builder.AddProject<Projects.DuongNhan_ApiService>("apiservice")
     .WithHttpHealthCheck("/health")
