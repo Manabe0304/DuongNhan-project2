@@ -1,0 +1,13 @@
+<Microsoft.AspNetCore.Components.Web.ErrorBoundary>
+    <ChildContent>@ChildContent</ChildContent>
+    <ErrorContent>
+        <div class="alert alert-danger">
+            <h5>Something went wrong.</h5>
+            <p>Please refresh the page and try again.</p>
+        </div>
+    </ErrorContent>
+</Microsoft.AspNetCore.Components.Web.ErrorBoundary>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

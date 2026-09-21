@@ -1,0 +1,26 @@
+@page "/Error"
+@using System.Diagnostics
+
+<PageTitle>Error — DuongNhan</PageTitle>
+
+<div class="text-center py-5">
+    <h1 class="text-danger">Error</h1>
+    <p>Something went wrong. Please try again.</p>
+    @if (ShowRequestId)
+    {
+        <p><strong>Request ID:</strong> <code>@requestId</code></p>
+    }
+</div>
+
+@code {
+    [CascadingParameter]
+    public HttpContext? HttpContext { get; set; }
+
+    private string? requestId;
+    private bool ShowRequestId => !string.IsNullOrEmpty(requestId);
+
+    protected override void OnInitialized()
+    {
+        requestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+    }
+}

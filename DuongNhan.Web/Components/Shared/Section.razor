@@ -1,0 +1,13 @@
+<section id="@Id" class="py-4">
+    @if (!string.IsNullOrWhiteSpace(Title))
+    {
+        <h2 class="mb-3">@Title</h2>
+    }
+    @ChildContent
+</section>
+
+@code {
+    [Parameter] public string? Id { get; set; }
+    [Parameter] public string? Title { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

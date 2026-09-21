@@ -24,7 +24,10 @@ internal sealed class RegisterEndpoint(
     {
         Post(ApiRoutes.Auth.Register);
         AllowAnonymous();
-        Throttle(hitLimit: 5, durationSeconds: 600);
+
+        var hitLimit = configuration.GetValue("Throttling:Register:HitLimit", 20);
+        var durationSeconds = configuration.GetValue("Throttling:Register:DurationSeconds", 600);
+        Throttle(hitLimit: hitLimit, durationSeconds: durationSeconds);
 
         Summary(s =>
         {
@@ -33,7 +36,7 @@ internal sealed class RegisterEndpoint(
             s.Responses[200] = "Registration succeeded.";
             s.Responses[400] = "Validation failed.";
             s.Responses[409] = "Email already registered.";
-            s.Responses[429] = "Too many registration attempts.";
+            s.Responses[429] = "Too many registration attempts. Please wait and try again.";
         });
     }
 

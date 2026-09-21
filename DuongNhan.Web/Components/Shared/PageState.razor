@@ -1,0 +1,28 @@
+@if (IsLoading)
+{
+    <LoadingSpinner />
+}
+else if (Error is not null)
+{
+    <div class="alert alert-danger d-flex justify-content-between align-items-center">
+        <span>@Error</span>
+        <button type="button" class="btn-close" @onclick="OnDismissError"></button>
+    </div>
+}
+else if (IsEmpty)
+{
+    <EmptyState Message="@EmptyMessage" />
+}
+else
+{
+    @ChildContent
+}
+
+@code {
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public bool IsEmpty { get; set; }
+    [Parameter] public string EmptyMessage { get; set; } = "Nothing here yet.";
+    [Parameter] public EventCallback OnDismissError { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+}

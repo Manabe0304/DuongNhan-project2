@@ -1,0 +1,28 @@
+<HeadContent>
+    <meta name="description" content="@Description" />
+    @if (!string.IsNullOrWhiteSpace(Canonical))
+    {
+        <link rel="canonical" href="@Canonical" />
+    }
+    <meta property="og:title" content="@Title" />
+    <meta property="og:description" content="@Description" />
+    <meta property="og:type" content="@OgType" />
+    @if (!string.IsNullOrWhiteSpace(OgImage))
+    {
+        <meta property="og:image" content="@OgImage" />
+    }
+    <meta name="twitter:card" content="summary_large_image" />
+    @if (NoIndex)
+    {
+        <meta name="robots" content="noindex, nofollow" />
+    }
+</HeadContent>
+
+@code {
+    [Parameter, EditorRequired] public string Title { get; set; } = "";
+    [Parameter, EditorRequired] public string Description { get; set; } = "";
+    [Parameter] public string? OgImage { get; set; }
+    [Parameter] public string? Canonical { get; set; }
+    [Parameter] public string OgType { get; set; } = "website";
+    [Parameter] public bool NoIndex { get; set; }
+}

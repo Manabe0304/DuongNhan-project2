@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /upload
+Disallow: /diagnosis
+Disallow: /history
+Disallow: /profile
+Disallow: /subscription
+
+Sitemap: https://duongnhan.com/sitemap.xml

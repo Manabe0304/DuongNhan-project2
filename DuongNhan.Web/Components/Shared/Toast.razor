@@ -1,0 +1,11 @@
+<div class="toast show @Message.CssClass" role="alert">
+    <div class="d-flex">
+        <div class="toast-body">@Message.Message</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" @onclick="OnClose"></button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public ToastMessage Message { get; set; } = default!;
+    [Parameter] public EventCallback OnClose { get; set; }
+}

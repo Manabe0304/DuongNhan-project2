@@ -6,11 +6,13 @@ using FluentValidation;
 
 namespace DuongNhan.ApiService.Features.Auth.Register;
 
-internal sealed class RegisterValidator : Validator<RegisterRequest>
+internal sealed partial class RegisterValidator : Validator<RegisterRequest>
 {
-    private static readonly Regex DisplayNamePattern = new(
-        @"^[\p{L}\p{M}\p{Zs}\-'\.]+$",
-        RegexOptions.Compiled | RegexOptions.CultureInvariant);
+    [GeneratedRegex(@"^[\p{L}\p{M}\p{Zs}\-'\.]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant)]
+    private static partial Regex GetDisplayNamePatternRegex();
+
+    private static readonly Regex DisplayNamePatternRegex = GetDisplayNamePatternRegex();
+    private static readonly Regex DisplayNamePattern = DisplayNamePatternRegex;
 
     public RegisterValidator(BreachedPasswordValidator breachedValidator)
     {

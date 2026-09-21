@@ -1,0 +1,10 @@
+<div class="placeholder-glow">
+    @for (int i = 0; i < Rows; i++)
+    {
+        <p class="placeholder col-12 mb-2"></p>
+    }
+</div>
+
+@code {
+    [Parameter] public int Rows { get; set; } = 5;
+}

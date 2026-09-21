@@ -1,0 +1,22 @@
+<div class="border border-2 border-dashed rounded p-5 text-center"
+     style="cursor: pointer;"
+     @ondragover:preventDefault
+     @ondrop:preventDefault>
+    <InputFile OnChange="HandleChange" accept="@Accept" />
+    <p class="text-muted mt-3 mb-0">Click or drag an image here</p>
+</div>
+
+@code {
+    [Parameter] public string Accept { get; set; } = "image/*";
+    [Parameter] public EventCallback<Stream> OnFileSelected { get; set; }
+
+    private async Task HandleChange(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+        var ms = new MemoryStream();
+        await stream.CopyToAsync(ms);
+        ms.Position = 0;
+        await OnFileSelected.InvokeAsync(ms);
+    }
+}

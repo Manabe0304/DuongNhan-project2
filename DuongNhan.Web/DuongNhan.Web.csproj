@@ -10,4 +10,11 @@
     <PackageReference Include="Refit.HttpClientFactory" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Components\Features\Auth\Components\" />
+    <Folder Include="Components\Features\Auth\Pages\" />
+    <Folder Include="Components\Features\Home\Pages\" />
+    <Folder Include="Components\Features\Skin\Pages\" />
+  </ItemGroup>
+
 </Project>

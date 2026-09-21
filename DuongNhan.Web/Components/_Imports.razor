@@ -1,11 +1,23 @@
 @using System.Net.Http
 @using System.Net.Http.Json
+@using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Web
-@using static Microsoft.AspNetCore.Components.Web.RenderMode
 @using Microsoft.AspNetCore.Components.Web.Virtualization
 @using Microsoft.AspNetCore.OutputCaching
 @using Microsoft.JSInterop
+@using static Microsoft.AspNetCore.Components.Web.RenderMode
 @using DuongNhan.Web
 @using DuongNhan.Web.Components
+@using DuongNhan.Web.Components.Layout
+@using DuongNhan.Web.Components.Shared
+@using DuongNhan.Web.Constants
+@using DuongNhan.Web.Services
+@using DuongNhan.Shared.Contracts
+@using DuongNhan.Shared.Dtos.Auth
+@using DuongNhan.Shared.Dtos.Users
+@using DuongNhan.Shared.Dtos.Skin
+@using DuongNhan.Shared.Dtos.Products
+@using DuongNhan.Shared.Dtos.Subscriptions
+@using DuongNhan.Shared.Enums
