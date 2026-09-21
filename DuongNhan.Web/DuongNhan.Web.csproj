@@ -5,4 +5,9 @@
     <ProjectReference Include="..\DuongNhan.Shared\DuongNhan.Shared.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Refit" />
+    <PackageReference Include="Refit.HttpClientFactory" />
+  </ItemGroup>
+
 </Project>
