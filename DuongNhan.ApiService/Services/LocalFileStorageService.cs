@@ -1,8 +1,21 @@
 namespace DuongNhan.ApiService.Services;
 
-internal sealed class LocalFileStorageService(IWebHostEnvironment environment) : IFileStorageService
+internal sealed class LocalFileStorageService : IFileStorageService
 {
-    private readonly string _basePath = Path.Combine(environment.ContentRootPath, "uploads");
+    private const string DefaultStoragePath = "uploads";
+
+    private readonly string _basePath;
+
+    public LocalFileStorageService(IWebHostEnvironment environment, IConfiguration configuration)
+    {
+        var storagePath = configuration["Uploads:StoragePath"];
+        if (string.IsNullOrWhiteSpace(storagePath))
+            storagePath = DefaultStoragePath;
+
+        _basePath = Path.IsPathRooted(storagePath)
+            ? storagePath
+            : Path.Combine(environment.ContentRootPath, storagePath);
+    }
 
     public async Task<string> SaveFileAsync(
         Stream content,

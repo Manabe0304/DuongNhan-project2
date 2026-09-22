@@ -16,12 +16,9 @@ internal sealed class LoginAttemptTracker(AppDbContext db, TimeProvider timeProv
             .AsNoTracking()
             .FirstOrDefaultAsync(a => a.EmailHash == emailHash, ct);
 
-        if (record is null) return false;
+        if (record?.LockedUntil is null) return false;
 
-        if (record.LockedUntil is not null && record.LockedUntil > now)
-            return true;
-
-        return false;
+        return record.LockedUntil > now;
     }
 
     public async Task RecordFailureAsync(string emailHash, CancellationToken ct)
@@ -34,6 +31,13 @@ internal sealed class LoginAttemptTracker(AppDbContext db, TimeProvider timeProv
         {
             record = new LoginAttempt { EmailHash = emailHash };
             db.LoginAttempts.Add(record);
+        }
+        else if (record.LockedUntil is not null && record.LockedUntil <= now)
+        {
+            // The previous lockout has elapsed: start a fresh attempt window so the
+            // next single failure does not immediately re-lock the account.
+            record.FailedCount = 0;
+            record.LockedUntil = null;
         }
 
         record.FailedCount++;

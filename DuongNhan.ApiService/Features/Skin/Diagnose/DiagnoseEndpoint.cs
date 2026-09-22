@@ -14,12 +14,17 @@ public sealed record DiagnoseRequest(Guid Id);
 internal sealed class DiagnoseEndpoint(
     AppDbContext db,
     IDiagnosisService diagnosisService,
+    IConfiguration configuration,
     ILogger<DiagnoseEndpoint> logger) : Endpoint<DiagnoseRequest, DiagnosisDto>
 {
     public override void Configure()
     {
         Post(ApiRoutes.Skin.Diagnose);
         AllowAnonymous();
+
+        var hitLimit = configuration.GetValue("Throttling:Diagnose:HitLimit", 20);
+        var durationSeconds = configuration.GetValue("Throttling:Diagnose:DurationSeconds", 60);
+        Throttle(hitLimit: hitLimit, durationSeconds: durationSeconds);
 
         Summary(s =>
         {

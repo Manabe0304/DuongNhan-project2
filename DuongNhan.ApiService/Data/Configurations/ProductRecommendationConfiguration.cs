@@ -26,6 +26,6 @@ internal sealed class ProductRecommendationConfiguration : IEntityTypeConfigurat
 
         builder.HasIndex(pr => new { pr.DiagnosisId, pr.StepOrder });
 
-        builder.HasQueryFilter(pr => pr.Diagnosis!.SkinImage!.DeletedAt == null);
+        builder.HasQueryFilter(AppQueryFilters.SoftDelete, pr => pr.Diagnosis!.SkinImage!.DeletedAt == null);
     }
 }

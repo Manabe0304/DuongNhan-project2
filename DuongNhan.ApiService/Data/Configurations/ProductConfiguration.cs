@@ -24,6 +24,6 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(p => p.Category);
         builder.HasIndex(p => p.Brand);
 
-        builder.HasQueryFilter(p => p.DeletedAt == null);
+        builder.HasQueryFilter(AppQueryFilters.SoftDelete, p => p.DeletedAt == null);
     }
 }

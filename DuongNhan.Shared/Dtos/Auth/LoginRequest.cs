@@ -1,6 +1,6 @@
 ﻿namespace DuongNhan.Shared.Dtos.Auth;
 
-public sealed record LoginRequest
-(
-
+public sealed record LoginRequest(
+    string Email,
+    string Password
 );

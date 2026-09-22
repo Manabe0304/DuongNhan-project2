@@ -20,6 +20,6 @@ internal sealed class PlanConfiguration : IEntityTypeConfiguration<Plan>
         builder.Property(p => p.FeaturesJson).HasColumnType("text");
 
         builder.HasIndex(p => p.Code).IsUnique();
-        builder.HasQueryFilter(p => p.DeletedAt == null);
+        builder.HasQueryFilter(AppQueryFilters.SoftDelete, p => p.DeletedAt == null);
     }
 }

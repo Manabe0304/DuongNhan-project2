@@ -12,7 +12,7 @@ internal static class AppDbSeeder
         var now = timeProvider.GetUtcNow();
 
         // 1. Seed Guest/Demo User
-        if (!await db.Users.IgnoreQueryFilters().AnyAsync(u => u.Id == GuestUserId, ct))
+        if (!await db.Users.IgnoreQueryFilters([AppQueryFilters.SoftDelete]).AnyAsync(u => u.Id == GuestUserId, ct))
         {
             db.Users.Add(new User
             {
@@ -27,7 +27,7 @@ internal static class AppDbSeeder
         }
 
         // 2. Seed Plans
-        if (!await db.Plans.IgnoreQueryFilters().AnyAsync(ct))
+        if (!await db.Plans.IgnoreQueryFilters([AppQueryFilters.SoftDelete]).AnyAsync(ct))
         {
             db.Plans.AddRange([
                 new Plan
@@ -70,7 +70,7 @@ internal static class AppDbSeeder
         }
 
         // 3. Seed Products
-        if (!await db.Products.IgnoreQueryFilters().AnyAsync(ct))
+        if (!await db.Products.IgnoreQueryFilters([AppQueryFilters.SoftDelete]).AnyAsync(ct))
         {
             db.Products.AddRange([
                 new Product

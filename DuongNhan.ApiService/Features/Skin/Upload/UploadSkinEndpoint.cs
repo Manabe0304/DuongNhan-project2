@@ -12,16 +12,22 @@ namespace DuongNhan.ApiService.Features.Skin.Upload;
 internal sealed class UploadSkinEndpoint(
     AppDbContext db,
     IFileStorageService fileStorage,
+    IConfiguration configuration,
     ILogger<UploadSkinEndpoint> logger) : EndpointWithoutRequest<UploadSkinResponse>
 {
-    private const long MaxFileSize = 10 * 1024 * 1024; // 10 MB
     private static readonly HashSet<string> AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+
+    private readonly int _maxFileSizeMb = configuration.GetValue("Uploads:MaxFileSizeMb", 10);
 
     public override void Configure()
     {
         Post(ApiRoutes.Skin.Upload);
         AllowAnonymous();
         AllowFileUploads();
+
+        var hitLimit = configuration.GetValue("Throttling:Upload:HitLimit", 30);
+        var durationSeconds = configuration.GetValue("Throttling:Upload:DurationSeconds", 60);
+        Throttle(hitLimit: hitLimit, durationSeconds: durationSeconds);
 
         Summary(s =>
         {
@@ -52,9 +58,9 @@ internal sealed class UploadSkinEndpoint(
             return;
         }
 
-        if (file.Length > MaxFileSize)
+        if (file.Length > _maxFileSizeMb * 1024L * 1024L)
         {
-            AddError("file", "Image file exceeds maximum allowed size of 10MB.");
+            AddError("file", $"Image file exceeds maximum allowed size of {_maxFileSizeMb}MB.");
             await Send.ErrorsAsync(StatusCodes.Status400BadRequest, cancellation: ct);
             return;
         }
@@ -76,11 +82,11 @@ internal sealed class UploadSkinEndpoint(
         }
 
         // Ensure user exists in database to prevent FK constraint failure
-        var userExists = await db.Users.IgnoreQueryFilters().AnyAsync(u => u.Id == userId, ct);
+        var userExists = await db.Users.IgnoreQueryFilters([AppQueryFilters.SoftDelete]).AnyAsync(u => u.Id == userId, ct);
         if (!userExists)
         {
             userId = AppDbSeeder.GuestUserId;
-            var guestExists = await db.Users.IgnoreQueryFilters().AnyAsync(u => u.Id == AppDbSeeder.GuestUserId, ct);
+            var guestExists = await db.Users.IgnoreQueryFilters([AppQueryFilters.SoftDelete]).AnyAsync(u => u.Id == AppDbSeeder.GuestUserId, ct);
             if (!guestExists)
             {
                 db.Users.Add(new User
