@@ -53,6 +53,8 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<ILoginAttemptTracker, LoginAttemptTracker>();
 builder.Services.AddScoped<IAuditLogger, AuditLogger>();
 builder.Services.AddScoped<UserMapper>();
+builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<IDiagnosisService, OpenAiDiagnosisService>();
 
 // ── JWT authentication ─────────────────────────────────────────
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -139,6 +141,9 @@ if (app.Environment.IsDevelopment())
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
+
+    var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+    await AppDbSeeder.SeedAsync(db, timeProvider);
 
     app.MapOpenApi();
     app.MapScalarApiReference();
