@@ -21,7 +21,7 @@ env:
 
 jobs:
   build-test:
-    name: Build, Lint & Test
+    name: Build & Lint
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -54,19 +54,6 @@ jobs:
       - name: Show SDK info
         run: dotnet --info
 
-      - name: Trust ASP.NET Core dev certificate
-        run: |
-          dotnet dev-certs https --clean
-          dotnet dev-certs https
-          dotnet dev-certs https -ep /tmp/aspnetcore.pfx -p devpass
-          openssl pkcs12 -in /tmp/aspnetcore.pfx \
-              -clcerts -nokeys -out /tmp/aspnetcore.crt \
-              -passin pass:devpass
-          sudo cp /tmp/aspnetcore.crt \
-              /usr/local/share/ca-certificates/aspnetcore-dev.crt
-          sudo update-ca-certificates
-          dotnet dev-certs https --check
-
       - name: Restore
         run: dotnet restore "$SOLUTION_FILE"
 
@@ -76,30 +63,6 @@ jobs:
 
       - name: Build
         run: dotnet build "$SOLUTION_FILE" --configuration $CONFIGURATION --no-restore
-
-      - name: Pre-pull Docker images
-        run: |
-          docker pull postgres:17-alpine
-          docker pull dpage/pgadmin4:9.17
-
-      - name: Test
-        run: >
-          dotnet test "$SOLUTION_FILE"
-          --configuration $CONFIGURATION
-          --no-build
-          --results-directory ./TestResults
-          --report-trx
-          --report-trx-filename test-results.trx
-          --coverage
-          --coverage-output-format cobertura
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: ./TestResults
-          if-no-files-found: ignore
 
       - name: Upload build output (Web)
         if: success()

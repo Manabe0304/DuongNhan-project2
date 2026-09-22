@@ -21,7 +21,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasIndex(u => u.Email).IsUnique();
         builder.HasIndex(u => u.Status);
 
-        builder.HasQueryFilter(u => u.DeletedAt == null);
+        builder.HasQueryFilter(AppQueryFilters.SoftDelete, u => u.DeletedAt == null);
 
         builder.HasMany(u => u.SkinImages)
             .WithOne(si => si.User)

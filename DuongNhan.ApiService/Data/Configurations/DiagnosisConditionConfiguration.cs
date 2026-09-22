@@ -18,6 +18,6 @@ internal sealed class DiagnosisConditionConfiguration : IEntityTypeConfiguration
         builder.HasIndex(c => new { c.DiagnosisId, c.Rank });
 
         // Match the Diagnosis filter so the graph is filtered consistently.
-        builder.HasQueryFilter(c => c.Diagnosis!.SkinImage!.DeletedAt == null);
+        builder.HasQueryFilter(AppQueryFilters.SoftDelete, c => c.Diagnosis!.SkinImage!.DeletedAt == null);
     }
 }

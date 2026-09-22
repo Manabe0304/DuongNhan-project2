@@ -1,6 +1,5 @@
 ﻿namespace DuongNhan.Shared.Dtos.Auth;
 
-public sealed record RefreshTokenRequest
-(
-
+public sealed record RefreshTokenRequest(
+    string RefreshToken
 );

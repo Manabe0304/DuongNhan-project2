@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using ValidationFailure = FluentValidation.Results.ValidationFailure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,7 @@ builder.AddNpgsqlDbContext<AppDbContext>("postgresdb", configureDbContextOptions
 });
 
 // ── Time + password hashing ────────────────────────────────────
+builder.Services.AddMemoryCache();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
 
@@ -44,15 +46,30 @@ builder.Services.Configure<PasswordHasherOptions>(options =>
 // Only UserAgent and ApiKey are available on HibpOptions.
 builder.Services.AddPwnedServices(options =>
 {
-    options.UserAgent = "DuongNhan-SkinAnalysis/1.0";
+    options.UserAgent = builder.Configuration["HaveIBeenPwned:UserAgent"]
+        ?? "DuongNhan-SkinAnalysis/1.0";
 });
 
 // ── Application services ───────────────────────────────────────
 builder.Services.AddScoped<BreachedPasswordValidator>();
-builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
+builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
+builder.Services.AddSingleton<DummyPasswordVerifier>();
 builder.Services.AddScoped<ILoginAttemptTracker, LoginAttemptTracker>();
+builder.Services.AddScoped<ITokenInvalidationCache, TokenInvalidationCache>();
 builder.Services.AddScoped<IAuditLogger, AuditLogger>();
 builder.Services.AddScoped<UserMapper>();
+builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddScoped<IDiagnosisService, OpenAiDiagnosisService>();
+
+// ── JWT signing key ────────────────────────────────────────────
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException("Jwt:Key is not configured.");
+var jwtKeyBytes = Encoding.UTF8.GetBytes(jwtKey);
+if (jwtKeyBytes.Length < 32)
+{
+    throw new InvalidOperationException(
+        "Jwt:Key must be at least 32 bytes (256 bits) to safely sign HS256 tokens.");
+}
 
 // ── JWT authentication ─────────────────────────────────────────
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -66,17 +83,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]
-                    ?? throw new InvalidOperationException("Jwt:Key is not configured."))),
-            ClockSkew = TimeSpan.FromSeconds(30)
+            IssuerSigningKey = new SymmetricSecurityKey(jwtKeyBytes),
+            ClockSkew = TimeSpan.FromSeconds(
+                builder.Configuration.GetValue("Jwt:ClockSkewSeconds", 30))
         };
 
         options.Events = new JwtBearerEvents
         {
             OnTokenValidated = async context =>
             {
-                var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
                 var userIdClaim = context.Principal?.FindFirst(AppClaimTypes.UserId)?.Value;
 
                 if (!Guid.TryParse(userIdClaim, out var userId))
@@ -85,20 +100,24 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     return;
                 }
 
-                var issuedAt = context.SecurityToken.ValidFrom;
-                var invalidatedAt = await db.Users
-                    .AsNoTracking()
-                    .Where(u => u.Id == userId)
-                    .Select(u => u.TokensInvalidatedAt)
-                    .FirstOrDefaultAsync(context.HttpContext.RequestAborted);
+                var invalidationCache = context.HttpContext.RequestServices
+                    .GetRequiredService<ITokenInvalidationCache>();
+                var state = await invalidationCache.GetAsync(userId, context.HttpContext.RequestAborted);
 
-                if (issuedAt < invalidatedAt)
+                if (!state.Found)
+                {
+                    context.Fail("Token subject no longer exists.");
+                    return;
+                }
+
+                if (context.SecurityToken.ValidFrom < state.InvalidatedAt)
                     context.Fail("Token has been revoked.");
             }
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(Policies.RequireUser, policy => policy.RequireAuthenticatedUser());
 
 // ── Rate limiting ──────────────────────────────────────────────
 builder.Services.AddRateLimiter(options =>
@@ -134,11 +153,35 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+// Global response hardening: never let intermediaries or browsers cache auth
+// payloads (they carry tokens) and always disable MIME sniffing.
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        var headers = context.Response.Headers;
+        headers["X-Content-Type-Options"] = "nosniff";
+
+        if (context.Request.Path.StartsWithSegments("/api/auth"))
+        {
+            headers["Cache-Control"] = "no-store";
+            headers["Pragma"] = "no-cache";
+        }
+
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
+
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
+
+    var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+    await AppDbSeeder.SeedAsync(db, timeProvider);
 
     app.MapOpenApi();
     app.MapScalarApiReference();
@@ -152,7 +195,7 @@ app.UseFastEndpoints(config =>
 {
     config.Endpoints.RoutePrefix = "api";
     config.Errors.UseProblemDetails();
-    config.Errors.ResponseBuilder = (failures, _, _) =>
+    config.Errors.ResponseBuilder = (List<ValidationFailure> failures, HttpContext _, int statusCode) =>
     {
         var errors = failures
             .GroupBy(f => f.PropertyName)
@@ -162,7 +205,7 @@ app.UseFastEndpoints(config =>
         {
             type = "https://tools.ietf.org/html/rfc9110#section-15.5.1",
             title = "One or more validation errors occurred.",
-            status = StatusCodes.Status400BadRequest,
+            status = statusCode,
             errors
         };
     };

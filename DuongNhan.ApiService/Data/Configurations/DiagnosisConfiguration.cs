@@ -27,6 +27,6 @@ internal sealed class DiagnosisConfiguration : IEntityTypeConfiguration<Diagnosi
             .HasForeignKey(c => c.DiagnosisId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasQueryFilter(d => d.SkinImage!.DeletedAt == null);
+        builder.HasQueryFilter(AppQueryFilters.SoftDelete, d => d.SkinImage!.DeletedAt == null);
     }
 }

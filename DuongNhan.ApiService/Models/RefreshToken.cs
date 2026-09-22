@@ -4,6 +4,7 @@ internal sealed class RefreshToken
 {
     public Guid Id { get; init; } = Guid.CreateVersion7();
     public Guid UserId { get; init; }
+    public Guid SessionId { get; init; }
     public required string TokenHash { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
     public DateTimeOffset? RevokedAt { get; set; }

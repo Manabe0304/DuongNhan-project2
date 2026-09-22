@@ -16,7 +16,8 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
 
         builder.HasIndex(rt => rt.TokenHash).IsUnique();
         builder.HasIndex(rt => rt.UserId);
+        builder.HasIndex(rt => rt.SessionId);
 
-        builder.HasQueryFilter(rt => rt.User!.DeletedAt == null);
+        builder.HasQueryFilter(AppQueryFilters.SoftDelete, rt => rt.User!.DeletedAt == null);
     }
 }

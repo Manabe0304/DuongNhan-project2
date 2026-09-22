@@ -1,4 +1,5 @@
 ﻿using DuongNhan.ApiService.Data;
+using DuongNhan.ApiService.Features.Auth.Shared;
 using DuongNhan.ApiService.Mappers;
 using DuongNhan.ApiService.Models;
 using DuongNhan.ApiService.Services;
@@ -43,7 +44,7 @@ internal sealed class RegisterEndpoint(
     public override async Task HandleAsync(RegisterRequest req, CancellationToken ct)
     {
         var normalizedEmail = req.Email.Trim().ToLowerInvariant();
-        var emailHash = HashEmail(normalizedEmail);
+        var emailHash = AuthHashing.HashEmail(normalizedEmail);
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
         var userAgent = HttpContext.Request.Headers.UserAgent.ToString();
 
@@ -85,11 +86,13 @@ internal sealed class RegisterEndpoint(
 
             db.Users.Add(user);
 
+            var sessionId = Guid.CreateVersion7();
             var (refreshToken, refreshHash, refreshExpiresAt) = jwtTokenService.CreateRefreshToken();
 
             db.RefreshTokens.Add(new RefreshToken
             {
                 UserId = user.Id,
+                SessionId = sessionId,
                 TokenHash = refreshHash,
                 ExpiresAt = refreshExpiresAt
             });
@@ -109,13 +112,12 @@ internal sealed class RegisterEndpoint(
 
             RegisterEndpointLogs.UserRegistered(logger, user.Id);
 
-            var accessToken = jwtTokenService.CreateAccessToken(user);
-            var lifetimeMinutes = configuration.GetValue("Jwt:AccessTokenLifetimeMinutes", 15);
+            var accessToken = jwtTokenService.CreateAccessToken(user, sessionId);
 
             await Send.OkAsync(new AuthResponse(
                 AccessToken: accessToken,
                 RefreshToken: refreshToken,
-                ExpiresAt: DateTimeOffset.UtcNow.AddMinutes(lifetimeMinutes),
+                ExpiresAt: DateTimeOffset.UtcNow.AddMinutes(jwtTokenService.AccessTokenLifetimeMinutes),
                 User: mapper.ToDto(user)), ct);
         }
         catch (DbUpdateException ex) when (IsUniqueViolation(ex))
@@ -148,11 +150,6 @@ internal sealed class RegisterEndpoint(
         var cleaned = new string(value.Where(c => !char.IsControl(c)).ToArray()).Trim();
         return cleaned.Length > maxLength ? cleaned[..maxLength] : cleaned;
     }
-
-    private static string HashEmail(string email)
-        => Convert.ToHexString(
-            System.Security.Cryptography.SHA256.HashData(
-                System.Text.Encoding.UTF8.GetBytes(email))).ToLowerInvariant();
 }
 
 internal static partial class RegisterEndpointLogs

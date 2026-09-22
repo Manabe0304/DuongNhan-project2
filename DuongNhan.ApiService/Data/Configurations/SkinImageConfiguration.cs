@@ -21,7 +21,7 @@ internal sealed class SkinImageConfiguration : IEntityTypeConfiguration<SkinImag
         builder.HasIndex(si => new { si.UserId, si.CreatedAt });
         builder.HasIndex(si => si.Status);
 
-        builder.HasQueryFilter(si => si.DeletedAt == null);
+        builder.HasQueryFilter(AppQueryFilters.SoftDelete, si => si.DeletedAt == null);
 
         builder.HasOne(si => si.Diagnosis)
             .WithOne(d => d.SkinImage)
