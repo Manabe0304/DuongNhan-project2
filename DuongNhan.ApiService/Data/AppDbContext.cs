@@ -14,6 +14,9 @@ internal sealed class AppDbContext(
     public DbSet<DiagnosisCondition> DiagnosisConditions => Set<DiagnosisCondition>();
     public DbSet<LoginAttempt> LoginAttempts => Set<LoginAttempt>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
+    public DbSet<Product> Products => Set<Product>();
+    public DbSet<Plan> Plans => Set<Plan>();
+    public DbSet<ProductRecommendation> ProductRecommendations => Set<ProductRecommendation>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

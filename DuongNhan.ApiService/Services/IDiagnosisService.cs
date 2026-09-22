@@ -1,6 +1,8 @@
-﻿namespace DuongNhan.ApiService.Services
+using DuongNhan.ApiService.Models;
+
+namespace DuongNhan.ApiService.Services;
+
+internal interface IDiagnosisService
 {
-    public interface IDiagnosisService
-    {
-    }
+    Task<Diagnosis> DiagnoseAsync(SkinImage image, CancellationToken ct = default);
 }
