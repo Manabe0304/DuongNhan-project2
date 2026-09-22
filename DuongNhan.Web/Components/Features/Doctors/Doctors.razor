@@ -1,0 +1,79 @@
+@page "/doctors"
+@inject DoctorCatalogService Catalog
+
+<div class="container dn-container dn-page">
+    <div class="dn-page-heading"><span class="dn-kicker">Đội ngũ chuyên gia</span><h1>Bác sĩ Da liễu Chuyên khoa</h1><p>Kết nối trực tiếp với các bác sĩ da liễu giàu kinh nghiệm tại bệnh viện và phòng khám uy tín.</p></div>
+    <div class="dn-filter-card mb-4">
+        <input class="form-control" placeholder="Tìm theo tên bác sĩ, chuyên khoa hoặc phòng khám..." @bind="query" @bind:event="oninput" />
+        <div class="d-flex gap-2 flex-wrap mt-3">
+            @foreach (var city in cities)
+            {
+                <button class="btn btn-sm @(cityFilter == city ? "btn-dn-dark" : "btn-light") rounded-pill" @onclick="() => cityFilter = city">@city</button>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @foreach (var doc in Filtered)
+        {
+            <div class="col-md-6">
+                <div class="dn-card p-4 h-100">
+                    <div class="d-flex gap-3">
+                        <img class="dn-doctor-img" src="@doc.Image" alt="@doc.Name" />
+                        <div class="min-w-0">
+                            <div><span class="badge bg-success-subtle text-success rounded-pill">@doc.City</span> <small class="text-secondary">@doc.Experience năm kinh nghiệm</small></div>
+                            <h5 class="mt-2 mb-1">@doc.Name</h5><div class="text-coral small fw-semibold">@doc.Specialty</div>
+                            <div class="small mt-1">★ <b>@doc.Rating</b> <span class="text-secondary">(@doc.Reviews đánh giá)</span></div>
+                        </div>
+                    </div>
+                    <div class="dn-clinic-box mt-3"><b>⌂ @doc.Clinic</b><br /><span>⌖ @doc.Address</span></div>
+                    <p class="small text-secondary mt-3">@doc.Bio</p>
+                    <div class="d-flex align-items-center justify-content-between border-top pt-3">
+                        <div><small class="text-secondary d-block">Phí tư vấn từ</small><b>@doc.Price</b></div>
+                        <button class="btn btn-dn-coral rounded-pill" @onclick="() => Open(doc)">Đặt lịch khám</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+    @if (!Filtered.Any())
+    {
+        <div class="dn-empty mt-4">Không tìm thấy bác sĩ phù hợp.</div>
+    }
+</div>
+
+@if (selected is not null)
+{
+    <div class="dn-modal-backdrop">
+        <div class="dn-modal">
+            <div class="d-flex justify-content-between align-items-start border-bottom pb-3 mb-4"><div><h5>Đặt lịch tư vấn da liễu</h5><small class="text-secondary">với @selected.Name</small></div><button class="btn-close" @onclick="Close"></button></div>
+            <div class="mb-3"><label class="form-label small fw-semibold">Hình thức tư vấn</label><div class="row g-2"><div class="col-6"><button class="dn-choice @(type == "online" ? "selected" : "")" @onclick='() => type = "online"'><b>Video Call Online</b><span>@selected.OnlineFee.ToString("N0")đ</span></button></div><div class="col-6"><button class="dn-choice @(type == "offline" ? "selected" : "")" @onclick='() => type = "offline"'><b>Tại phòng khám</b><span>@selected.OfflineFee.ToString("N0")đ</span></button></div></div></div>
+            <div class="mb-3"><label class="form-label small fw-semibold">Chọn ngày khám</label><input type="date" class="form-control" @bind="date" /></div>
+            <div class="mb-3"><label class="form-label small fw-semibold">Khung giờ</label><div class="d-flex flex-wrap gap-2">@foreach(var slot in selected.Slots){
+                <button class="btn btn-sm @(slot == selectedSlot ? "btn-success" : "btn-light")" @onclick="() => selectedSlot = slot">@slot</button>
+            }
+        </div></div>
+        <div class="mb-3"><label class="form-label small fw-semibold">Số điện thoại</label><input class="form-control" @bind="phone" placeholder="09xx xxx xxx" /></div>
+        <div class="mb-3"><label class="form-label small fw-semibold">Mô tả tình trạng da</label><textarea class="form-control" rows="2" @bind="note" placeholder="Ví dụ: Da mụn tái phát..."></textarea></div>
+        @if (!string.IsNullOrWhiteSpace(bookingMessage))
+        {
+            <div class="alert alert-success small">@bookingMessage</div>
+        }
+        <div class="d-flex gap-2"><button class="btn btn-dn-outline flex-fill" @onclick="Close">Đóng</button><button class="btn btn-dn-coral flex-fill" @onclick="Confirm">Xác nhận đặt lịch</button></div>
+    </div>
+</div>
+}
+
+@code {
+    private readonly string[] cities = ["Tất cả", "TP.HCM", "Hà Nội", "Đà Nẵng"];
+    private string query = "", cityFilter = "Tất cả", type = "online", selectedSlot = "", phone = "", note = "", bookingMessage = "";
+    private DateTime date = DateTime.Today.AddDays(1);
+    private DoctorItem? selected;
+    private IEnumerable<DoctorItem> Filtered => Catalog.GetAll().Where(d =>
+        (cityFilter == "Tất cả" || d.City == cityFilter) &&
+        (string.IsNullOrWhiteSpace(query) || $"{d.Name} {d.Specialty} {d.Clinic}".Contains(query, StringComparison.OrdinalIgnoreCase)));
+
+    private void Open(DoctorItem doc) { selected = doc; selectedSlot = doc.Slots.FirstOrDefault() ?? ""; bookingMessage = ""; }
+    private void Close() => selected = null;
+    private void Confirm() { if (selected is null || string.IsNullOrWhiteSpace(selectedSlot)) return; bookingMessage = $"Đã ghi nhận yêu cầu với {selected.Name} vào {date:dd/MM/yyyy} lúc {selectedSlot}. Đội ngũ sẽ liên hệ xác nhận."; }
+}

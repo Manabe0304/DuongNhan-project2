@@ -1,8 +1,73 @@
 @page "/pricing"
+@inject DuongNhanApiService Api
+@inject UiSessionService Session
+@inject NavigationService Navigation
 
-<PageTitle>Pricing — DuongNhan</PageTitle>
-<SeoMeta Title="Pricing — DuongNhan"
-         Description="Simple plans for AI-powered skin analysis." />
+<div class="container dn-container dn-page">
+    <div class="text-center dn-page-heading mx-auto"><span class="dn-kicker">Plans</span><h1>Bảng giá đơn giản, minh bạch</h1><p>Chọn gói phù hợp với nhu cầu phân tích và theo dõi làn da.</p></div>
+    @if (loading) { <div class="text-center py-5"><div class="spinner-border text-success"></div></div> }
+    else if (!string.IsNullOrWhiteSpace(error)) { <div class="alert alert-warning">@error</div> }
+    else
+    {
+        <div class="row g-4 justify-content-center">
+            @foreach (var plan in plans)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="dn-plan-card h-100 @(IsPopular(plan) ? "popular" : "")">
+                        @if (IsPopular(plan)) { <span class="dn-popular">Phổ biến nhất</span> }
+                        <span class="dn-kicker">@Text(plan,"tier","Plan")</span>
+                        <h4>@Text(plan,"name","Dưỡng Nhan Plan")</h4>
+                        <div class="dn-price">@Price(plan)<small>/tháng</small></div>
+                        <hr />
+                        <ul class="list-unstyled dn-plan-list">
+                            @foreach (var feature in ArrayValues(plan, "features")) { <li>✓ @feature</li> }
+                        </ul>
+                        <button class="btn @(IsPopular(plan) ? "btn-dn-coral" : "btn-dn-outline") w-100" @onclick="() => Choose(plan)">Chọn gói</button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
 
-<h1>Pricing</h1>
-<p class="lead">Coming soon.</p>
+@code {
+    private List<System.Text.Json.JsonElement> plans = [];
+    private bool loading = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { plans = await Api.GetPlansAsync(); }
+        catch (Exception ex) { error = $"Không tải được danh sách gói: {ex.Message}"; }
+        finally { loading = false; }
+    }
+
+    private void Choose(System.Text.Json.JsonElement plan)
+        => Navigation.NavigateTo(Session.IsAuthenticated ? "/subscription/checkout" : "/login");
+
+    private static string Text(System.Text.Json.JsonElement item, string name, string fallback)
+    {
+        foreach (var key in new[] { name, char.ToUpperInvariant(name[0]) + name[1..] })
+            if (item.TryGetProperty(key, out var p))
+                return p.ValueKind == System.Text.Json.JsonValueKind.String ? p.GetString() ?? fallback : p.ToString();
+        return fallback;
+    }
+
+    private static string Price(System.Text.Json.JsonElement item)
+    {
+        foreach (var key in new[] {"priceMonthly","PriceMonthly","price","Price"})
+            if (item.TryGetProperty(key, out var p))
+                return p.ToString() == "0" ? "Miễn phí" : p.ToString() + " USD";
+        return "Liên hệ";
+    }
+
+    private static bool IsPopular(System.Text.Json.JsonElement item)
+        => Text(item,"popular","false").Equals("true",StringComparison.OrdinalIgnoreCase);
+
+    private static IEnumerable<string> ArrayValues(System.Text.Json.JsonElement item, string name)
+    {
+        if (item.TryGetProperty(name, out var p) || item.TryGetProperty(char.ToUpperInvariant(name[0]) + name[1..], out p))
+            if (p.ValueKind == System.Text.Json.JsonValueKind.Array)
+                foreach (var v in p.EnumerateArray()) yield return v.ToString();
+    }
+}

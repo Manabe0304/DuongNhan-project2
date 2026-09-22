@@ -1,29 +1,118 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@inject UiSessionService Session
+@inject NavigationService Navigation
+@inject TokenStorage TokenStorage
+@inject DuongNhanApiService Api
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
+<div class="dn-app">
+    <header class="dn-topbar">
+        <div class="container-fluid dn-container d-flex align-items-center justify-content-between">
+            <a class="dn-brand" href="/">
+                <span class="dn-brand-mark">✚</span>
+                <span>Dưỡng Nhan</span>
+            </a>
+
+            <nav class="dn-main-nav d-none d-lg-flex">
+                <a href="/" class="@NavClass("/")">Trang chủ</a>
+                <a href="/scan" class="@NavClass("/scan")">AI Scan Da</a>
+                <a href="/doctors" class="@NavClass("/doctors")">Bác sĩ</a>
+                <a href="/products" class="@NavClass("/products")">Sản phẩm</a>
+                <a href="/pricing" class="@NavClass("/pricing")">Bảng giá</a>
+                <a href="/contact" class="@NavClass("/contact")">Liên hệ</a>
+            </nav>
+
+            <div class="d-flex align-items-center gap-2">
+                @if (Session.IsAuthenticated)
+                {
+                    <a class="btn btn-dn-dark btn-sm d-none d-sm-inline-flex" href="/dashboard">Bảng điều khiển</a>
+                    <button class="btn btn-dn-outline btn-sm" @onclick="Logout">Đăng xuất</button>
+                }
+                else
+                {
+                    <a class="btn btn-dn-outline btn-sm" href="/login">Đăng nhập</a>
+                    <a class="btn btn-dn-coral btn-sm" href="/register">Đăng ký</a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <div class="dn-mobile-nav d-lg-none">
+        <div class="container-fluid dn-container d-flex gap-2 overflow-auto py-2">
+            <a href="/" class="btn btn-sm btn-light">Trang chủ</a>
+            <a href="/scan" class="btn btn-sm btn-light">AI Scan</a>
+            <a href="/doctors" class="btn btn-sm btn-light">Bác sĩ</a>
+            <a href="/products" class="btn btn-sm btn-light">Sản phẩm</a>
+            <a href="/pricing" class="btn btn-sm btn-light">Bảng giá</a>
+        </div>
     </div>
 
-    <main>
-        <div class="top-row px-4">
-            <AuthorizeView>
-                <Authorized>
-                    <span class="me-3">Hello, @context.User.Identity?.Name</span>
-                    <a href="/profile">Profile</a>
-                    <a href="/logout" class="ms-3">Log out</a>
-                </Authorized>
-                <NotAuthorized>
-                    <a href="/login">Log in</a>
-                    <a href="/register" class="ms-3">Register</a>
-                </NotAuthorized>
-            </AuthorizeView>
-        </div>
-
-        <article class="content px-4">
-            @Body
-        </article>
+    <main class="dn-main">
+        @Body
     </main>
+
+    <footer class="dn-footer">
+        <div class="container dn-container">
+            <div class="row g-4">
+                <div class="col-lg-5">
+                    <div class="dn-brand dn-brand-light mb-3"><span class="dn-brand-mark">✚</span>Dưỡng Nhan</div>
+                    <p class="text-secondary small mb-0">Nền tảng AI phân tích da và kết nối bác sĩ da liễu, giúp bạn hiểu làn da một cách khoa học.</p>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6>Sản phẩm</h6>
+                    <a href="/">Trang chủ</a>
+                    <a href="/doctors">Bác sĩ</a>
+                    <a href="/products">Sản phẩm</a>
+                    <a href="/pricing">Bảng giá</a>
+                </div>
+                <div class="col-6 col-lg-2">
+                    <h6>Hỗ trợ</h6>
+                    <a href="/contact">Liên hệ</a>
+                    <a href="/privacy">Bảo mật</a>
+                    <a href="/terms">Điều khoản</a>
+                </div>
+                <div class="col-lg-3">
+                    <h6>Liên hệ</h6>
+                    <p class="small text-secondary mb-1">hello@duongnhan.ai</p>
+                    <p class="small text-secondary mb-1">1900 8866</p>
+                    <p class="small text-secondary mb-0">268 Lý Thường Kiệt, Hà Nội</p>
+                </div>
+            </div>
+            <div class="dn-footer-bottom mt-4 pt-4">© 2026 Duong Nhan AI Platform. Bảo lưu mọi quyền.</div>
+        </div>
+    </footer>
 </div>
 
-<ToastContainer />
+@code {
+    private bool sessionLoaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || sessionLoaded) return;
+        sessionLoaded = true;
+        try
+        {
+            await Session.LoadAsync();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch { }
+    }
+
+    private string NavClass(string path)
+        => Navigation.CurrentUrl.EndsWith(path, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+
+    private async Task Logout()
+    {
+        try
+        {
+            var refresh = await TokenStorage.GetRefreshTokenAsync();
+            if (!string.IsNullOrWhiteSpace(refresh))
+                await Api.LogoutAsync(refresh);
+        }
+        catch { }
+        finally
+        {
+            await Session.SignOutAsync();
+            Navigation.NavigateTo("/");
+        }
+    }
+}

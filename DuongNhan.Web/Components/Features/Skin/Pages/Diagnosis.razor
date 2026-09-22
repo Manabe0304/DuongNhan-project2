@@ -1,0 +1,72 @@
+@page "/diagnosis/{Id:guid}"
+@inject DuongNhanApiService Api
+
+<div class="container dn-container dn-page">
+    <div class="dn-page-heading"><span class="dn-kicker">AI Result</span><h1>Kết quả phân tích</h1><p>Đây là kết quả từ lần phân tích gần nhất của bạn.</p></div>
+
+    @if (loading)
+    {
+        <div class="dn-card p-5 text-center"><div class="spinner-border text-success"></div><p class="small text-secondary mt-3">Đang tải kết quả...</p></div>
+    }
+    else if (diagnosis is null)
+    {
+        <div class="alert alert-warning">Không tìm thấy kết quả. <a href="/scan">Phân tích ảnh mới</a></div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="dn-card p-4 p-lg-5">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div><span class="badge rounded-pill text-bg-success">@Text("severity", "Moderate")</span><h2 class="mt-3 mb-1">@Text("primaryCondition", "Skin condition")</h2><p class="text-secondary small mb-0">@Text("summary", "Kết quả phân tích đã được tạo.")</p></div>
+                        <div class="dn-confidence"><strong>@Percent("confidence")%</strong><small>Confidence</small></div>
+                    </div>
+                    <hr />
+                    <h6>Phân tích chi tiết</h6>
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4"><div class="mini-stat"><small>Tình trạng chính</small><strong>@Text("primaryCondition", "—")</strong></div></div>
+                        <div class="col-md-4"><div class="mini-stat"><small>Mức độ</small><strong>@Text("severity", "—")</strong></div></div>
+                        <div class="col-md-4"><div class="mini-stat"><small>Độ tin cậy</small><strong>@Percent("confidence")%</strong></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="dn-card p-4">
+                    <h5>Khuyến nghị</h5>
+                    <p class="small text-secondary">Sử dụng kết quả như một công cụ hỗ trợ và tham khảo bác sĩ nếu triệu chứng kéo dài hoặc nặng lên.</p>
+                    <a class="btn btn-dn-coral w-100" href="/recommendations">Xem sản phẩm phù hợp</a>
+                    <a class="btn btn-dn-outline w-100 mt-2" href="/doctors">Đặt lịch với bác sĩ</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+    private System.Text.Json.JsonElement? diagnosis;
+    private bool loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        loading = true;
+        diagnosis = await Api.DiagnoseAsync(Id);
+        loading = false;
+    }
+
+    private string Text(string name, string fallback)
+    {
+        if (diagnosis is not { ValueKind: System.Text.Json.JsonValueKind.Object } d) return fallback;
+        foreach (var key in new[] { name, char.ToUpperInvariant(name[0]) + name[1..] })
+            if (d.TryGetProperty(key, out var p))
+                return p.ValueKind == System.Text.Json.JsonValueKind.String ? p.GetString() ?? fallback : p.ToString();
+        return fallback;
+    }
+
+    private int Percent(string name)
+    {
+        var raw = Text(name, "0");
+        return double.TryParse(raw, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var n)
+            ? (int)Math.Round(n <= 1 ? n * 100 : n) : 0;
+    }
+}

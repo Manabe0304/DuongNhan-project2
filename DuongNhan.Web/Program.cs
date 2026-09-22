@@ -7,12 +7,10 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+builder.Services.AddWebBlazor();
 
-builder.Services.AddOutputCache();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddWebAuthentication();
 
 builder.Services.AddScoped<AuthenticationStateProvider, AuthStateProvider>();
 builder.Services.AddScoped<TokenStorage>();
@@ -21,6 +19,10 @@ builder.Services.AddScoped<NavigationService>();
 builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<ImageValidationService>();
+builder.Services.AddScoped<DuongNhanApiService>();
+builder.Services.AddTransient<AuthHeaderHandler>();
+builder.Services.AddScoped<UiSessionService>();
+builder.Services.AddScoped<DoctorCatalogService>();
 
 builder.Services.AddApiClients();
 

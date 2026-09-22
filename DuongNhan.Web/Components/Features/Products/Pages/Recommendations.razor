@@ -1,0 +1,62 @@
+@page "/products"
+@page "/recommendations"
+@inject DuongNhanApiService Api
+
+<div class="container dn-container dn-page">
+    <div class="dn-page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
+        <div><span class="dn-kicker">Dermacare</span><h1>Sản phẩm chăm sóc da</h1><p>Khám phá sản phẩm và lựa chọn phù hợp với nhu cầu làn da của bạn.</p></div>
+        <div class="dn-search"><input class="form-control" placeholder="Tìm sản phẩm..." @bind="query" @bind:event="oninput" /></div>
+    </div>
+
+    @if (loading) { <div class="dn-card p-5 text-center"><div class="spinner-border text-success"></div></div> }
+    else if (!string.IsNullOrWhiteSpace(error)) { <div class="alert alert-warning">@error</div> }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var p in Filtered)
+            {
+                <div class="col-sm-6 col-xl-3">
+                    <div class="dn-product-card h-100">
+                        <div class="dn-product-img"><img src="@Text(p,"image",Text(p,"imageUrl","https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600"))" alt="" /></div>
+                        <div class="p-3 d-flex flex-column h-auto">
+                            <small class="text-secondary">@Text(p,"brand","DuongNhan")</small>
+                            <h6 class="mt-1 mb-2">@Text(p,"name","Skin care product")</h6>
+                            <div class="d-flex align-items-center justify-content-between mb-3"><span class="fw-bold">@Text(p,"price","—")</span><span class="small">★ @Text(p,"rating","4.8")</span></div>
+                            <a href="@Affiliate(p)" target="_blank" class="btn btn-dn-coral btn-sm mt-auto">Xem sản phẩm</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<System.Text.Json.JsonElement> items = [];
+    private string query = "";
+    private bool loading = true;
+    private string? error;
+
+    private IEnumerable<System.Text.Json.JsonElement> Filtered
+        => items.Where(x => string.IsNullOrWhiteSpace(query)
+            || Text(x,"name","").Contains(query, StringComparison.OrdinalIgnoreCase)
+            || Text(x,"brand","").Contains(query, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { items = await Api.GetProductsAsync(); }
+        catch (Exception ex) { error = $"Không tải được sản phẩm từ Product API: {ex.Message}"; }
+        finally { loading = false; }
+    }
+
+    private static string Text(System.Text.Json.JsonElement item, string name, string fallback)
+    {
+        foreach (var key in new[] { name, char.ToUpperInvariant(name[0]) + name[1..] })
+            if (item.TryGetProperty(key, out var p))
+                return p.ValueKind == System.Text.Json.JsonValueKind.String ? p.GetString() ?? fallback : p.ToString();
+        return fallback;
+    }
+
+    private static string Affiliate(System.Text.Json.JsonElement item)
+        => Text(item, "affiliateUrl", "#");
+}

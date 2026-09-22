@@ -1,0 +1,77 @@
+@page "/register"
+@page "/auth/register"
+@inject DuongNhanApiService Api
+@inject UiSessionService Session
+@inject NavigationService Navigation
+
+<div class="dn-auth-page">
+    <div class="dn-auth-brand d-none d-lg-flex">
+        <div class="dn-auth-brand-inner">
+            <a href="/" class="dn-brand dn-brand-light"><span class="dn-brand-mark">✚</span>Dưỡng Nhan</a>
+            <div class="mt-auto">
+                <h2>Làn da khoẻ mạnh bắt đầu từ dữ liệu chính xác.</h2>
+                <div class="d-flex align-items-center gap-3 mt-4">
+                    <div class="dn-score-ring-sm"><b>92</b><small>Skin Score</small></div>
+                    <p class="small text-secondary mb-0">Theo dõi điểm số da sau mỗi lần phân tích và thấy rõ tiến bộ theo thời gian.</p>
+                </div>
+            </div>
+            <small class="text-secondary">© 2026 Dưỡng Nhan AI Platform</small>
+        </div>
+    </div>
+
+    <div class="dn-auth-form-wrap">
+        <div class="dn-auth-form">
+            <a href="/" class="small text-secondary text-decoration-none">← Về trang chủ</a>
+            <span class="dn-kicker mt-4">Tài khoản</span>
+            <h1>Tạo tài khoản mới</h1>
+            <p class="text-secondary small">Bắt đầu hành trình chăm sóc da khoa học với AI và chuyên gia.</p>
+
+            @if (!string.IsNullOrWhiteSpace(error))
+            {
+                <div class="alert alert-danger small">@error</div>
+            }
+
+            <form @onsubmit="Submit" @onsubmit:preventDefault>
+                <div class="mb-3"><label>Họ và tên</label><input class="form-control form-control-lg" type="text" @bind="name" required placeholder="Nguyễn Văn A" /></div>
+                <div class="mb-3"><label>Email</label><input class="form-control form-control-lg" type="email" @bind="email" required placeholder="name@example.com" /></div>
+                <div class="mb-3"><label>Mật khẩu</label><input class="form-control form-control-lg" type="password" @bind="password" required placeholder="••••••••" /></div>
+                <div class="d-flex justify-content-between small mb-4"><label class="d-flex gap-2 align-items-center"><input type="checkbox" @bind="remember" /> Ghi nhớ đăng nhập</label><a href="/forgot-password" class="text-secondary">Quên mật khẩu?</a></div>
+                <button class="btn btn-dn-coral btn-lg w-100" disabled="@loading">@((loading) ? "Đang xử lý..." : "Đăng ký tài khoản")</button>
+            </form>
+
+            <div class="text-center small text-secondary mt-4">Đã có tài khoản? <a href="/login" class="fw-semibold text-dark">Đăng nhập</a></div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string name = "";
+    private string email = "";
+    private string password = "";
+    private bool remember = true;
+    private bool loading;
+    private string? error;
+
+    private async Task Submit()
+    {
+        error = null;
+        loading = true;
+        try
+        {
+            var result = await Api.RegisterAsync(name.Trim(), email.Trim(), password);
+            if (string.IsNullOrWhiteSpace(result.AccessToken))
+            {
+                error = "API không trả về access token. Hãy kiểm tra Auth API.";
+                return;
+            }
+
+            await Session.SignInAsync(result.UserName ?? email.Split('@')[0], result.Email ?? email, result.AccessToken, result.RefreshToken);
+            Navigation.NavigateTo("/dashboard");
+        }
+        catch (Exception ex)
+        {
+            error = $"Đăng nhập thất bại: {ex.Message}";
+        }
+        finally { loading = false; }
+    }
+}

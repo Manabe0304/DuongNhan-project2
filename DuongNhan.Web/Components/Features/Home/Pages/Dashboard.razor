@@ -1,0 +1,24 @@
+@page "/dashboard"
+@inject DuongNhanApiService Api
+@inject UiSessionService Session
+
+<div class="container dn-container dn-page">
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-4"><div><span class="dn-kicker">Customer Portal</span><h1>Xin chào, @(Session.Name ?? "bạn") 👋</h1><p class="text-secondary mb-0">Quản lý phân tích da, sản phẩm và lịch tư vấn của bạn.</p></div><a href="/scan" class="btn btn-dn-coral">+ Phân tích da</a></div>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="dn-stat-card"><small>AI Skin Score</small><strong>92</strong><span>+4 so với lần trước</span></div></div>
+        <div class="col-md-4"><div class="dn-stat-card"><small>Lần scan</small><strong>@scanCount</strong><span>Trong lịch sử</span></div></div>
+        <div class="col-md-4"><div class="dn-stat-card"><small>Gói hiện tại</small><strong>@plan</strong><span>Quản lý gói →</span></div></div>
+    </div>
+    <div class="row g-4">
+        <div class="col-lg-8"><div class="dn-card p-4"><div class="d-flex justify-content-between"><div><h5>Hoạt động gần đây</h5><p class="small text-secondary">Kết quả phân tích mới nhất của bạn.</p></div><a href="/history" class="small">Xem tất cả</a></div>
+            @if(history.Count==0){<div class="dn-empty py-4">Chưa có dữ liệu. <a href="/scan">Thực hiện scan đầu tiên</a></div>}
+            else @foreach(var h in history.Take(3)){<div class="dn-history-row"><div class="dn-history-dot">✓</div><div class="flex-grow-1"><b>@Text(h,"primaryCondition","Skin analysis")</b><small>@Text(h,"diagnosedAt","")</small></div><span class="badge bg-success-subtle text-success">@Text(h,"severity","—")</span></div>}
+        </div></div>
+        <div class="col-lg-4"><div class="dn-card p-4"><h5>Thao tác nhanh</h5><a class="dn-quick" href="/scan">📷 <span><b>Scan da mới</b><small>Phân tích tình trạng hiện tại</small></span></a><a class="dn-quick" href="/products">🧴 <span><b>Sản phẩm</b><small>Xem gợi ý chăm sóc</small></span></a><a class="dn-quick" href="/doctors">🩺 <span><b>Bác sĩ</b><small>Đặt lịch tư vấn</small></span></a><a class="dn-quick" href="/profile">⚙ <span><b>Hồ sơ</b><small>Cập nhật thông tin</small></span></a></div></div>
+    </div>
+</div>
+@code{
+ private List<System.Text.Json.JsonElement> history=[]; private string plan="Free"; private int scanCount;
+ protected override async Task OnInitializedAsync(){try{history=await Api.GetHistoryAsync();scanCount=history.Count;var p=await Api.GetCurrentSubscriptionAsync();if(p is { } x) plan=Text(x,"tier",Text(x,"name","Free"));}catch{}}
+ private static string Text(System.Text.Json.JsonElement i,string n,string f){foreach(var k in new[]{n,char.ToUpper(n[0])+n[1..]})if(i.TryGetProperty(k,out var p))return p.ToString();return f;}
+}

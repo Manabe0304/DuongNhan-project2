@@ -1,0 +1,11 @@
+@page "/contact"
+@inject IJSRuntime JS
+
+<div class="container dn-container dn-page">
+    <div class="dn-page-heading"><span class="dn-kicker">Hỗ trợ & Hợp tác</span><h1>Liên hệ với chúng tôi</h1><p>Có câu hỏi về kết quả AI hoặc muốn hợp tác cùng mạng lưới y khoa Dưỡng Nhan? Gửi tin nhắn, đội ngũ sẽ phản hồi.</p></div>
+    <div class="row g-4">
+        <div class="col-lg-6"><div class="dn-card p-4 p-lg-5"><form @onsubmit="Submit" @onsubmit:preventDefault><div class="mb-3"><label>Họ và tên</label><input class="form-control" required @bind="name" /></div><div class="mb-3"><label>Email</label><input type="email" class="form-control" required @bind="email" /></div><div class="mb-3"><label>Nội dung cần hỗ trợ</label><textarea class="form-control" rows="5" required @bind="content"></textarea></div><button class="btn btn-dn-coral w-100">Gửi liên hệ ngay</button></form>@if(sent){<div class="alert alert-success small mt-3">✓ Cảm ơn bạn! Chúng tôi đã nhận được tin nhắn và sẽ phản hồi trong 24 giờ.</div>}</div></div>
+        <div class="col-lg-6"><div class="dn-map-placeholder">⌖<h5>Bản đồ Trụ sở Dưỡng Nhan AI Hub</h5><p>268 Lý Thường Kiệt, Phường Cửa Nam, Hà Nội</p></div><div class="dn-card p-4 mt-3"><p class="small mb-2">📍 268 Lý Thường Kiệt, P. Cửa Nam, Hà Nội</p><p class="small mb-2">◷ 8:00 – 18:00, Thứ 2 – Thứ 7</p><p class="small mb-0">✉ hello@duongnhan.ai</p></div></div>
+    </div>
+</div>
+@code { private string name="",email="",content=""; private bool sent; private Task Submit(){sent=true;return Task.CompletedTask;} }

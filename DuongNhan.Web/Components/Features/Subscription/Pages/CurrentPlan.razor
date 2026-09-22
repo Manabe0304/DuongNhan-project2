@@ -1,0 +1,4 @@
+@page "/subscription/current"
+@inject DuongNhanApiService Api
+<div class="container dn-container dn-page"><div class="dn-page-heading"><span class="dn-kicker">Subscription</span><h1>Gói hiện tại</h1></div><div class="dn-card p-4 p-lg-5"><h4>@tier</h4><p class="text-secondary">Gói đăng ký hiện tại của bạn.</p><a href="/pricing" class="btn btn-dn-coral">Nâng cấp gói</a></div></div>
+@code{private string tier="Free";protected override async Task OnInitializedAsync(){try{var x=await Api.GetCurrentSubscriptionAsync();if(x is { } j)foreach(var k in new[]{"tier","Tier","name","Name"})if(j.TryGetProperty(k,out var p)){tier=p.ToString();break;}}catch{}}}

@@ -1,0 +1,118 @@
+@page "/scan"
+@page "/upload"
+@inject DuongNhanApiService Api
+@inject ImageValidationService ImageValidation
+@inject NavigationService Navigation
+
+<div class="container dn-container dn-page">
+    <div class="dn-page-heading"><span class="dn-kicker">AI Skin Analysis</span><h1>Phân tích làn da</h1><p>Upload ảnh khuôn mặt rõ nét để nhận kết quả phân tích và gợi ý chăm sóc.</p></div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="dn-card p-4 p-lg-5">
+                <div class="dn-dropzone @(file is null ? "" : "has-file")">
+                    <div class="dn-upload-icon">↑</div>
+                    <h5>@(file is null ? "Chọn ảnh da để bắt đầu" : file.Name)</h5>
+                    <p class="small text-secondary">JPEG, PNG hoặc WebP • tối đa 10 MB</p>
+                    <InputFile OnChange="OnFileSelected" accept="image/jpeg,image/png,image/webp" class="form-control mt-3" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(message))
+                {
+                    <div class="alert @(success ? "alert-success" : "alert-danger") small mt-3">@message</div>
+                }
+
+                <div class="dn-check-list mt-4">
+                    <div>✓ Ảnh chính diện, đủ sáng</div><div>✓ Không dùng filter hoặc beauty mode</div><div>✓ Khuôn mặt chiếm phần lớn khung hình</div>
+                </div>
+
+                <button class="btn btn-dn-coral btn-lg w-100 mt-4" @onclick="Analyze" disabled="@(file is null || loading)">
+                    @(loading ? "Đang phân tích..." : "Phân tích bằng AI")
+                </button>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="dn-card p-4 h-100">
+                <span class="dn-kicker">Lưu ý</span>
+                <h5 class="mt-2">Để có kết quả tốt hơn</h5>
+                <ul class="small text-secondary dn-bullet-list">
+                    <li>Ánh sáng tự nhiên hoặc ánh sáng trắng đều, không ngược sáng.</li>
+                    <li>Không trang điểm dày và không che vùng da cần đánh giá.</li>
+                    <li>AI hỗ trợ sàng lọc, không thay thế chẩn đoán y khoa.</li>
+                </ul>
+                <div class="dn-mini-banner mt-4"><strong>Muốn được tư vấn chuyên sâu?</strong><br /><a href="/doctors">Kết nối bác sĩ da liễu →</a></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private IBrowserFile? file;
+    private bool loading;
+    private bool success;
+    private string? message;
+
+    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    {
+        file = e.File;
+        message = null;
+        await Task.CompletedTask;
+    }
+
+    private async Task Analyze()
+    {
+        if (file is null) return;
+
+        loading = true;
+        success = false;
+        message = null;
+
+        try
+        {
+            await using var stream =
+                file.OpenReadStream(AppConstants.MaxUploadBytes);
+
+            var validation = await ImageValidation.ValidateAsync(
+                stream,
+                file.Name,
+                file.ContentType);
+
+            if (!validation.IsValid)
+            {
+                message = validation.Message;
+                return;
+            }
+
+            var uploaded = await Api.UploadAsync(file);
+
+            var id = uploaded.GetGuid(
+                "id",
+                "skinImageId",
+                "imageId",
+                "uploadId");
+
+            if (id is null)
+            {
+                message = "Upload thành công nhưng API chưa trả về ID ảnh để chẩn đoán.";
+                return;
+            }
+
+            await Api.DiagnoseAsync(id.Value);
+
+            success = true;
+            message = "Phân tích da thành công.";
+
+            Navigation.NavigateTo($"/diagnosis/{id.Value}");
+        }
+        catch (Exception ex)
+        {
+            success = false;
+            message = $"Không thể phân tích ảnh: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+}
