@@ -193,7 +193,7 @@ app.UseAuthorization();
 
 app.UseFastEndpoints(config =>
 {
-    config.Endpoints.RoutePrefix = "api";
+    // Routes in ApiRoutes already include the /api prefix, so no global prefix is applied here.
     config.Errors.UseProblemDetails();
     config.Errors.ResponseBuilder = (List<ValidationFailure> failures, HttpContext _, int statusCode) =>
     {

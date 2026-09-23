@@ -1,0 +1,33 @@
+@* Renders the graded capture checks (pass / warn / fail). *@
+@if (Report is null)
+{
+    <div class="dn-quality-row">
+        <span class="dn-quality-label">Đang kiểm tra chất lượng ảnh…</span>
+    </div>
+}
+else
+{
+    <div class="dn-quality">
+        @foreach (var check in Report.Checks)
+        {
+            <div class="dn-quality-row @check.Status">
+                <div>
+                    <span class="dn-quality-label">@check.Label</span>
+                    <div class="dn-quality-detail">@check.Detail</div>
+                </div>
+                <span class="dn-quality-score">@Label(check.Status)</span>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public ImageQualityReport? Report { get; set; }
+
+    private static string Label(string status) => status switch
+    {
+        "pass" => "Đạt",
+        "warn" => "Trung bình",
+        _ => "Chưa đạt"
+    };
+}

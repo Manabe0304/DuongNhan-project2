@@ -1,0 +1,17 @@
+@* Confidence arrives as 0..1 (or already as a percentage); show it with a band. *@
+<span class="badge rounded-pill @CssClass">@Percentage%</span>
+
+@code {
+    [Parameter] public decimal Value { get; set; }
+
+    private int Percentage => Value <= 1
+        ? (int)Math.Round(Value * 100)
+        : (int)Math.Round(Value);
+
+    private string CssClass => Percentage switch
+    {
+        >= 80 => "text-bg-success",
+        >= 60 => "text-bg-primary",
+        _ => "text-bg-secondary"
+    };
+}

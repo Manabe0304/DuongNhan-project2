@@ -23,10 +23,13 @@
                         <div class="min-w-0">
                             <div><span class="badge bg-success-subtle text-success rounded-pill">@doc.City</span> <small class="text-secondary">@doc.Experience năm kinh nghiệm</small></div>
                             <h5 class="mt-2 mb-1">@doc.Name</h5><div class="text-coral small fw-semibold">@doc.Specialty</div>
-                            <div class="small mt-1">★ <b>@doc.Rating</b> <span class="text-secondary">(@doc.Reviews đánh giá)</span></div>
+                            <div class="small mt-1 d-flex align-items-center gap-2"><span class="dn-rating"><i class="ph-fill ph-star" aria-hidden="true"></i><b>@doc.Rating</b></span> <span class="text-secondary">(@doc.Reviews đánh giá)</span></div>
                         </div>
                     </div>
-                    <div class="dn-clinic-box mt-3"><b>⌂ @doc.Clinic</b><br /><span>⌖ @doc.Address</span></div>
+                    <div class="dn-clinic-box mt-3">
+                        <div class="dn-clinic-line"><i class="ph ph-first-aid" aria-hidden="true"></i><b>@doc.Clinic</b></div>
+                        <div class="dn-clinic-line"><i class="ph ph-map-pin" aria-hidden="true"></i><span>@doc.Address</span></div>
+                    </div>
                     <p class="small text-secondary mt-3">@doc.Bio</p>
                     <div class="d-flex align-items-center justify-content-between border-top pt-3">
                         <div><small class="text-secondary d-block">Phí tư vấn từ</small><b>@doc.Price</b></div>

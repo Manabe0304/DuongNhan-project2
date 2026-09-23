@@ -3,66 +3,188 @@
 @inject DuongNhanApiService Api
 @inject ImageValidationService ImageValidation
 @inject NavigationService Navigation
+@inject IJSRuntime JS
 
 <div class="container dn-container dn-page">
-    <div class="dn-page-heading"><span class="dn-kicker">AI Skin Analysis</span><h1>Phân tích làn da</h1><p>Upload ảnh khuôn mặt rõ nét để nhận kết quả phân tích và gợi ý chăm sóc.</p></div>
+    <div class="dn-page-heading">
+        <span class="dn-kicker">AI Skin Analysis</span>
+        <h1>Phân tích làn da</h1>
+        <p>Chụp hoặc tải ảnh khuôn mặt rõ nét. Ảnh sẽ được kiểm tra chất lượng trước khi gửi đi phân tích.</p>
+    </div>
 
     <div class="row g-4">
         <div class="col-lg-7">
             <div class="dn-card p-4 p-lg-5">
-                <div class="dn-dropzone @(file is null ? "" : "has-file")">
-                    <div class="dn-upload-icon">↑</div>
-                    <h5>@(file is null ? "Chọn ảnh da để bắt đầu" : file.Name)</h5>
-                    <p class="small text-secondary">JPEG, PNG hoặc WebP • tối đa 10 MB</p>
-                    <InputFile OnChange="OnFileSelected" accept="image/jpeg,image/png,image/webp" class="form-control mt-3" />
-                </div>
+
+                @if (image is null)
+                {
+                    <CaptureModeSelector Mode="mode" ModeChanged="OnModeChanged" />
+
+                    <div class="mt-4">
+                        @if (mode == CaptureMode.Camera)
+                        {
+                            <CameraCapture OnCaptured="OnCapturedAsync" />
+                        }
+                        else
+                        {
+                            <SkinUploadForm OnImageSelected="OnImageSelectedAsync" OnError="OnUploadError" />
+                        }
+                    </div>
+                }
+                else if (cropping)
+                {
+                    <ImageCropper Source="@image.ToDataUrl()"
+                                  OnCropped="OnCroppedAsync"
+                                  OnCancel="() => cropping = false" />
+                }
+                else
+                {
+                    <SkinImagePreview Source="@image.ToDataUrl()"
+                                      Caption="@image.FileName"
+                                      Alt="Ảnh da sẽ phân tích" />
+
+                    <div class="mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">Chất lượng ảnh</h6>
+                            @if (quality is not null)
+                            {
+                                <span class="dn-quality-score">@quality.Score/100</span>
+                            }
+                        </div>
+                        <ImageQualityCheck Report="quality" />
+                    </div>
+
+                    @if (quality is { IsAcceptable: false })
+                    {
+                        <div class="alert alert-warning small mt-3 mb-0">
+                            Ảnh chưa đạt yêu cầu. Bạn vẫn có thể tiếp tục, nhưng kết quả có thể kém chính xác hơn.
+                        </div>
+                    }
+
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        <button class="btn btn-dn-coral btn-lg flex-grow-1 dn-btn"
+                                @onclick="AnalyzeAsync"
+                                disabled="@loading">
+                            <i class="ph ph-scan" aria-hidden="true"></i>@(loading ? "Đang phân tích..." : "Phân tích bằng AI")
+                        </button>
+                        <button class="btn btn-dn-outline dn-btn" @onclick="() => cropping = true" disabled="@loading">
+                            <i class="ph ph-crop" aria-hidden="true"></i>Cắt vuông
+                        </button>
+                        <button class="btn btn-dn-outline dn-btn" @onclick="Reset" disabled="@loading">
+                            <i class="ph ph-arrows-clockwise" aria-hidden="true"></i>Chọn ảnh khác
+                        </button>
+                    </div>
+                }
 
                 @if (!string.IsNullOrWhiteSpace(message))
                 {
-                    <div class="alert @(success ? "alert-success" : "alert-danger") small mt-3">@message</div>
+                    <div class="alert @(success ? "alert-success" : "alert-danger") small mt-3 mb-0">@message</div>
                 }
-
-                <div class="dn-check-list mt-4">
-                    <div>✓ Ảnh chính diện, đủ sáng</div><div>✓ Không dùng filter hoặc beauty mode</div><div>✓ Khuôn mặt chiếm phần lớn khung hình</div>
-                </div>
-
-                <button class="btn btn-dn-coral btn-lg w-100 mt-4" @onclick="Analyze" disabled="@(file is null || loading)">
-                    @(loading ? "Đang phân tích..." : "Phân tích bằng AI")
-                </button>
             </div>
         </div>
 
         <div class="col-lg-5">
             <div class="dn-card p-4 h-100">
-                <span class="dn-kicker">Lưu ý</span>
-                <h5 class="mt-2">Để có kết quả tốt hơn</h5>
+                <span class="dn-kicker">Chụp ảnh đúng cách</span>
+                <h5 class="mt-2">Để AI phân tích chính xác</h5>
+
                 <ul class="small text-secondary dn-bullet-list">
-                    <li>Ánh sáng tự nhiên hoặc ánh sáng trắng đều, không ngược sáng.</li>
-                    <li>Không trang điểm dày và không che vùng da cần đánh giá.</li>
-                    <li>AI hỗ trợ sàng lọc, không thay thế chẩn đoán y khoa.</li>
+                    <li><strong>Ánh sáng:</strong> ánh sáng trắng, đều (gần cửa sổ). Tránh đèn chiếu thẳng gây lóa.</li>
+                    <li><strong>Khoảng cách:</strong> khoảng 20 cm, khuôn mặt chiếm phần lớn khung hình.</li>
+                    <li><strong>Góc chụp:</strong> chụp thẳng, thêm một góc nghiêng nhẹ để tránh vùng bóng.</li>
+                    <li><strong>Chuẩn bị:</strong> tẩy trang, không dùng filter hay beauty mode.</li>
+                    <li><strong>Độ phân giải:</strong> nên đạt tối thiểu 1024px ở cạnh ngắn để thấy rõ lỗ chân lông.</li>
                 </ul>
-                <div class="dn-mini-banner mt-4"><strong>Muốn được tư vấn chuyên sâu?</strong><br /><a href="/doctors">Kết nối bác sĩ da liễu →</a></div>
+
+                <div class="dn-mini-banner mt-4">
+                    <strong>Ảnh chỉ dùng để phân tích.</strong><br />
+                    Kết quả mang tính sàng lọc, không thay thế chẩn đoán y khoa.
+                </div>
+
+                <div class="mt-3 d-flex flex-column gap-2">
+                    <a href="/history" class="dn-link">Xem lịch sử phân tích<i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+                    <a href="/doctors" class="dn-link">Cần tư vấn chuyên sâu? Kết nối bác sĩ<i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 @code {
-    private IBrowserFile? file;
+    private CaptureMode mode = CaptureMode.Camera;
+    private SkinImageInput? image;
+    private ImageQualityReport? quality;
+    private bool cropping;
     private bool loading;
     private bool success;
     private string? message;
 
-    private async Task OnFileSelected(InputFileChangeEventArgs e)
+    private Task OnModeChanged(CaptureMode value)
     {
-        file = e.File;
+        mode = value;
         message = null;
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
-    private async Task Analyze()
+    private async Task OnCapturedAsync(string dataUrl)
     {
-        if (file is null) return;
+        var input = SkinImageInput.FromDataUrl(dataUrl);
+        if (input is null)
+        {
+            message = "Không xử lý được ảnh vừa chụp. Vui lòng thử lại.";
+            return;
+        }
+
+        await SetImageAsync(input);
+    }
+
+    private Task OnImageSelectedAsync(SkinImageInput input) => SetImageAsync(input);
+
+    private Task OnUploadError(string? error)
+    {
+        message = error;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnCroppedAsync(string dataUrl)
+    {
+        var input = SkinImageInput.FromDataUrl(dataUrl);
+        if (input is null) return;
+
+        cropping = false;
+        await SetImageAsync(input);
+    }
+
+    private async Task SetImageAsync(SkinImageInput input)
+    {
+        message = null;
+        quality = null;
+        cropping = false;
+
+        var validation = await ImageValidation.ValidateAsync(input);
+        if (!validation.IsValid)
+        {
+            image = null;
+            message = validation.Message;
+            return;
+        }
+
+        image = input;
+        quality = await ImageValidation.AssessAsync(input.ToDataUrl());
+    }
+
+    private void Reset()
+    {
+        image = null;
+        quality = null;
+        cropping = false;
+        success = false;
+        message = null;
+    }
+
+    private async Task AnalyzeAsync()
+    {
+        if (image is null) return;
 
         loading = true;
         success = false;
@@ -70,49 +192,39 @@
 
         try
         {
-            await using var stream =
-                file.OpenReadStream(AppConstants.MaxUploadBytes);
+            var upload = await DownscaleAsync(image);
 
-            var validation = await ImageValidation.ValidateAsync(
-                stream,
-                file.Name,
-                file.ContentType);
-
-            if (!validation.IsValid)
-            {
-                message = validation.Message;
-                return;
-            }
-
-            var uploaded = await Api.UploadAsync(file);
-
-            var id = uploaded.GetGuid(
-                "id",
-                "skinImageId",
-                "imageId",
-                "uploadId");
-
-            if (id is null)
-            {
-                message = "Upload thành công nhưng API chưa trả về ID ảnh để chẩn đoán.";
-                return;
-            }
-
-            await Api.DiagnoseAsync(id.Value);
+            var uploaded = await Api.UploadImageAsync(upload);
+            await Api.DiagnoseTypedAsync(uploaded.SkinImageId);
 
             success = true;
             message = "Phân tích da thành công.";
-
-            Navigation.NavigateTo($"/diagnosis/{id.Value}");
+            Navigation.NavigateTo($"/diagnosis/{uploaded.SkinImageId}");
         }
         catch (Exception ex)
         {
-            success = false;
             message = $"Không thể phân tích ảnh: {ex.Message}";
         }
         finally
         {
             loading = false;
+        }
+    }
+
+    // Keeps uploads small: a 2048px long edge is more than enough for the model.
+    private async Task<SkinImageInput> DownscaleAsync(SkinImageInput source)
+    {
+        try
+        {
+            var module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/camera.js");
+            var downscaled = await module.InvokeAsync<string>("downscale", source.ToDataUrl(), 2048);
+            await module.DisposeAsync();
+
+            return SkinImageInput.FromDataUrl(downscaled) ?? source;
+        }
+        catch
+        {
+            return source;
         }
     }
 }

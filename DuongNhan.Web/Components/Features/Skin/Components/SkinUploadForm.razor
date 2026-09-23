@@ -1,0 +1,106 @@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@* File picker with drag & drop. Dropped files are read in JS because Blazor's
+   DragEventArgs only exposes file names, not their contents. *@
+<div class="dn-dropzone"
+     @ref="dropZone"
+     @ondragover:preventDefault
+     @ondrop:preventDefault>
+
+    <div class="dn-upload-icon"><i class="ph ph-upload-simple" aria-hidden="true"></i></div>
+    <h5>Chọn hoặc kéo-thả ảnh da của bạn</h5>
+    <p class="small text-secondary mb-3">JPEG, PNG hoặc WebP • tối đa 10 MB</p>
+
+    <InputFile OnChange="OnFilePickedAsync"
+               accept="image/jpeg,image/png,image/webp"
+               class="form-control" />
+</div>
+
+@code {
+    [Parameter] public EventCallback<SkinImageInput> OnImageSelected { get; set; }
+    [Parameter] public EventCallback<string?> OnError { get; set; }
+    [Parameter] public long MaxBytes { get; set; } = AppConstants.MaxUploadBytes;
+
+    private ElementReference dropZone;
+    private IJSObjectReference? module;
+    private IJSObjectReference? registration;
+    private DotNetObjectReference<SkinUploadForm>? selfReference;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/fileDrop.js");
+            selfReference = DotNetObjectReference.Create(this);
+            registration = await module.InvokeAsync<IJSObjectReference>(
+                "registerDropZone", dropZone, selfReference, MaxBytes);
+        }
+        catch (Exception ex)
+        {
+            await OnError.InvokeAsync($"Không bật được kéo-thả ảnh: {ex.Message}");
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnDropImage(string dataUrl, string fileName)
+    {
+        var input = SkinImageInput.FromDataUrl(dataUrl, fileName);
+        if (input is null)
+        {
+            await OnError.InvokeAsync("Không đọc được ảnh đã thả. Vui lòng chọn ảnh khác.");
+            return;
+        }
+
+        await OnImageSelected.InvokeAsync(input);
+    }
+
+    [JSInvokable]
+    public Task OnDropError(string message) => OnError.InvokeAsync(message);
+
+    private async Task OnFilePickedAsync(InputFileChangeEventArgs args)
+    {
+        var file = args.File;
+
+        try
+        {
+            await using var stream = file.OpenReadStream(MaxBytes);
+            using var buffer = new MemoryStream();
+            await stream.CopyToAsync(buffer);
+
+            await OnImageSelected.InvokeAsync(
+                new SkinImageInput(buffer.ToArray(), file.Name, file.ContentType));
+        }
+        catch (Exception ex)
+        {
+            await OnError.InvokeAsync($"Không đọc được tệp ảnh: {ex.Message}");
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (registration is not null)
+            {
+                await registration.InvokeVoidAsync("dispose");
+                await registration.DisposeAsync();
+            }
+
+            if (module is not null)
+                await module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit already closed.
+        }
+        catch (ObjectDisposedException)
+        {
+            // Nothing left to release.
+        }
+
+        selfReference?.Dispose();
+    }
+}

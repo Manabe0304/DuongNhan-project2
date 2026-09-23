@@ -1,0 +1,135 @@
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@* Live camera preview with capture. Emits a JPEG data URL for the page to grade. *@
+<div class="dn-camera">
+    <video @ref="video" class="dn-camera-video" autoplay playsinline muted></video>
+    <div class="dn-camera-frame"></div>
+    <CaptureGuideOverlay />
+
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="dn-camera-error">@error</div>
+    }
+</div>
+
+<div class="dn-camera-actions">
+    @if (running)
+    {
+        <button type="button" class="btn btn-dn-coral btn-lg dn-btn" @onclick="CaptureAsync" disabled="@busy">
+            <i class="ph ph-camera" aria-hidden="true"></i>Chụp ảnh
+        </button>
+        <button type="button" class="btn btn-dn-outline dn-btn" @onclick="StopAsync" disabled="@busy">
+            <i class="ph ph-x" aria-hidden="true"></i>Tắt camera
+        </button>
+    }
+    else
+    {
+        <button type="button" class="btn btn-dn-dark btn-lg dn-btn" @onclick="StartAsync" disabled="@busy">
+            <i class="ph ph-camera" aria-hidden="true"></i>Bật camera
+        </button>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback<string> OnCaptured { get; set; }
+
+    private ElementReference video;
+    private IJSObjectReference? module;
+    private bool running;
+    private bool busy;
+    private string? error;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/camera.js");
+        }
+        catch (Exception ex)
+        {
+            error = $"Không tải được module camera: {ex.Message}";
+        }
+    }
+
+    private async Task StartAsync()
+    {
+        if (module is null) return;
+
+        busy = true;
+        error = null;
+
+        try
+        {
+            await module.InvokeVoidAsync("startCamera", video);
+            running = true;
+        }
+        catch (Exception)
+        {
+            error = "Không truy cập được camera. Hãy cấp quyền camera hoặc chuyển sang chế độ tải ảnh lên.";
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private async Task StopAsync()
+    {
+        if (module is not null)
+        {
+            try
+            {
+                await module.InvokeVoidAsync("stopCamera", video);
+            }
+            catch (JSException)
+            {
+                // The stream may already be gone; nothing to do.
+            }
+        }
+
+        running = false;
+    }
+
+    private async Task CaptureAsync()
+    {
+        if (module is null) return;
+
+        busy = true;
+        try
+        {
+            var dataUrl = await module.InvokeAsync<string>("captureFrame", video);
+            if (!string.IsNullOrWhiteSpace(dataUrl))
+                await OnCaptured.InvokeAsync(dataUrl);
+        }
+        catch (Exception ex)
+        {
+            error = $"Không chụp được ảnh: {ex.Message}";
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (module is null) return;
+
+        try
+        {
+            await module.InvokeVoidAsync("stopCamera", video);
+            await module.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+            // Circuit already closed.
+        }
+        catch (ObjectDisposedException)
+        {
+            // Nothing left to release.
+        }
+    }
+}

@@ -1,0 +1,27 @@
+@* Lets the user choose between live capture and picking an existing photo. *@
+<div class="dn-choice-group" role="tablist" aria-label="Cách cung cấp ảnh">
+    <button type="button"
+            role="tab"
+            class="dn-choice @(IsCamera ? "active" : null)"
+            aria-selected="@IsCamera"
+            @onclick="() => SelectAsync(CaptureMode.Camera)">
+        <i class="ph ph-camera" aria-hidden="true"></i>Chụp trực tiếp
+    </button>
+    <button type="button"
+            role="tab"
+            class="dn-choice @(IsCamera ? null : "active")"
+            aria-selected="@(!IsCamera)"
+            @onclick="() => SelectAsync(CaptureMode.Upload)">
+        <i class="ph ph-images" aria-hidden="true"></i>Tải ảnh lên
+    </button>
+</div>
+
+@code {
+    [Parameter] public CaptureMode Mode { get; set; } = CaptureMode.Camera;
+    [Parameter] public EventCallback<CaptureMode> ModeChanged { get; set; }
+
+    private bool IsCamera => Mode == CaptureMode.Camera;
+
+    private Task SelectAsync(CaptureMode mode)
+        => mode == Mode ? Task.CompletedTask : ModeChanged.InvokeAsync(mode);
+}

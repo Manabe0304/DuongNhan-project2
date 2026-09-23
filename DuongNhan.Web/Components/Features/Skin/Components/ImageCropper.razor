@@ -1,0 +1,63 @@
+@inject IJSRuntime JS
+
+@* Optional square crop with zoom, so the face fills a consistent input frame. *@
+<div class="dn-card dn-cropper p-3">
+    <img src="@Source" alt="Ảnh cần cắt" />
+
+    <div class="dn-cropper-controls">
+        <label class="form-label mb-0 small">Thu phóng</label>
+        <input type="range" class="form-range" min="1" max="2.5" step="0.1"
+               value="@zoom" @oninput="OnZoomChanged" />
+        <span class="small text-secondary">@zoom.ToString("0.0")×</span>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-2">
+        <button type="button" class="btn btn-dn-dark btn-sm" @onclick="ApplyAsync" disabled="@busy">
+            Cắt vuông &amp; dùng ảnh này
+        </button>
+        <button type="button" class="btn btn-dn-outline btn-sm" @onclick="Cancel" disabled="@busy">
+            Bỏ qua
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Source { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> OnCropped { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private double zoom = 1;
+    private bool busy;
+
+    private void OnZoomChanged(ChangeEventArgs args)
+    {
+        if (double.TryParse(
+                args.Value?.ToString(),
+                System.Globalization.NumberStyles.Any,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var value))
+        {
+            zoom = Math.Clamp(value, 1, 2.5);
+        }
+    }
+
+    private async Task ApplyAsync()
+    {
+        busy = true;
+        try
+        {
+            var module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/camera.js");
+            var cropped = await module.InvokeAsync<string>("cropToSquare", Source, zoom);
+            await module.DisposeAsync();
+
+            if (!string.IsNullOrWhiteSpace(cropped))
+                await OnCropped.InvokeAsync(cropped);
+        }
+        finally
+        {
+            busy = false;
+        }
+    }
+
+    private Task Cancel() => OnCancel.InvokeAsync();
+}

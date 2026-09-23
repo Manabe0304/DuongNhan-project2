@@ -6,31 +6,38 @@
 
 <div class="dn-app">
     <header class="dn-topbar">
-        <div class="container-fluid dn-container d-flex align-items-center justify-content-between">
+        <div class="container-fluid dn-container d-flex align-items-center justify-content-between gap-3">
             <a class="dn-brand" href="/">
-                <span class="dn-brand-mark">✚</span>
                 <span>Dưỡng Nhan</span>
             </a>
 
-            <nav class="dn-main-nav d-none d-lg-flex">
-                <a href="/" class="@NavClass("/")">Trang chủ</a>
-                <a href="/scan" class="@NavClass("/scan")">AI Scan Da</a>
-                <a href="/doctors" class="@NavClass("/doctors")">Bác sĩ</a>
-                <a href="/products" class="@NavClass("/products")">Sản phẩm</a>
-                <a href="/pricing" class="@NavClass("/pricing")">Bảng giá</a>
-                <a href="/contact" class="@NavClass("/contact")">Liên hệ</a>
+            <nav class="dn-main-nav d-none d-lg-flex" aria-label="Điều hướng chính">
+                <a href="/" class="@NavClass("/")"><i class="ph ph-house" aria-hidden="true"></i>Trang chủ</a>
+                <a href="/scan" class="@NavClass("/scan")"><i class="ph ph-scan" aria-hidden="true"></i>AI Scan Da</a>
+                <a href="/doctors" class="@NavClass("/doctors")"><i class="ph ph-stethoscope" aria-hidden="true"></i>Bác sĩ</a>
+                <a href="/products" class="@NavClass("/products")"><i class="ph ph-flask" aria-hidden="true"></i>Sản phẩm</a>
+                <a href="/pricing" class="@NavClass("/pricing")"><i class="ph ph-seal-check" aria-hidden="true"></i>Bảng giá</a>
+                <a href="/contact" class="@NavClass("/contact")"><i class="ph ph-envelope" aria-hidden="true"></i>Liên hệ</a>
             </nav>
 
             <div class="d-flex align-items-center gap-2">
                 @if (Session.IsAuthenticated)
                 {
-                    <a class="btn btn-dn-dark btn-sm d-none d-sm-inline-flex" href="/dashboard">Bảng điều khiển</a>
-                    <button class="btn btn-dn-outline btn-sm" @onclick="Logout">Đăng xuất</button>
+                    <a class="btn btn-dn-dark btn-sm dn-btn d-none d-sm-inline-flex" href="/dashboard">
+                        <i class="ph ph-chart-line-up" aria-hidden="true"></i>Bảng điều khiển
+                    </a>
+                    <button type="button" class="btn btn-dn-outline btn-sm dn-btn" @onclick="Logout">
+                        <i class="ph ph-sign-out" aria-hidden="true"></i>Đăng xuất
+                    </button>
                 }
                 else
                 {
-                    <a class="btn btn-dn-outline btn-sm" href="/login">Đăng nhập</a>
-                    <a class="btn btn-dn-coral btn-sm" href="/register">Đăng ký</a>
+                    <a class="btn btn-dn-outline btn-sm dn-btn" href="/login">
+                        <i class="ph ph-sign-in" aria-hidden="true"></i>Đăng nhập
+                    </a>
+                    <a class="btn btn-dn-coral btn-sm dn-btn" href="/register">
+                        <i class="ph ph-user-plus" aria-hidden="true"></i>Đăng ký
+                    </a>
                 }
             </div>
         </div>
@@ -38,11 +45,11 @@
 
     <div class="dn-mobile-nav d-lg-none">
         <div class="container-fluid dn-container d-flex gap-2 overflow-auto py-2">
-            <a href="/" class="btn btn-sm btn-light">Trang chủ</a>
-            <a href="/scan" class="btn btn-sm btn-light">AI Scan</a>
-            <a href="/doctors" class="btn btn-sm btn-light">Bác sĩ</a>
-            <a href="/products" class="btn btn-sm btn-light">Sản phẩm</a>
-            <a href="/pricing" class="btn btn-sm btn-light">Bảng giá</a>
+            <a href="/" class="dn-chip"><i class="ph ph-house" aria-hidden="true"></i>Trang chủ</a>
+            <a href="/scan" class="dn-chip"><i class="ph ph-scan" aria-hidden="true"></i>AI Scan</a>
+            <a href="/doctors" class="dn-chip"><i class="ph ph-stethoscope" aria-hidden="true"></i>Bác sĩ</a>
+            <a href="/products" class="dn-chip"><i class="ph ph-flask" aria-hidden="true"></i>Sản phẩm</a>
+            <a href="/pricing" class="dn-chip"><i class="ph ph-seal-check" aria-hidden="true"></i>Bảng giá</a>
         </div>
     </div>
 
@@ -54,8 +61,12 @@
         <div class="container dn-container">
             <div class="row g-4">
                 <div class="col-lg-5">
-                    <div class="dn-brand dn-brand-light mb-3"><span class="dn-brand-mark">✚</span>Dưỡng Nhan</div>
-                    <p class="text-secondary small mb-0">Nền tảng AI phân tích da và kết nối bác sĩ da liễu, giúp bạn hiểu làn da một cách khoa học.</p>
+                    <div class="dn-brand dn-brand-light mb-3">
+                        <span>Dưỡng Nhan</span>
+                    </div>
+                    <p class="dn-footer-text mb-0">
+                        Nền tảng AI phân tích da và kết nối bác sĩ da liễu, giúp bạn hiểu làn da một cách khoa học.
+                    </p>
                 </div>
                 <div class="col-6 col-lg-2">
                     <h6>Sản phẩm</h6>
@@ -72,9 +83,9 @@
                 </div>
                 <div class="col-lg-3">
                     <h6>Liên hệ</h6>
-                    <p class="small text-secondary mb-1">hello@duongnhan.ai</p>
-                    <p class="small text-secondary mb-1">1900 8866</p>
-                    <p class="small text-secondary mb-0">268 Lý Thường Kiệt, Hà Nội</p>
+                    <p class="dn-footer-contact"><i class="ph ph-envelope" aria-hidden="true"></i>hello@duongnhan.ai</p>
+                    <p class="dn-footer-contact"><i class="ph ph-phone" aria-hidden="true"></i>1900 8866</p>
+                    <p class="dn-footer-contact"><i class="ph ph-map-pin" aria-hidden="true"></i>268 Lý Thường Kiệt, Hà Nội</p>
                 </div>
             </div>
             <div class="dn-footer-bottom mt-4 pt-4">© 2026 Duong Nhan AI Platform. Bảo lưu mọi quyền.</div>
@@ -89,16 +100,20 @@
     {
         if (!firstRender || sessionLoaded) return;
         sessionLoaded = true;
+
         try
         {
             await Session.LoadAsync();
             await InvokeAsync(StateHasChanged);
         }
-        catch { }
+        catch
+        {
+            // Session details are cosmetic; a failure here must not break the shell.
+        }
     }
 
     private string NavClass(string path)
-        => Navigation.CurrentUrl.EndsWith(path, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+        => Navigation.CurrentUrl.EndsWith(path, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
 
     private async Task Logout()
     {
@@ -108,7 +123,10 @@
             if (!string.IsNullOrWhiteSpace(refresh))
                 await Api.LogoutAsync(refresh);
         }
-        catch { }
+        catch
+        {
+            // Signing out locally is what matters; the API is best effort.
+        }
         finally
         {
             await Session.SignOutAsync();

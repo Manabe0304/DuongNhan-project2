@@ -77,8 +77,6 @@ internal sealed class RegisterEndpoint(
             return;
         }
 
-        await using var tx = await db.Database.BeginTransactionAsync(ct);
-
         try
         {
             user.DisplayName = Sanitize(req.DisplayName, 100);
@@ -97,8 +95,10 @@ internal sealed class RegisterEndpoint(
                 ExpiresAt = refreshExpiresAt
             });
 
+            // One SaveChanges already runs in an implicit transaction, so the user and
+            // their refresh token are committed atomically. An explicit transaction is
+            // also incompatible with the provider's retrying execution strategy.
             await db.SaveChangesAsync(ct);
-            await tx.CommitAsync(ct);
 
             await auditLogger.LogAsync(
                 userId: user.Id,
@@ -122,7 +122,9 @@ internal sealed class RegisterEndpoint(
         }
         catch (DbUpdateException ex) when (IsUniqueViolation(ex))
         {
-            await tx.RollbackAsync(ct);
+            // The failed insert is still tracked as Added; drop it so the audit write
+            // below does not retry the same colliding insert.
+            db.ChangeTracker.Clear();
 
             RegisterEndpointLogs.ConcurrentRegistrationConflict(logger, emailHash, ex);
 

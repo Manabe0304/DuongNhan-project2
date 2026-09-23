@@ -1,0 +1,41 @@
+@* Ranked skin conditions with per-condition confidence. *@
+@if (Conditions is null || Conditions.Count == 0)
+{
+    <p class="small text-secondary mb-0">Không có tình trạng nào được ghi nhận.</p>
+}
+else
+{
+    <div>
+        @foreach (var condition in Ordered)
+        {
+            <div class="dn-condition">
+                <span class="dn-condition-rank">@condition.Rank</span>
+                <div class="dn-condition-body">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <strong>@condition.ConditionName</strong>
+                        <ConfidenceBadge Value="@condition.Confidence" />
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(condition.Description))
+                    {
+                        <div class="small text-secondary">@condition.Description</div>
+                    }
+                    <div class="dn-condition-bar">
+                        <span style="width:@BarWidth(condition.Confidence)%"></span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<DiagnosisConditionDto>? Conditions { get; set; }
+
+    private IEnumerable<DiagnosisConditionDto> Ordered
+        => (Conditions ?? []).OrderBy(c => c.Rank);
+
+    private static int BarWidth(decimal confidence)
+        => confidence <= 1
+            ? (int)Math.Round(confidence * 100)
+            : (int)Math.Round(confidence);
+}

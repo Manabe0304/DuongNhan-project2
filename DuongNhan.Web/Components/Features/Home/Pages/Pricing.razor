@@ -20,7 +20,7 @@
                         <div class="dn-price">@Price(plan)<small>/tháng</small></div>
                         <hr />
                         <ul class="list-unstyled dn-plan-list">
-                            @foreach (var feature in ArrayValues(plan, "features")) { <li>✓ @feature</li> }
+                            @foreach (var feature in ArrayValues(plan, "features")) { <li><i class="ph ph-check" aria-hidden="true"></i>@feature</li> }
                         </ul>
                         <button class="btn @(IsPopular(plan) ? "btn-dn-coral" : "btn-dn-outline") w-100" @onclick="() => Choose(plan)">Chọn gói</button>
                     </div>

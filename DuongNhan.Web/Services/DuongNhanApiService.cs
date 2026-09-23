@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
+using DuongNhan.Shared.Dtos.Skin;
 using DuongNhan.Web.Api;
 using Microsoft.AspNetCore.Components.Forms;
 using Refit;
@@ -68,6 +69,19 @@ public sealed class DuongNhanApiService(
 
     public async Task<JsonElement?> DiagnoseAsync(Guid id, CancellationToken ct = default)
         => await ToJsonAsync(await skin.DiagnoseAsync(id, ct));
+
+    public async Task<DiagnosisDto?> DiagnoseTypedAsync(Guid id, CancellationToken ct = default)
+        => await skin.DiagnoseAsync(id, ct);
+
+    /// <summary>Uploads a normalised capture (camera or file) as multipart/form-data.</summary>
+    public async Task<UploadSkinResponse> UploadImageAsync(SkinImageInput input, CancellationToken ct = default)
+    {
+        using var stream = new MemoryStream(input.Bytes, writable: false);
+        return await skin.UploadAsync(new StreamPart(stream, input.FileName, input.ContentType), ct);
+    }
+
+    public async Task<List<DiagnosisDto>> GetHistoryTypedAsync(CancellationToken ct = default)
+        => await skin.GetHistoryAsync(ct);
 
     public async Task<List<JsonElement>> GetHistoryAsync(CancellationToken ct = default)
         => ToJsonList(await skin.GetHistoryAsync(ct));

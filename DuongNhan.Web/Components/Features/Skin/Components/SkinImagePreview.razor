@@ -1,0 +1,14 @@
+@* Displays the image that is about to be analysed. *@
+<div class="dn-preview">
+    <img src="@Source" alt="@(Alt ?? "Ảnh da đã chọn")" />
+    @if (!string.IsNullOrWhiteSpace(Caption))
+    {
+        <div class="dn-preview-caption">@Caption</div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string Source { get; set; } = string.Empty;
+    [Parameter] public string? Caption { get; set; }
+    [Parameter] public string? Alt { get; set; }
+}

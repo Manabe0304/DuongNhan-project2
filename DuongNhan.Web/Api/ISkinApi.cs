@@ -12,8 +12,10 @@ public interface ISkinApi
         [AliasAs("file")] StreamPart file,
         CancellationToken ct = default);
 
-    [Post(ApiRoutes.Skin.Diagnose)]
-    Task<DiagnosisDto> DiagnoseAsync(Guid id, CancellationToken ct = default);
+    // Refit does not understand ASP.NET route constraints such as "{id:guid}",
+    // so the client uses the constraint-free form of the same route.
+    [Post("/api/skin/{id}/diagnose")]
+    Task<DiagnosisDto> DiagnoseAsync([AliasAs("id")] Guid id, CancellationToken ct = default);
 
     [Get(ApiRoutes.Skin.History)]
     Task<List<DiagnosisDto>> GetHistoryAsync(CancellationToken ct = default);

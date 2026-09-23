@@ -2,10 +2,77 @@
 @inject IJSRuntime JS
 
 <div class="container dn-container dn-page">
-    <div class="dn-page-heading"><span class="dn-kicker">Hỗ trợ & Hợp tác</span><h1>Liên hệ với chúng tôi</h1><p>Có câu hỏi về kết quả AI hoặc muốn hợp tác cùng mạng lưới y khoa Dưỡng Nhan? Gửi tin nhắn, đội ngũ sẽ phản hồi.</p></div>
+    <div class="dn-page-heading">
+        <span class="dn-kicker">Hỗ trợ &amp; Hợp tác</span>
+        <h1>Liên hệ với chúng tôi</h1>
+        <p>Có câu hỏi về kết quả AI hoặc muốn hợp tác cùng mạng lưới y khoa Dưỡng Nhan? Gửi tin nhắn, đội ngũ sẽ phản hồi.</p>
+    </div>
+
     <div class="row g-4">
-        <div class="col-lg-6"><div class="dn-card p-4 p-lg-5"><form @onsubmit="Submit" @onsubmit:preventDefault><div class="mb-3"><label>Họ và tên</label><input class="form-control" required @bind="name" /></div><div class="mb-3"><label>Email</label><input type="email" class="form-control" required @bind="email" /></div><div class="mb-3"><label>Nội dung cần hỗ trợ</label><textarea class="form-control" rows="5" required @bind="content"></textarea></div><button class="btn btn-dn-coral w-100">Gửi liên hệ ngay</button></form>@if(sent){<div class="alert alert-success small mt-3">✓ Cảm ơn bạn! Chúng tôi đã nhận được tin nhắn và sẽ phản hồi trong 24 giờ.</div>}</div></div>
-        <div class="col-lg-6"><div class="dn-map-placeholder">⌖<h5>Bản đồ Trụ sở Dưỡng Nhan AI Hub</h5><p>268 Lý Thường Kiệt, Phường Cửa Nam, Hà Nội</p></div><div class="dn-card p-4 mt-3"><p class="small mb-2">📍 268 Lý Thường Kiệt, P. Cửa Nam, Hà Nội</p><p class="small mb-2">◷ 8:00 – 18:00, Thứ 2 – Thứ 7</p><p class="small mb-0">✉ hello@duongnhan.ai</p></div></div>
+        <div class="col-lg-6">
+            <div class="dn-card p-4 p-lg-5">
+                <form @onsubmit="Submit" @onsubmit:preventDefault>
+                    <div class="mb-3">
+                        <label class="form-label" for="contact-name">Họ và tên</label>
+                        <input id="contact-name" class="form-control" required @bind="name" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="contact-email">Email</label>
+                        <input id="contact-email" type="email" class="form-control" required @bind="email" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="contact-content">Nội dung cần hỗ trợ</label>
+                        <textarea id="contact-content" class="form-control" rows="5" required @bind="content"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-dn-coral w-100 dn-btn">
+                        <i class="ph ph-paper-plane-tilt" aria-hidden="true"></i>Gửi liên hệ
+                    </button>
+                </form>
+
+                @if (sent)
+                {
+                    <div class="alert alert-success small mt-3 mb-0 dn-btn-alert">
+                        <i class="ph ph-check-circle" aria-hidden="true"></i>
+                        <span>Cảm ơn bạn! Chúng tôi đã nhận được tin nhắn và sẽ phản hồi trong 24 giờ.</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="dn-map-placeholder">
+                <i class="ph ph-map-pin" aria-hidden="true"></i>
+                <h5 class="mt-2 mb-1">Trụ sở Dưỡng Nhan AI Hub</h5>
+                <p class="mb-0">268 Lý Thường Kiệt, Phường Cửa Nam, Hà Nội</p>
+            </div>
+
+            <div class="dn-card p-4 mt-3">
+                <p class="dn-contact-line">
+                    <i class="ph ph-map-pin" aria-hidden="true"></i>
+                    <span>268 Lý Thường Kiệt, P. Cửa Nam, Hà Nội</span>
+                </p>
+                <p class="dn-contact-line">
+                    <i class="ph ph-clock" aria-hidden="true"></i>
+                    <span>8:00 – 18:00, Thứ 2 – Thứ 7</span>
+                </p>
+                <p class="dn-contact-line mb-0">
+                    <i class="ph ph-envelope" aria-hidden="true"></i>
+                    <span>hello@duongnhan.ai</span>
+                </p>
+            </div>
+        </div>
     </div>
 </div>
-@code { private string name="",email="",content=""; private bool sent; private Task Submit(){sent=true;return Task.CompletedTask;} }
+
+@code {
+    private string name = string.Empty;
+    private string email = string.Empty;
+    private string content = string.Empty;
+    private bool sent;
+
+    private Task Submit()
+    {
+        sent = true;
+        return Task.CompletedTask;
+    }
+}

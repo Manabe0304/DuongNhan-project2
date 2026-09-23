@@ -1,0 +1,21 @@
+@* Framing aid drawn over the live preview, plus the capture protocol reminders. *@
+<div class="dn-guide-overlay">
+    <ul>
+        @foreach (var tip in Tips)
+        {
+            <li>@tip</li>
+        }
+    </ul>
+</div>
+
+@code {
+    private static readonly string[] DefaultTips =
+    [
+        "Ánh sáng trắng, đều — tránh đèn chiếu thẳng vào mặt",
+        "Cách da khoảng 20 cm, khuôn mặt chiếm phần lớn khung",
+        "Không trang điểm, không bật filter hay beauty mode",
+        "Giữ máy chắc tay để ảnh không bị mờ"
+    ];
+
+    [Parameter] public IReadOnlyList<string> Tips { get; set; } = DefaultTips;
+}

@@ -10,16 +10,23 @@
                 <span class="dn-kicker">AI Skin Intelligence</span>
                 <h1 class="dn-display">Hiểu làn da của bạn.<br /><span>Chăm sóc đúng cách.</span></h1>
                 <p class="dn-lead">Phân tích da bằng AI, theo dõi tiến triển và kết nối trực tiếp với bác sĩ da liễu — tất cả trong một nền tảng.</p>
+
                 <div class="d-flex flex-wrap gap-3 mt-4">
-                    <a href="/scan" class="btn btn-dn-coral btn-lg px-4">✨ Phân tích da miễn phí</a>
-                    <a href="/doctors" class="btn btn-dn-outline btn-lg px-4">Tìm bác sĩ</a>
+                    <a href="/scan" class="btn btn-dn-coral btn-lg dn-btn">
+                        <i class="ph ph-scan" aria-hidden="true"></i>Phân tích da miễn phí
+                    </a>
+                    <a href="/doctors" class="btn btn-dn-outline btn-lg dn-btn">
+                        <i class="ph ph-stethoscope" aria-hidden="true"></i>Tìm bác sĩ
+                    </a>
                 </div>
-                <div class="d-flex flex-wrap gap-4 mt-4 small text-secondary">
-                    <span>✓ Không cần thẻ thanh toán</span>
-                    <span>✓ Kết quả trong vài giây</span>
-                    <span>✓ Theo dõi lịch sử</span>
-                </div>
+
+                <ul class="dn-hero-points">
+                    <li><i class="ph ph-check" aria-hidden="true"></i>Không cần thẻ thanh toán</li>
+                    <li><i class="ph ph-check" aria-hidden="true"></i>Kết quả trong vài giây</li>
+                    <li><i class="ph ph-check" aria-hidden="true"></i>Theo dõi lịch sử</li>
+                </ul>
             </div>
+
             <div class="col-lg-5">
                 <div class="dn-score-card">
                     <div class="dn-score-orb">
@@ -43,10 +50,32 @@
             <h2>Chăm sóc da dựa trên dữ liệu</h2>
             <p>Không đoán mò. Dưỡng Nhan kết nối phân tích AI, sản phẩm và chuyên gia thành một quy trình đơn giản.</p>
         </div>
+
         <div class="row g-4">
-            <div class="col-md-4"><div class="dn-feature-card"><div class="dn-icon coral">✦</div><h5>AI Skin Scan</h5><p>Upload ảnh da để nhận phân tích tình trạng, mức độ và các vấn đề có thể gặp.</p><a href="/scan">Bắt đầu scan →</a></div></div>
-            <div class="col-md-4"><div class="dn-feature-card"><div class="dn-icon teal">⌁</div><h5>Routine cá nhân</h5><p>Nhận đề xuất sản phẩm theo vấn đề da và theo dõi tiến triển theo thời gian.</p><a href="/products">Xem sản phẩm →</a></div></div>
-            <div class="col-md-4"><div class="dn-feature-card"><div class="dn-icon dark">＋</div><h5>Bác sĩ da liễu</h5><p>Kết nối với bác sĩ tại bệnh viện và phòng khám uy tín khi cần tư vấn chuyên sâu.</p><a href="/doctors">Tìm bác sĩ →</a></div></div>
+            <div class="col-md-4">
+                <div class="dn-feature-card">
+                    <div class="dn-icon coral"><i class="ph ph-scan" aria-hidden="true"></i></div>
+                    <h5>AI Skin Scan</h5>
+                    <p>Tải ảnh da để nhận phân tích tình trạng, mức độ và các vấn đề có thể gặp.</p>
+                    <a href="/scan" class="dn-link">Bắt đầu scan<i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dn-feature-card">
+                    <div class="dn-icon teal"><i class="ph ph-flask" aria-hidden="true"></i></div>
+                    <h5>Routine cá nhân</h5>
+                    <p>Nhận đề xuất sản phẩm theo vấn đề da và theo dõi tiến triển theo thời gian.</p>
+                    <a href="/products" class="dn-link">Xem sản phẩm<i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="dn-feature-card">
+                    <div class="dn-icon dark"><i class="ph ph-stethoscope" aria-hidden="true"></i></div>
+                    <h5>Bác sĩ da liễu</h5>
+                    <p>Kết nối với bác sĩ tại bệnh viện và phòng khám uy tín khi cần tư vấn chuyên sâu.</p>
+                    <a href="/doctors" class="dn-link">Tìm bác sĩ<i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -57,11 +86,37 @@
             <div class="col-lg-6">
                 <span class="dn-kicker">Quy trình</span>
                 <h2 class="dn-display-sm">Từ một bức ảnh đến kế hoạch chăm sóc.</h2>
-                <div class="dn-step"><span>01</span><div><h6>Upload ảnh</h6><p>Ảnh rõ, đủ sáng giúp AI phân tích chính xác hơn.</p></div></div>
-                <div class="dn-step"><span>02</span><div><h6>AI phân tích</h6><p>Hệ thống đánh giá tình trạng và mức độ các vấn đề da.</p></div></div>
-                <div class="dn-step"><span>03</span><div><h6>Hành động</h6><p>Nhận gợi ý chăm sóc, sản phẩm và lựa chọn gặp bác sĩ.</p></div></div>
+
+                <div class="dn-step">
+                    <span>01</span>
+                    <div><h6>Chụp hoặc tải ảnh</h6><p>Ảnh rõ, đủ sáng giúp AI phân tích chính xác hơn.</p></div>
+                </div>
+                <div class="dn-step">
+                    <span>02</span>
+                    <div><h6>AI phân tích</h6><p>Hệ thống đánh giá tình trạng và mức độ các vấn đề da.</p></div>
+                </div>
+                <div class="dn-step">
+                    <span>03</span>
+                    <div><h6>Hành động</h6><p>Nhận gợi ý chăm sóc, sản phẩm và lựa chọn gặp bác sĩ.</p></div>
+                </div>
             </div>
-            <div class="col-lg-6"><div class="dn-analysis-preview"><div class="dn-analysis-top"><span>Latest analysis</span><b>92%</b></div><div class="progress mb-4" style="height:8px"><div class="progress-bar bg-success" style="width:92%"></div></div><div class="row g-2"><div class="col-4"><div class="mini-stat"><small>Acne</small><strong>Low</strong></div></div><div class="col-4"><div class="mini-stat"><small>Hydration</small><strong>Good</strong></div></div><div class="col-4"><div class="mini-stat"><small>Barrier</small><strong>Good</strong></div></div></div></div></div>
+
+            <div class="col-lg-6">
+                <div class="dn-analysis-preview">
+                    <div class="dn-analysis-top">
+                        <span>Latest analysis</span>
+                        <b>92%</b>
+                    </div>
+                    <div class="progress mb-4" style="height:8px">
+                        <div class="progress-bar bg-success" style="width:92%"></div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4"><div class="mini-stat"><small>Acne</small><strong>Low</strong></div></div>
+                        <div class="col-4"><div class="mini-stat"><small>Hydration</small><strong>Good</strong></div></div>
+                        <div class="col-4"><div class="mini-stat"><small>Barrier</small><strong>Good</strong></div></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </section>
@@ -69,8 +124,14 @@
 <section class="dn-section">
     <div class="container dn-container">
         <div class="dn-dark-cta">
-            <div><span class="dn-kicker">Bắt đầu hôm nay</span><h2>Đừng đoán về làn da.</h2><p>Hãy bắt đầu bằng một lần phân tích miễn phí.</p></div>
-            <a href="/scan" class="btn btn-dn-coral btn-lg">Tạo tài khoản & Scan ngay</a>
+            <div>
+                <span class="dn-kicker">Bắt đầu hôm nay</span>
+                <h2>Đừng đoán về làn da.</h2>
+                <p>Hãy bắt đầu bằng một lần phân tích miễn phí.</p>
+            </div>
+            <a href="/scan" class="btn btn-dn-coral btn-lg dn-btn">
+                <i class="ph ph-arrow-right" aria-hidden="true"></i>Tạo tài khoản &amp; Scan ngay
+            </a>
         </div>
     </div>
 </section>

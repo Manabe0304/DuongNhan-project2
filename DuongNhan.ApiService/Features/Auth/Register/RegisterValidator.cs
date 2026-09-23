@@ -22,14 +22,15 @@ internal sealed partial class RegisterValidator : Validator<RegisterRequest>
             .MaximumLength(320).WithMessage("Email is too long.");
 
         RuleFor(r => r.Password)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage("Password is required.")
             .MinimumLength(12).WithMessage("Password must be at least 12 characters.")
             .MaximumLength(128).WithMessage("Password must not exceed 128 characters.")
-            .Must(p => p.Any(char.IsUpper))
+            .Must(p => p is not null && p.Any(char.IsUpper))
                 .WithMessage("Password must contain an uppercase letter.")
-            .Must(p => p.Any(char.IsLower))
+            .Must(p => p is not null && p.Any(char.IsLower))
                 .WithMessage("Password must contain a lowercase letter.")
-            .Must(p => p.Any(char.IsDigit))
+            .Must(p => p is not null && p.Any(char.IsDigit))
                 .WithMessage("Password must contain a digit.")
             .MustAsync(async (password, ct) =>
             {
@@ -39,8 +40,9 @@ internal sealed partial class RegisterValidator : Validator<RegisterRequest>
             .WithMessage("This password has appeared in a known data breach. Please choose a different one.");
 
         RuleFor(r => r.DisplayName)
+            .Cascade(CascadeMode.Stop)
             .NotEmpty().WithMessage("Display name is required.")
-            .Must(v => v!.Trim().Length >= 2)
+            .Must(v => v is not null && v.Trim().Length >= 2)
                 .WithMessage("Display name must be at least 2 characters.")
             .MaximumLength(100).WithMessage("Display name is too long.")
             .Matches(DisplayNamePattern)
