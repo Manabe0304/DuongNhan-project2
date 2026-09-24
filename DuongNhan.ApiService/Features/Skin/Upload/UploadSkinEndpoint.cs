@@ -93,7 +93,7 @@ internal sealed class UploadSkinEndpoint(
                 {
                     Id = AppDbSeeder.GuestUserId,
                     Email = "guest@duongnhan.ai",
-                    PasswordHash = "AQAAAAIAAYagAAAAEPlaceholderHashForGuestDemoUser1234567890=",
+                    PasswordHash = string.Empty,
                     DisplayName = "Khách dùng thử",
                     Status = "active"
                 });

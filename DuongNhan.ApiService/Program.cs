@@ -20,15 +20,26 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
-builder.AddNpgsqlDbContext<AppDbContext>("postgresdb", configureDbContextOptions: options =>
-{
-    options.UseNpgsql(npgsql =>
+builder.AddNpgsqlDbContext<AppDbContext>("postgresdb",
+    configureDbContextOptions: options =>
     {
-        npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
-        npgsql.CommandTimeout(30);
-        npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        options.UseNpgsql(npgsql =>
+        {
+            npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(10), null);
+            npgsql.CommandTimeout(30);
+            npgsql.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        });
+    },
+    configureSettings: settings =>
+    {
+        // Aspire pings /health every few seconds, and the Npgsql health check
+        // opens a connection and runs "SELECT 1" each time, which floods the
+        // Information log. The app itself is still checked by the default
+        // "self" liveness probe registered in AddServiceDefaults.
+        settings.DisableHealthChecks = true;
+        settings.DisableTracing = false;
+        settings.DisableMetrics = false;
     });
-});
 
 // ── Time + password hashing ────────────────────────────────────
 builder.Services.AddMemoryCache();

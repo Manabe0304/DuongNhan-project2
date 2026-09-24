@@ -18,12 +18,12 @@ internal static class AppDbSeeder
             {
                 Id = GuestUserId,
                 Email = "guest@duongnhan.ai",
-                PasswordHash = "AQAAAAIAAYagAAAAEPlaceholderHashForGuestDemoUser1234567890=",
+                PasswordHash = string.Empty,
                 DisplayName = "Khách dùng thử",
                 PhoneNumber = "+84901234567",
                 Status = "active",
                 CreatedAt = now
-            });
+            });;
         }
 
         // 2. Seed Plans
