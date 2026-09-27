@@ -1,0 +1,201 @@
+@inject UiSessionService Session
+@inject DuongNhanApiService Api
+@inject NavigationService Navigation
+@inject TokenStorage TokenStorage
+
+<div class="dn-sidebar-backdrop @(IsOpen ? "show" : string.Empty)" @onclick="RequestClose"></div>
+
+<aside class="dn-sidebar @(IsOpen ? "open" : string.Empty)">
+    <div class="dn-sidebar-brand">
+        <a href="/" class="dn-brand dn-brand-light" @onclick="RequestClose">
+            <span class="dn-brand-mark">✚</span>
+            <span>
+                <span>Dưỡng Nhan</span>
+                <small>Skin Intelligence</small>
+            </span>
+        </a>
+        <button type="button" class="dn-sidebar-close" @onclick="RequestClose" aria-label="Đóng menu">
+            <i class="ph ph-x" aria-hidden="true"></i>
+        </button>
+    </div>
+
+    <div class="dn-user-card">
+        <div class="dn-user-card-row">
+            <div class="dn-user-avatar">@Initials</div>
+            <div class="flex-grow-1 min-w-0">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <p class="dn-user-name mb-0">@(Session.Name ?? "Thành viên")</p>
+                    <span class="dn-plan-tag @(IsPro ? "pro" : string.Empty)">@(IsPro ? "Pro" : "Free")</span>
+                </div>
+                <div class="dn-user-email">@Session.Email</div>
+            </div>
+        </div>
+
+        @if (usageLimit > 0)
+        {
+            <div class="dn-usage-mini">
+                <div class="dn-usage-mini-row">
+                    <span>Lượt scan AI:</span>
+                    <strong>@usageUsed/@usageLimit</strong>
+                </div>
+                <div class="dn-usage-mini-bar">
+                    <span style="width:@(UsagePercent)%"></span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <nav class="dn-side-nav">
+        <div class="dn-side-nav-label">Danh mục</div>
+
+        @foreach (var item in menuItems)
+        {
+            <a href="@item.Href" class="dn-side-nav-item @(IsActive(item.Href) ? "active" : string.Empty)" @onclick="RequestClose">
+                <span class="d-flex align-items-center gap-2">
+                    <i class="ph @item.Icon" aria-hidden="true"></i>
+                    <span>@item.Label</span>
+                </span>
+                @if (item.Badge is not null)
+                {
+                    <span class="dn-nav-badge">@item.Badge</span>
+                }
+            </a>
+        }
+    </nav>
+
+    <div class="dn-side-bottom">
+        @if (!IsPro)
+        {
+            <a href="/pricing" class="dn-upgrade-cta" @onclick="RequestClose">
+                <i class="ph ph-lightning" aria-hidden="true"></i>
+                <span>Nâng cấp gói Pro</span>
+            </a>
+        }
+        <div class="dn-side-bottom-row">
+            <a href="/profile" class="dn-side-link" @onclick="RequestClose">
+                <i class="ph ph-user-gear" aria-hidden="true"></i>
+                <span>Cài đặt</span>
+            </a>
+            <button type="button" class="dn-side-link danger" @onclick="Logout">
+                <i class="ph ph-sign-out" aria-hidden="true"></i>
+                <span>Đăng xuất</span>
+            </button>
+        </div>
+    </div>
+</aside>
+
+@code {
+    /// <summary>Whether the sidebar is pulled into view on narrow (mobile) viewports.</summary>
+    [Parameter] public bool IsOpen { get; set; }
+
+    /// <summary>Raised when the sidebar should close: backdrop click, close button, or a nav item was chosen.</summary>
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private sealed record MenuItem(string Href, string Label, string Icon, string? Badge = null);
+
+    private readonly MenuItem[] menuItems =
+    [
+        new("/", "Trang chủ", "ph-house"),
+        new("/scan", "AI Scan Da", "ph-sparkle"),
+        new("/products", "Sản phẩm & Shopee", "ph-shopping-bag", "Mall"),
+        new("/recommendations", "Phác đồ điều trị", "ph-clipboard-text"),
+        new("/history", "Lịch sử phân tích", "ph-clock-counter-clockwise"),
+        new("/pricing", "Bảng giá gói", "ph-seal-check"),
+        new("/profile", "Hồ sơ cá nhân", "ph-user-circle"),
+    ];
+
+    private int usageUsed;
+    private int usageLimit;
+    private bool IsPro;
+    private int UsagePercent => usageLimit <= 0 ? 0 : Math.Min(100, usageUsed * 100 / usageLimit);
+    private string Initials
+    {
+        get
+        {
+            var name = Session.Name;
+            return string.IsNullOrWhiteSpace(name) ? "DN" : name[..Math.Min(2, name.Length)].ToUpperInvariant();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var usage = await Api.GetUsageAsync();
+            if (usage is { } u)
+            {
+                usageUsed = ReadInt(u, "scansUsedThisMonth", "scansUsed", "used");
+                usageLimit = ReadInt(u, "scansLimit", "limit");
+            }
+
+            var subscription = await Api.GetCurrentSubscriptionAsync();
+            if (subscription is { } s)
+            {
+                var code = ReadString(s, "planCode", "code", "plan");
+                IsPro = code is not null && (code.Contains("pro", StringComparison.OrdinalIgnoreCase) || code.Contains("vip", StringComparison.OrdinalIgnoreCase));
+            }
+        }
+        catch
+        {
+            // Sidebar decoration only — a failed lookup should not block navigation.
+        }
+    }
+
+    private bool IsActive(string href)
+    {
+        var current = new Uri(Navigation.CurrentUrl).AbsolutePath.TrimEnd('/');
+        if (current.Length == 0) current = "/";
+        return href == "/"
+            ? current == "/"
+            : current.Equals(href, StringComparison.OrdinalIgnoreCase)
+              || current.StartsWith(href + "/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Task RequestClose() => OnClose.HasDelegate ? OnClose.InvokeAsync() : Task.CompletedTask;
+
+    private async Task Logout()
+    {
+        try
+        {
+            var refresh = await TokenStorage.GetRefreshTokenAsync();
+            if (!string.IsNullOrWhiteSpace(refresh))
+                await Api.LogoutAsync(refresh);
+        }
+        catch
+        {
+            // Signing out locally is what matters; revoking server-side is best effort.
+        }
+        finally
+        {
+            await Session.SignOutAsync();
+            await RequestClose();
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    private static int ReadInt(System.Text.Json.JsonElement j, params string[] keys)
+    {
+        foreach (var key in keys)
+        {
+            foreach (var candidate in new[] { key, char.ToUpperInvariant(key[0]) + key[1..] })
+            {
+                if (j.TryGetProperty(candidate, out var p) && p.TryGetInt32(out var n))
+                    return n;
+            }
+        }
+        return 0;
+    }
+
+    private static string? ReadString(System.Text.Json.JsonElement j, params string[] keys)
+    {
+        foreach (var key in keys)
+        {
+            foreach (var candidate in new[] { key, char.ToUpperInvariant(key[0]) + key[1..] })
+            {
+                if (j.TryGetProperty(candidate, out var p) && p.ValueKind == System.Text.Json.JsonValueKind.String)
+                    return p.GetString();
+            }
+        }
+        return null;
+    }
+}

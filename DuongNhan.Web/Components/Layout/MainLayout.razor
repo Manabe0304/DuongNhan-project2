@@ -1,100 +1,134 @@
 @inherits LayoutComponentBase
 @inject UiSessionService Session
 @inject NavigationService Navigation
-@inject TokenStorage TokenStorage
 @inject DuongNhanApiService Api
 
 <div class="dn-app">
-    <header class="dn-topbar">
-        <div class="container-fluid dn-container d-flex align-items-center justify-content-between gap-3">
-            <a class="dn-brand" href="/">
-                <span>Dưỡng Nhan</span>
-            </a>
+    @if (Session.IsAuthenticated)
+    {
+        <div class="dn-shell">
+            <NavMenu IsOpen="isSidebarOpen" OnClose="CloseSidebar" />
 
-            <nav class="dn-main-nav d-none d-lg-flex" aria-label="Điều hướng chính">
-                <a href="/" class="@NavClass("/")"><i class="ph ph-house" aria-hidden="true"></i>Trang chủ</a>
-                <a href="/scan" class="@NavClass("/scan")"><i class="ph ph-scan" aria-hidden="true"></i>AI Scan Da</a>
-                <a href="/doctors" class="@NavClass("/doctors")"><i class="ph ph-stethoscope" aria-hidden="true"></i>Bác sĩ</a>
-                <a href="/products" class="@NavClass("/products")"><i class="ph ph-flask" aria-hidden="true"></i>Sản phẩm</a>
-                <a href="/pricing" class="@NavClass("/pricing")"><i class="ph ph-seal-check" aria-hidden="true"></i>Bảng giá</a>
-                <a href="/contact" class="@NavClass("/contact")"><i class="ph ph-envelope" aria-hidden="true"></i>Liên hệ</a>
-            </nav>
+            <div class="dn-shell-main">
+                <header class="dn-app-topbar">
+                    <div class="d-flex align-items-center gap-2 min-w-0">
+                        <button type="button" class="dn-sidebar-toggle d-lg-none" @onclick="OpenSidebar" aria-label="Mở menu điều hướng">
+                            <i class="ph ph-list" aria-hidden="true"></i>
+                        </button>
+                        <div class="min-w-0">
+                            <span class="dn-app-topbar-crumb d-none d-sm-inline">Dưỡng Nhan /</span>
+                            <h2 class="dn-app-topbar-title text-truncate">@PageTitle</h2>
+                        </div>
+                    </div>
 
-            <div class="d-flex align-items-center gap-2">
-                @if (Session.IsAuthenticated)
-                {
-                    <a class="btn btn-dn-dark btn-sm dn-btn d-none d-sm-inline-flex" href="/dashboard">
-                        <i class="ph ph-chart-line-up" aria-hidden="true"></i>Bảng điều khiển
+                    <div class="d-flex align-items-center gap-2">
+                        @if (usageLimit > 0)
+                        {
+                            <a href="/pricing" class="dn-usage-pill d-none d-md-inline-flex">
+                                <span class="dn-dot"></span>
+                                <span>Lượt quét: <strong>@usageUsed/@usageLimit</strong></span>
+                            </a>
+                        }
+
+                        <a href="/scan" class="btn-dn-coral dn-btn rounded-pill px-3 py-2">
+                            <i class="ph ph-sparkle" aria-hidden="true"></i>
+                            <span class="d-none d-sm-inline">Scan da mới</span>
+                        </a>
+
+                        <a href="/profile" class="dn-profile-pill @(IsCurrentPath("/profile") ? "active" : string.Empty)">
+                            <span class="dn-user-avatar">@Initials</span>
+                            <span class="d-none d-sm-inline">@(Session.Name ?? "Tài khoản")</span>
+                        </a>
+                    </div>
+                </header>
+
+                <main class="dn-main">
+                    @Body
+                </main>
+
+                <Footer />
+            </div>
+        </div>
+    }
+    else
+    {
+        <header class="dn-topbar">
+            <div class="container-fluid dn-container d-flex align-items-center justify-content-between gap-3">
+                <a class="dn-brand" href="/">
+                    <img class="dn-brand-mark" src="/DuongNhan.jpg"/>
+                    <span class="d-inline-flex align-items-center gap-2">
+                        <span>Dưỡng Nhan</span>
+                        <span class="dn-brand-badge">AI</span>
+                    </span>
+                </a>
+
+                <nav class="dn-main-nav d-none d-lg-flex" aria-label="Điều hướng chính">
+                    <a href="/" class="@NavClass("/")"><i class="ph ph-house" aria-hidden="true"></i>Trang chủ</a>
+                    <a href="/scan" class="@NavClass("/scan")"><i class="ph ph-sparkle" aria-hidden="true"></i>AI Scan Da</a>
+                    <a href="/products" class="@NavClass("/products")">
+                        <i class="ph ph-shopping-bag" aria-hidden="true"></i>Sản phẩm
+                        <span class="dn-nav-badge">Shopee Mall</span>
                     </a>
-                    <button type="button" class="btn btn-dn-outline btn-sm dn-btn" @onclick="Logout">
-                        <i class="ph ph-sign-out" aria-hidden="true"></i>Đăng xuất
-                    </button>
-                }
-                else
-                {
+                    <a href="/pricing" class="@NavClass("/pricing")"><i class="ph ph-seal-check" aria-hidden="true"></i>Bảng giá</a>
+                </nav>
+
+                <div class="d-flex align-items-center gap-2">
                     <a class="btn btn-dn-outline btn-sm dn-btn" href="/login">
                         <i class="ph ph-sign-in" aria-hidden="true"></i>Đăng nhập
                     </a>
                     <a class="btn btn-dn-coral btn-sm dn-btn" href="/register">
                         <i class="ph ph-user-plus" aria-hidden="true"></i>Đăng ký
                     </a>
-                }
-            </div>
-        </div>
-    </header>
-
-    <div class="dn-mobile-nav d-lg-none">
-        <div class="container-fluid dn-container d-flex gap-2 overflow-auto py-2">
-            <a href="/" class="dn-chip"><i class="ph ph-house" aria-hidden="true"></i>Trang chủ</a>
-            <a href="/scan" class="dn-chip"><i class="ph ph-scan" aria-hidden="true"></i>AI Scan</a>
-            <a href="/doctors" class="dn-chip"><i class="ph ph-stethoscope" aria-hidden="true"></i>Bác sĩ</a>
-            <a href="/products" class="dn-chip"><i class="ph ph-flask" aria-hidden="true"></i>Sản phẩm</a>
-            <a href="/pricing" class="dn-chip"><i class="ph ph-seal-check" aria-hidden="true"></i>Bảng giá</a>
-        </div>
-    </div>
-
-    <main class="dn-main">
-        @Body
-    </main>
-
-    <footer class="dn-footer">
-        <div class="container dn-container">
-            <div class="row g-4">
-                <div class="col-lg-5">
-                    <div class="dn-brand dn-brand-light mb-3">
-                        <span>Dưỡng Nhan</span>
-                    </div>
-                    <p class="dn-footer-text mb-0">
-                        Nền tảng AI phân tích da và kết nối bác sĩ da liễu, giúp bạn hiểu làn da một cách khoa học.
-                    </p>
-                </div>
-                <div class="col-6 col-lg-2">
-                    <h6>Sản phẩm</h6>
-                    <a href="/">Trang chủ</a>
-                    <a href="/doctors">Bác sĩ</a>
-                    <a href="/products">Sản phẩm</a>
-                    <a href="/pricing">Bảng giá</a>
-                </div>
-                <div class="col-6 col-lg-2">
-                    <h6>Hỗ trợ</h6>
-                    <a href="/contact">Liên hệ</a>
-                    <a href="/privacy">Bảo mật</a>
-                    <a href="/terms">Điều khoản</a>
-                </div>
-                <div class="col-lg-3">
-                    <h6>Liên hệ</h6>
-                    <p class="dn-footer-contact"><i class="ph ph-envelope" aria-hidden="true"></i>hello@duongnhan.ai</p>
-                    <p class="dn-footer-contact"><i class="ph ph-phone" aria-hidden="true"></i>1900 8866</p>
-                    <p class="dn-footer-contact"><i class="ph ph-map-pin" aria-hidden="true"></i>268 Lý Thường Kiệt, Hà Nội</p>
                 </div>
             </div>
-            <div class="dn-footer-bottom mt-4 pt-4">© 2026 Duong Nhan AI Platform. Bảo lưu mọi quyền.</div>
+        </header>
+
+        <div class="dn-mobile-nav d-lg-none">
+            <div class="container-fluid dn-container d-flex gap-1 overflow-auto py-2">
+                <a href="/" class="dn-chip @(IsCurrentPath("/") ? "active" : string.Empty)"><i class="ph ph-house" aria-hidden="true"></i><span>Trang chủ</span></a>
+                <a href="/scan" class="dn-chip @(IsCurrentPath("/scan") ? "active" : string.Empty)"><i class="ph ph-sparkle" aria-hidden="true"></i><span>AI Scan</span></a>
+                <a href="/products" class="dn-chip @(IsCurrentPath("/products") ? "active" : string.Empty)"><i class="ph ph-shopping-bag" aria-hidden="true"></i><span>Sản phẩm</span></a>
+                <a href="/pricing" class="dn-chip @(IsCurrentPath("/pricing") ? "active" : string.Empty)"><i class="ph ph-seal-check" aria-hidden="true"></i><span>Bảng giá</span></a>
+            </div>
         </div>
-    </footer>
+
+        <main class="dn-main">
+            @Body
+        </main>
+
+        <Footer />
+    }
 </div>
+
+<ToastContainer />
 
 @code {
     private bool sessionLoaded;
+    private bool isSidebarOpen;
+    private int usageUsed;
+    private int usageLimit;
+
+    private string Initials
+    {
+        get
+        {
+            var name = Session.Name;
+            return string.IsNullOrWhiteSpace(name) ? "U" : name[..1].ToUpperInvariant();
+        }
+    }
+
+    private string PageTitle => Navigation.CurrentUrl switch
+    {
+        var u when u.Contains("/scan", StringComparison.OrdinalIgnoreCase) || u.Contains("/upload", StringComparison.OrdinalIgnoreCase) => "AI Scan Da",
+        var u when u.Contains("/diagnosis", StringComparison.OrdinalIgnoreCase) => "Kết quả phân tích da",
+        var u when u.Contains("/recommendations", StringComparison.OrdinalIgnoreCase) => "Phác đồ điều trị",
+        var u when u.Contains("/products", StringComparison.OrdinalIgnoreCase) => "Sản phẩm & Shopee Mall",
+        var u when u.Contains("/pricing", StringComparison.OrdinalIgnoreCase) => "Bảng giá gói quét",
+        var u when u.Contains("/history", StringComparison.OrdinalIgnoreCase) => "Lịch sử phân tích",
+        var u when u.Contains("/profile", StringComparison.OrdinalIgnoreCase) => "Hồ sơ cá nhân & Cài đặt",
+        var u when u.Contains("/dashboard", StringComparison.OrdinalIgnoreCase) => "Bảng điều khiển",
+        _ => "Dưỡng Nhan AI",
+    };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -105,32 +139,50 @@
         {
             await Session.LoadAsync();
             await InvokeAsync(StateHasChanged);
+
+            if (Session.IsAuthenticated)
+            {
+                var usage = await Api.GetUsageAsync();
+                if (usage is { } u)
+                {
+                    usageUsed = ReadInt(u, "scansUsedThisMonth", "scansUsed", "used");
+                    usageLimit = ReadInt(u, "scansLimit", "limit");
+                    await InvokeAsync(StateHasChanged);
+                }
+            }
         }
         catch
         {
-            // Session details are cosmetic; a failure here must not break the shell.
+            // Session/usage details are cosmetic; a failure here must not break the shell.
         }
     }
 
     private string NavClass(string path)
-        => Navigation.CurrentUrl.EndsWith(path, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+        => IsCurrentPath(path) ? "active" : string.Empty;
 
-    private async Task Logout()
+    private bool IsCurrentPath(string path)
     {
-        try
+        var current = new Uri(Navigation.CurrentUrl).AbsolutePath.TrimEnd('/');
+        if (current.Length == 0) current = "/";
+        return path == "/"
+            ? current == "/"
+            : current.Equals(path, StringComparison.OrdinalIgnoreCase)
+              || current.StartsWith(path + "/", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void OpenSidebar() => isSidebarOpen = true;
+    private Task CloseSidebar() { isSidebarOpen = false; return Task.CompletedTask; }
+
+    private static int ReadInt(System.Text.Json.JsonElement j, params string[] keys)
+    {
+        foreach (var key in keys)
         {
-            var refresh = await TokenStorage.GetRefreshTokenAsync();
-            if (!string.IsNullOrWhiteSpace(refresh))
-                await Api.LogoutAsync(refresh);
+            foreach (var candidate in new[] { key, char.ToUpperInvariant(key[0]) + key[1..] })
+            {
+                if (j.TryGetProperty(candidate, out var p) && p.TryGetInt32(out var n))
+                    return n;
+            }
         }
-        catch
-        {
-            // Signing out locally is what matters; the API is best effort.
-        }
-        finally
-        {
-            await Session.SignOutAsync();
-            Navigation.NavigateTo("/");
-        }
+        return 0;
     }
 }
