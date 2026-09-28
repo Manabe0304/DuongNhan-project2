@@ -65,15 +65,14 @@
                     <div class="alert alert-danger small">@error</div>
                 }
 
-                <button type="button" class="dn-google-btn" @onclick="StartGoogleSignIn" disabled="@loading">
-                    <svg width="16" height="16" viewBox="0 0 18 18" aria-hidden="true">
-                        <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z" />
-                        <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" />
-                        <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707 0-.59.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.347 2.825.957 4.039l3.007-2.332z" />
-                        <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" />
-                    </svg>
-                    <span>@(isRegister ? "Đăng ký nhanh bằng Google" : "Đăng nhập bằng Google")</span>
-                </button>
+                @if (googleStatus is null or "ok")
+                {
+                    <div id="dn-google-btn" class="dn-google-slot" @key="isRegister"></div>
+                }
+                else
+                {
+                    <div class="alert alert-warning small mb-0">@GoogleStatusMessage</div>
+                }
 
                 <div class="dn-divider"><span>Hoặc dùng Email</span></div>
 
@@ -219,23 +218,46 @@
         }
     }
 
-    private async Task StartGoogleSignIn()
+    private string? googleStatus;
+    private bool? googleRenderedForRegister;
+
+    private string GoogleStatusMessage => googleStatus == "not-configured"
+        ? "Đăng nhập Google chưa được cấu hình: hãy đặt Google:ClientId trong DuongNhan.Web/appsettings.json."
+        : "Không tải được Google Sign-In. Hãy kiểm tra kết nối mạng hoặc tiện ích chặn quảng cáo.";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        error = null;
+        if (!Modal.IsOpen || stage != Stage.Form)
+        {
+            googleRenderedForRegister = null;
+            return;
+        }
+
+        if (googleRenderedForRegister == isRegister) return;
+        googleRenderedForRegister = isRegister;
+
         try
         {
             var clientId = Configuration["Google:ClientId"] ?? "";
-            var ready = await JS.InvokeAsync<bool>("dnGoogleAuth.init", clientId, selfReference);
-            if (!ready)
+            var status = await JS.InvokeAsync<string>(
+                "dnGoogleAuth.renderButton",
+                "dn-google-btn",
+                clientId,
+                selfReference,
+                isRegister ? "signup_with" : "signin_with",
+                336);
+
+            if (status != googleStatus)
             {
-                error = "Đăng nhập Google chưa được cấu hình trên máy chủ này.";
-                return;
+                googleStatus = status;
+                StateHasChanged();
             }
-            await JS.InvokeVoidAsync("dnGoogleAuth.prompt");
         }
         catch (Exception ex)
         {
-            error = $"Không thể mở đăng nhập Google: {ex.Message}";
+            googleStatus = "script-blocked";
+            error ??= $"Không thể mở đăng nhập Google: {ex.Message}";
+            StateHasChanged();
         }
     }
 
@@ -275,15 +297,22 @@
     {
         try
         {
-            var devCode = await Api.SendOtpAsync(email.Trim());
-            info = string.IsNullOrWhiteSpace(devCode)
-                ? "Mã xác minh đã được gửi tới email của bạn."
-                : $"Chế độ phát triển — mã xác minh của bạn: {devCode}";
+            var sent = await Api.SendOtpAsync(email.Trim());
+            if (sent)
+            {
+                error = null;
+                info = $"Mã xác minh đã được gửi tới {email.Trim()}. Hãy kiểm tra hộp thư (kể cả mục Spam).";
+            }
+            else
+            {
+                info = null;
+                error = "Không gửi được email xác minh lúc này. Vui lòng thử lại sau.";
+            }
         }
         catch
         {
             info = null;
-            error = "Không thể gửi mã xác minh lúc này. Bạn có thể thử lại sau trong trang hồ sơ.";
+            error = "Không gửi được email xác minh lúc này. Vui lòng thử lại sau.";
         }
     }
 

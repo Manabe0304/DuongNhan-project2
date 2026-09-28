@@ -1,4 +1,6 @@
+@implements IDisposable
 @inject UiSessionService Session
+@inject NavigationManager NavManager
 @inject DuongNhanApiService Api
 @inject NavigationService Navigation
 @inject TokenStorage TokenStorage
@@ -119,6 +121,8 @@
 
     protected override async Task OnInitializedAsync()
     {
+        NavManager.LocationChanged += HandleLocationChanged;
+
         try
         {
             var usage = await Api.GetUsageAsync();
@@ -150,6 +154,12 @@
             : current.Equals(href, StringComparison.OrdinalIgnoreCase)
               || current.StartsWith(href + "/", StringComparison.OrdinalIgnoreCase);
     }
+
+    // Re-render on every navigation so the highlighted item always matches the current page.
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+        => _ = InvokeAsync(StateHasChanged);
+
+    public void Dispose() => NavManager.LocationChanged -= HandleLocationChanged;
 
     private Task RequestClose() => OnClose.HasDelegate ? OnClose.InvokeAsync() : Task.CompletedTask;
 

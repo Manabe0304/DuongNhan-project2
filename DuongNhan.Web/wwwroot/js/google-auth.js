@@ -1,36 +1,54 @@
-// Thin wrapper around Google Identity Services (GIS) so Blazor components can
-// trigger a Google sign-in prompt and receive the resulting ID token back in .NET.
+// Thin wrapper around Google Identity Services (GIS). Renders Google's official
+// "Sign in with Google" button (which opens a reliable popup) and hands the signed
+// ID token back to the Blazor component.
 window.dnGoogleAuth = {
-    _dotNetRef: null,
+    _waitForGoogle: function (timeoutMs) {
+        return new Promise((resolve) => {
+            const started = Date.now();
+            const tick = () => {
+                if (window.google && window.google.accounts && window.google.accounts.id) {
+                    resolve(true);
+                } else if (Date.now() - started > timeoutMs) {
+                    resolve(false);
+                } else {
+                    setTimeout(tick, 100);
+                }
+            };
+            tick();
+        });
+    },
 
-    init: function (clientId, dotNetRef) {
-        this._dotNetRef = dotNetRef;
-
-        if (!clientId || clientId.indexOf('REPLACE_WITH_YOUR_GOOGLE_OAUTH_CLIENT_ID') === 0) {
-            console.warn('Dưỡng Nhan: Google Sign-In is not configured yet (Google:ClientId in appsettings.json).');
-            return false;
+    // Returns "ok" | "not-configured" | "script-blocked"
+    renderButton: async function (elementId, clientId, dotNetRef, text, width) {
+        if (!clientId || clientId.indexOf('52076919259-cmjvm8mbul607hum1h1clcos1oq2qsal.apps.googleusercontent.com') === 0) {
+            return 'not-configured';
         }
 
-        if (!window.google || !window.google.accounts || !window.google.accounts.id) {
-            console.warn('Dưỡng Nhan: Google Identity Services script has not loaded yet.');
-            return false;
-        }
+        const loaded = await this._waitForGoogle(8000);
+        if (!loaded) return 'script-blocked';
+
+        const el = document.getElementById(elementId);
+        if (!el) return 'ok';
 
         window.google.accounts.id.initialize({
             client_id: clientId,
             callback: (response) => {
-                if (this._dotNetRef && response && response.credential) {
-                    this._dotNetRef.invokeMethodAsync('OnGoogleCredential', response.credential);
+                if (response && response.credential) {
+                    dotNetRef.invokeMethodAsync('OnGoogleCredential', response.credential);
                 }
             }
         });
 
-        return true;
-    },
-
-    prompt: function () {
-        if (window.google && window.google.accounts && window.google.accounts.id) {
-            window.google.accounts.id.prompt();
-        }
+        el.innerHTML = '';
+        window.google.accounts.id.renderButton(el, {
+            type: 'standard',
+            theme: 'outline',
+            size: 'large',
+            text: text,
+            shape: 'rectangular',
+            logo_alignment: 'center',
+            width: width
+        });
+        return 'ok';
     }
 };

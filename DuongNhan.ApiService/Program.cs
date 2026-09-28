@@ -70,6 +70,7 @@ builder.Services.AddScoped<ITokenInvalidationCache, TokenInvalidationCache>();
 builder.Services.AddScoped<IAuditLogger, AuditLogger>();
 builder.Services.AddScoped<UserMapper>();
 builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
+builder.Services.AddSingleton<IEmailSender, SmtpEmailSender>();
 builder.Services.AddScoped<IDiagnosisService, OpenAiDiagnosisService>();
 
 // ── JWT signing key ────────────────────────────────────────────

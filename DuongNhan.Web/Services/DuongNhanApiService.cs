@@ -49,11 +49,11 @@ public sealed class DuongNhanApiService(
         return ApiResult.From(response);
     }
 
-    /// <summary>Returns the OTP code directly when the API is running in Development (no email provider is wired up yet); otherwise null.</summary>
-    public async Task<string?> SendOtpAsync(string email, CancellationToken ct = default)
+    /// <summary>Asks the API to email a verification code. Returns false if the server could not send it.</summary>
+    public async Task<bool> SendOtpAsync(string email, CancellationToken ct = default)
     {
         var response = await auth.SendOtpAsync(new DuongNhan.Shared.Dtos.Auth.SendOtpRequest(email), ct);
-        return response.DevCode;
+        return response.Sent;
     }
 
     public async Task<bool> VerifyOtpAsync(string email, string code, CancellationToken ct = default)

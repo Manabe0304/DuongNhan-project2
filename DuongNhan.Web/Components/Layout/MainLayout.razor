@@ -1,4 +1,6 @@
 @inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager NavManager
 @inject UiSessionService Session
 @inject NavigationService Navigation
 @inject DuongNhanApiService Api
@@ -132,6 +134,16 @@
         var u when u.Contains("/dashboard", StringComparison.OrdinalIgnoreCase) => "Bảng điều khiển",
         _ => "Dưỡng Nhan AI",
     };
+
+    protected override void OnInitialized() => NavManager.LocationChanged += HandleLocationChanged;
+
+    private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        isSidebarOpen = false;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose() => NavManager.LocationChanged -= HandleLocationChanged;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
