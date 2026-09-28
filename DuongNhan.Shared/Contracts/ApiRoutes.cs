@@ -1,4 +1,4 @@
-﻿namespace DuongNhan.Shared.Contracts;
+namespace DuongNhan.Shared.Contracts;
 
 public static class ApiRoutes
 {
@@ -9,6 +9,9 @@ public static class ApiRoutes
         public const string Login = Base + "/login";
         public const string Refresh = Base + "/refresh";
         public const string Logout = Base + "/logout";
+        public const string Google = Base + "/google";
+        public const string SendOtp = Base + "/send-otp";
+        public const string VerifyOtp = Base + "/verify-otp";
     }
 
     public static class Users

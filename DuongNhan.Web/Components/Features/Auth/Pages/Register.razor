@@ -20,8 +20,19 @@
             <form @onsubmit="Submit" @onsubmit:preventDefault>
                 <div class="mb-3"><label>Họ và tên</label><input class="form-control form-control-lg" type="text" @bind="name" required placeholder="Nguyễn Văn A" /></div>
                 <div class="mb-3"><label>Email</label><input class="form-control form-control-lg" type="email" @bind="email" required placeholder="name@example.com" /></div>
-                <div class="mb-3"><label>Mật khẩu</label><input class="form-control form-control-lg" type="password" @bind="password" required placeholder="••••••••" /></div>
-                <div class="d-flex justify-content-between small mb-4"><label class="d-flex gap-2 align-items-center"><input type="checkbox" @bind="remember" /> Ghi nhớ đăng nhập</label><a href="/forgot-password" class="text-secondary">Quên mật khẩu?</a></div>
+                <div class="mb-3">
+                    <label>Mật khẩu</label>
+                    <input class="form-control form-control-lg" type="password" @bind="password" required placeholder="••••••••" />
+                    <small class="text-secondary">Tối thiểu 12 ký tự, gồm chữ hoa, chữ thường và số.</small>
+                </div>
+                <div class="mb-4">
+                    <label>Xác nhận mật khẩu</label>
+                    <input class="form-control form-control-lg" type="password" @bind="confirmPassword" required placeholder="••••••••" />
+                    @if (!string.IsNullOrEmpty(confirmPassword) && confirmPassword != password)
+                    {
+                        <small class="text-danger">Mật khẩu xác nhận không khớp.</small>
+                    }
+                </div>
                 <button class="btn btn-dn-coral btn-lg w-100" disabled="@loading">@((loading) ? "Đang xử lý..." : "Đăng ký tài khoản")</button>
             </form>
 
@@ -34,13 +45,19 @@
     private string name = "";
     private string email = "";
     private string password = "";
-    private bool remember = true;
+    private string confirmPassword = "";
     private bool loading;
     private string? error;
 
     private async Task Submit()
     {
         error = null;
+        if (password != confirmPassword)
+        {
+            error = "Mật khẩu xác nhận không khớp.";
+            return;
+        }
+
         loading = true;
         try
         {
@@ -56,7 +73,7 @@
         }
         catch (Exception ex)
         {
-            error = $"Đăng nhập thất bại: {ex.Message}";
+            error = $"Đăng ký thất bại: {ex.Message}";
         }
         finally { loading = false; }
     }

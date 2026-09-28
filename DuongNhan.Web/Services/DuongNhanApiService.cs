@@ -43,6 +43,25 @@ public sealed class DuongNhanApiService(
         await auth.LogoutAsync(request, ct);
     }
 
+    public async Task<ApiResult> GoogleLoginAsync(string idToken, CancellationToken ct = default)
+    {
+        var response = await auth.GoogleLoginAsync(new DuongNhan.Shared.Dtos.Auth.GoogleLoginRequest(idToken), ct);
+        return ApiResult.From(response);
+    }
+
+    /// <summary>Returns the OTP code directly when the API is running in Development (no email provider is wired up yet); otherwise null.</summary>
+    public async Task<string?> SendOtpAsync(string email, CancellationToken ct = default)
+    {
+        var response = await auth.SendOtpAsync(new DuongNhan.Shared.Dtos.Auth.SendOtpRequest(email), ct);
+        return response.DevCode;
+    }
+
+    public async Task<bool> VerifyOtpAsync(string email, string code, CancellationToken ct = default)
+    {
+        var response = await auth.VerifyOtpAsync(new DuongNhan.Shared.Dtos.Auth.VerifyOtpRequest(email, code), ct);
+        return response.Verified;
+    }
+
     public async Task<ApiResult> RefreshAsync(string refreshToken, CancellationToken ct = default)
     {
         var request = NewRequest<DuongNhan.Shared.Dtos.Auth.RefreshTokenRequest>(
@@ -144,8 +163,8 @@ public sealed record ApiResult(JsonElement Data)
 
     public string? AccessToken => GetString("accessToken", "AccessToken", "token");
     public string? RefreshToken => GetString("refreshToken", "RefreshToken");
-    public string? UserName => GetString("userName", "UserName", "name", "Name", "displayName", "DisplayName");
-    public string? Email => GetString("email", "Email");
+    public string? UserName => GetString("userName", "UserName", "name", "Name", "displayName", "DisplayName") ?? GetNestedUserString("displayName", "DisplayName");
+    public string? Email => GetString("email", "Email") ?? GetNestedUserString("email", "Email");
 
     public string? GetString(params string[] names)
     {
@@ -154,6 +173,18 @@ public sealed record ApiResult(JsonElement Data)
             if (Data.ValueKind == JsonValueKind.Object && Data.TryGetProperty(name, out var p) && p.ValueKind == JsonValueKind.String)
                 return p.GetString();
         }
+        return null;
+    }
+
+    private string? GetNestedUserString(params string[] names)
+    {
+        if (Data.ValueKind != JsonValueKind.Object) return null;
+        if (!Data.TryGetProperty("user", out var user) && !Data.TryGetProperty("User", out user)) return null;
+        if (user.ValueKind != JsonValueKind.Object) return null;
+
+        foreach (var name in names)
+            if (user.TryGetProperty(name, out var p) && p.ValueKind == JsonValueKind.String)
+                return p.GetString();
         return null;
     }
 

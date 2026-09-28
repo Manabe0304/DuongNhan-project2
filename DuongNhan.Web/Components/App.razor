@@ -12,9 +12,11 @@
     <link rel="stylesheet" href="@Assets["DuongNhan.Web.styles.css"]" />
     <ImportMap />
     <HeadOutlet />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
     <Routes @rendermode="InteractiveServer" />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    <script src="@Assets["js/google-auth.js"]"></script>
 </body>
 </html>

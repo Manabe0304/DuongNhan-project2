@@ -1,5 +1,6 @@
 @page "/"
 @inject UiSessionService Session
+@inject DuongNhanApiService Api
 
 <PageTitle>Dưỡng Nhan — AI phân tích da</PageTitle>
 
@@ -121,6 +122,48 @@
     </div>
 </section>
 
+<section class="dn-section dn-soft-section">
+    <div class="container dn-container">
+        <div class="text-center dn-section-heading">
+            <span class="dn-kicker">Bảng giá</span>
+            <h2>Chọn gói phù hợp với bạn</h2>
+            <p>Bắt đầu miễn phí, nâng cấp bất cứ lúc nào khi bạn cần theo dõi da sát sao hơn.</p>
+        </div>
+
+        @if (loadingPlans)
+        {
+            <div class="text-center py-4"><div class="spinner-border text-success"></div></div>
+        }
+        else if (plans.Count == 0)
+        {
+            <p class="text-center text-secondary">Chưa có gói nào khả dụng — hãy quay lại sau.</p>
+        }
+        else
+        {
+            <div class="row g-4 justify-content-center">
+                @foreach (var plan in plans)
+                {
+                    <div class="col-md-6 col-xl-4">
+                        <div class="dn-plan-card h-100 @(IsPlanPopular(plan) ? "popular" : "")">
+                            @if (IsPlanPopular(plan))
+                            {
+                                <span class="dn-popular">Phổ biến nhất</span>
+                            }
+                            <h4>@PlanText(plan, "name", "Dưỡng Nhan Plan")</h4>
+                            <div class="dn-price">@PlanPrice(plan)<small>/tháng</small></div>
+                            <p class="small text-secondary mb-0">@PlanText(plan, "description", "")</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="/pricing" class="dn-link justify-content-center">Xem đầy đủ tính năng từng gói<i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+            </div>
+        }
+    </div>
+</section>
+
 <section class="dn-section">
     <div class="container dn-container">
         <div class="dn-dark-cta">
@@ -135,3 +178,36 @@
         </div>
     </div>
 </section>
+
+@code {
+    private List<System.Text.Json.JsonElement> plans = [];
+    private bool loadingPlans = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { plans = await Api.GetPlansAsync(); }
+        catch { /* the teaser is optional decoration — /pricing still works if this fails */ }
+        finally { loadingPlans = false; }
+    }
+
+    private static string PlanText(System.Text.Json.JsonElement item, string name, string fallback)
+    {
+        foreach (var key in new[] { name, char.ToUpperInvariant(name[0]) + name[1..] })
+            if (item.TryGetProperty(key, out var p))
+                return p.ValueKind == System.Text.Json.JsonValueKind.String ? p.GetString() ?? fallback : p.ToString();
+        return fallback;
+    }
+
+    private static string PlanPrice(System.Text.Json.JsonElement item)
+    {
+        foreach (var key in new[] { "price", "Price" })
+        {
+            if (item.TryGetProperty(key, out var p) && p.ValueKind == System.Text.Json.JsonValueKind.Number)
+                return p.GetDecimal() == 0 ? "Miễn phí" : $"{p.GetDecimal():N0}₫";
+        }
+        return "Liên hệ";
+    }
+
+    private static bool IsPlanPopular(System.Text.Json.JsonElement item)
+        => PlanText(item, "code", "").Contains("pro", StringComparison.OrdinalIgnoreCase);
+}

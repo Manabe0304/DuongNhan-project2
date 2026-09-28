@@ -22,6 +22,7 @@ builder.Services.AddScoped<ImageValidationService>();
 builder.Services.AddScoped<DuongNhanApiService>();
 builder.Services.AddTransient<AuthHeaderHandler>();
 builder.Services.AddScoped<UiSessionService>();
+builder.Services.AddScoped<AuthModalService>();
 builder.Services.AddScoped<DoctorCatalogService>();
 
 builder.Services.AddApiClients();

@@ -30,6 +30,7 @@
     <PackageVersion Include="libphonenumber-csharp" Version="9.0.39" />
     <PackageVersion Include="Refit" Version="9.0.2" />
     <PackageVersion Include="Refit.HttpClientFactory" Version="9.0.2" />
+    <PackageVersion Include="Google.Apis.Auth" Version="1.69.0" />
     <PackageVersion Include="MSTest" Version="4.4.1" />
   </ItemGroup>
 

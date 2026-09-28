@@ -402,7 +402,7 @@ h6 {
     height: 2.25rem;
     display: grid;
     place-items: center;
-    border-radius: var(--dn-radius);
+    border-radius: 10px;
     background: var(--dn-dark-soft);
     border: 1px solid var(--dn-dark-line);
     color: #cbd5e1;
@@ -1223,19 +1223,54 @@ h6 {
 .dn-auth-page {
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 1.5rem;
     padding: 2.5rem 1rem;
-    background: var(--dn-soft);
+    background: var(--dn-cream);
 }
+
+.dn-auth-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--dn-heading);
+}
+
+    .dn-auth-brand .dn-brand-mark {
+        color: var(--dn-primary);
+        font-size: 1.3rem;
+    }
+
+    .dn-auth-brand:hover {
+        color: var(--dn-heading);
+        text-decoration: none;
+    }
 
 .dn-auth-form-wrap {
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
     background: var(--dn-surface);
     border: 1px solid var(--dn-line);
-    border-radius: var(--dn-radius);
+    border-radius: 1.5rem;
+    box-shadow: 0 20px 45px -20px rgba(20, 23, 31, .18);
     padding: 2rem;
+    animation: dn-auth-scale-in .18s ease-out;
+}
+
+@keyframes dn-auth-scale-in {
+    from {
+        opacity: 0;
+        transform: scale(.97) translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 .dn-auth-form > .dn-link {
@@ -1245,11 +1280,147 @@ h6 {
 .dn-auth-form label {
     display: block;
     margin-bottom: .35rem;
-    font-weight: 500;
+    font-weight: 600;
+    font-size: .78rem;
+    color: var(--dn-heading);
 }
 
 .dn-auth-form .form-control {
-    padding: .6rem .8rem;
+    padding: .6rem .8rem .6rem 2.25rem;
+    border-radius: .75rem;
+    background: var(--dn-soft);
+    border-color: var(--dn-line);
+    font-size: .85rem;
+}
+
+    .dn-auth-form .form-control:focus {
+        background: var(--dn-surface);
+        border-color: var(--dn-primary);
+        box-shadow: 0 0 0 .2rem rgba(240, 124, 104, .15);
+    }
+
+.dn-auth-field {
+    position: relative;
+}
+
+    .dn-auth-field .ph {
+        position: absolute;
+        left: .75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--dn-muted);
+        font-size: .95rem;
+        pointer-events: none;
+    }
+
+.dn-auth-heading {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+    .dn-auth-heading h1 {
+        font-size: 1.2rem;
+        margin-bottom: .25rem;
+    }
+
+    .dn-auth-heading p {
+        color: var(--dn-muted);
+        font-size: .8rem;
+        margin: 0;
+    }
+
+.dn-auth-divider {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin: .9rem 0;
+    color: var(--dn-muted);
+}
+
+    .dn-auth-divider::before, .dn-auth-divider::after {
+        content: "";
+        flex: 1 1 auto;
+        border-top: 1px solid var(--dn-line);
+    }
+
+    .dn-auth-divider span {
+        font-size: .65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        white-space: nowrap;
+    }
+
+.dn-auth-google {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .6rem .9rem;
+    border: 1px solid var(--dn-line-strong);
+    border-radius: .75rem;
+    background: var(--dn-surface);
+    color: var(--dn-ink);
+    font-weight: 600;
+    font-size: .82rem;
+}
+
+    .dn-auth-google:hover {
+        background: var(--dn-soft);
+        text-decoration: none;
+        color: var(--dn-ink);
+    }
+
+.dn-auth-submit {
+    width: 100%;
+    margin-top: .4rem;
+    padding: .7rem 1rem;
+    border: 0;
+    border-radius: .75rem;
+    color: #fff;
+    font-weight: 700;
+    font-size: .85rem;
+    background: linear-gradient(90deg, var(--dn-primary), var(--dn-accent));
+}
+
+    .dn-auth-submit:hover, .dn-auth-submit:focus {
+        filter: brightness(1.05);
+        color: #fff;
+    }
+
+    .dn-auth-submit:disabled {
+        opacity: .6;
+    }
+
+.dn-auth-toggle {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--dn-line);
+    text-align: center;
+}
+
+    .dn-auth-toggle button, .dn-auth-toggle a {
+        background: transparent;
+        border: 0;
+        color: var(--dn-primary);
+        font-weight: 700;
+        font-size: .78rem;
+    }
+
+        .dn-auth-toggle button:hover, .dn-auth-toggle a:hover {
+            color: var(--dn-primary-hover);
+            text-decoration: none;
+        }
+
+.dn-auth-error {
+    margin-bottom: 1rem;
+    padding: .65rem .8rem;
+    background: var(--dn-tint-coral);
+    border: 1px solid rgba(240, 124, 104, .3);
+    color: #b3402f;
+    font-size: .78rem;
+    border-radius: .75rem;
 }
 
 /* ── Doctors ──────────────────────────────────────────────────────────── */
@@ -1944,3 +2115,81 @@ h6 {
         margin-left: 0;
     }
 }
+
+/* ── Auth modal (AuthModal.razor), mirrors AuthModal.tsx ─────────────────── */
+
+.dn-modal-backdrop {
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    background: rgba(20, 23, 31, .6);
+}
+
+.dn-auth-modal {
+    position: relative;
+    max-width: 440px;
+    border-radius: 24px;
+    padding: 2rem;
+    box-shadow: 0 24px 60px rgba(20, 23, 31, .25);
+}
+
+.dn-modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--dn-muted);
+}
+
+    .dn-modal-close:hover {
+        background: var(--dn-soft);
+        color: var(--dn-heading);
+    }
+
+.dn-google-btn {
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .6rem;
+    padding: .7rem 1rem;
+    background: #fff;
+    border: 1px solid var(--dn-line-strong);
+    border-radius: 12px;
+    color: var(--dn-heading);
+    font-weight: 700;
+    font-size: .9rem;
+    transition: background-color .15s ease, border-color .15s ease;
+}
+
+    .dn-google-btn:hover:not(:disabled) {
+        background: var(--dn-soft);
+    }
+
+    .dn-google-btn:disabled {
+        opacity: .6;
+    }
+
+.dn-divider {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: 1.25rem 0;
+    color: #94a3b8;
+    font-size: .68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+}
+
+    .dn-divider::before, .dn-divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: var(--dn-line);
+    }

@@ -19,8 +19,7 @@
 
             <form @onsubmit="Submit" @onsubmit:preventDefault>
                 <div class="mb-3"><label>Email</label><input class="form-control form-control-lg" type="email" @bind="email" required placeholder="name@example.com" /></div>
-                <div class="mb-3"><label>Mật khẩu</label><input class="form-control form-control-lg" type="password" @bind="password" required placeholder="••••••••" /></div>
-                <div class="d-flex justify-content-between small mb-4"><label class="d-flex gap-2 align-items-center"><input type="checkbox" @bind="remember" /> Ghi nhớ đăng nhập</label><a href="/forgot-password" class="text-secondary">Quên mật khẩu?</a></div>
+                <div class="mb-4"><label>Mật khẩu</label><input class="form-control form-control-lg" type="password" @bind="password" required placeholder="••••••••" /></div>
                 <button class="btn btn-dn-coral btn-lg w-100" disabled="@loading">@((loading) ? "Đang xử lý..." : "Đăng nhập ngay")</button>
             </form>
 
@@ -32,7 +31,6 @@
 @code {
     private string email = "";
     private string password = "";
-    private bool remember = true;
     private bool loading;
     private string? error;
 

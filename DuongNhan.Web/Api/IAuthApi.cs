@@ -1,4 +1,4 @@
-﻿using DuongNhan.Shared.Contracts;
+using DuongNhan.Shared.Contracts;
 using DuongNhan.Shared.Dtos.Auth;
 using Refit;
 
@@ -17,4 +17,13 @@ public interface IAuthApi
 
     [Post(ApiRoutes.Auth.Logout)]
     Task LogoutAsync([Body] RefreshTokenRequest request, CancellationToken ct = default);
+
+    [Post(ApiRoutes.Auth.Google)]
+    Task<AuthResponse> GoogleLoginAsync([Body] GoogleLoginRequest request, CancellationToken ct = default);
+
+    [Post(ApiRoutes.Auth.SendOtp)]
+    Task<OtpResponse> SendOtpAsync([Body] SendOtpRequest request, CancellationToken ct = default);
+
+    [Post(ApiRoutes.Auth.VerifyOtp)]
+    Task<VerifyOtpResponse> VerifyOtpAsync([Body] VerifyOtpRequest request, CancellationToken ct = default);
 }

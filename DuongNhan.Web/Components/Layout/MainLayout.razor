@@ -2,6 +2,7 @@
 @inject UiSessionService Session
 @inject NavigationService Navigation
 @inject DuongNhanApiService Api
+@inject AuthModalService AuthModalState
 
 <div class="dn-app">
     @if (Session.IsAuthenticated)
@@ -55,7 +56,7 @@
         <header class="dn-topbar">
             <div class="container-fluid dn-container d-flex align-items-center justify-content-between gap-3">
                 <a class="dn-brand" href="/">
-                    <img class="dn-brand-mark" src="/DuongNhan.jpg"/>
+                    <img class="dn-brand-mark" src="/DuongNhan.jpg" />
                     <span class="d-inline-flex align-items-center gap-2">
                         <span>Dưỡng Nhan</span>
                         <span class="dn-brand-badge">AI</span>
@@ -73,12 +74,12 @@
                 </nav>
 
                 <div class="d-flex align-items-center gap-2">
-                    <a class="btn btn-dn-outline btn-sm dn-btn" href="/login">
+                    <button type="button" class="btn btn-dn-outline btn-sm dn-btn" @onclick="AuthModalState.OpenLogin">
                         <i class="ph ph-sign-in" aria-hidden="true"></i>Đăng nhập
-                    </a>
-                    <a class="btn btn-dn-coral btn-sm dn-btn" href="/register">
+                    </button>
+                    <button type="button" class="btn btn-dn-coral btn-sm dn-btn" @onclick="AuthModalState.OpenRegister">
                         <i class="ph ph-user-plus" aria-hidden="true"></i>Đăng ký
-                    </a>
+                    </button>
                 </div>
             </div>
         </header>
@@ -97,6 +98,8 @@
         </main>
 
         <Footer />
+
+        <AuthModal />
     }
 </div>
 
