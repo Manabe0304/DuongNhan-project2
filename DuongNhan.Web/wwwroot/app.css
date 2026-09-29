@@ -2226,3 +2226,178 @@ h6 {
     justify-content: center;
     min-height: 44px;
 }
+
+/* ── Pricing cards (PlanCard.razor) ─────────────────────────────────────── */
+
+.dn-plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+    gap: 1.5rem;
+    max-width: 1180px;
+    margin: 2.5rem auto 0;
+    padding-top: .9rem; /* room for the ribbon */
+    align-items: stretch;
+}
+
+.dn-plan {
+    --plan-accent: #111827;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 28px;
+    padding: 2rem 1.75rem 1.75rem;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+}
+
+    .dn-plan.pro {
+        --plan-accent: #f0003c;
+        border: 2px solid #f43f5e;
+        box-shadow: 0 10px 30px rgba(244, 63, 94, .12);
+    }
+
+    .dn-plan.vip {
+        --plan-accent: #111827;
+    }
+
+.dn-plan-ribbon {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: .35rem 1rem;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #f43f5e, #6d4aff);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.dn-plan-head {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: wrap;
+}
+
+    .dn-plan-head h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: #111827;
+    }
+
+.dn-plan-current {
+    padding: .15rem .6rem;
+    border-radius: 999px;
+    background: #d1fae5;
+    color: #065f46;
+    font-size: .72rem;
+    font-weight: 800;
+}
+
+.dn-plan-desc {
+    margin: .9rem 0 1.4rem;
+    min-height: 3.2em;
+    color: #6b7280;
+    font-size: .92rem;
+    line-height: 1.6;
+}
+
+.dn-plan-price {
+    display: flex;
+    align-items: baseline;
+    gap: .4rem;
+}
+
+.dn-plan-amount {
+    font-size: 2.6rem;
+    font-weight: 900;
+    letter-spacing: -.02em;
+    color: #0f172a;
+    line-height: 1.1;
+}
+
+    .dn-plan-amount u {
+        text-decoration-thickness: 3px;
+        text-underline-offset: 4px;
+    }
+
+.dn-plan-per {
+    color: #6b7280;
+    font-size: .9rem;
+}
+
+.dn-plan-rule {
+    margin: 1.5rem 0;
+    border: 0;
+    border-top: 1px solid #f1f1f1;
+    opacity: 1;
+}
+
+.dn-plan-benefits-title {
+    font-size: .8rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: #374151;
+    margin-bottom: 1rem;
+}
+
+.dn-plan-features {
+    list-style: none;
+    margin: 0 0 1.75rem;
+    padding: 0;
+    display: grid;
+    gap: .85rem;
+}
+
+    .dn-plan-features li {
+        display: flex;
+        align-items: flex-start;
+        gap: .7rem;
+        color: #374151;
+        font-size: .92rem;
+        line-height: 1.45;
+    }
+
+    .dn-plan-features svg {
+        flex: none;
+        margin-top: 2px;
+        color: #059669;
+    }
+
+.dn-plan-btn {
+    margin-top: auto;
+    width: 100%;
+    padding: .9rem 1rem;
+    border: 0;
+    border-radius: 14px;
+    font-weight: 800;
+    font-size: .95rem;
+    color: #fff;
+    background: var(--plan-accent);
+    transition: filter .15s ease, transform .15s ease;
+}
+
+    .dn-plan-btn:hover:not(:disabled) {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
+    }
+
+    .dn-plan-btn.free {
+        background: #fff;
+        color: #111827;
+        border: 1px solid #d1d5db;
+    }
+
+    .dn-plan-btn:disabled {
+        background: #eef1f6;
+        color: #9aa3b2;
+        border-color: transparent;
+        cursor: default;
+    }

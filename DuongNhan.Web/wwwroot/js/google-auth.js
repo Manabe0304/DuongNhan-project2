@@ -20,9 +20,9 @@ window.dnGoogleAuth = {
 
     // Returns "ok" | "not-configured" | "script-blocked"
     renderButton: async function (elementId, clientId, dotNetRef, text, width) {
-        if (!clientId || clientId.indexOf('52076919259-cmjvm8mbul607hum1h1clcos1oq2qsal.apps.googleusercontent.com') === 0) {
+        if (!clientId || clientId.indexOf('REPLACE_WITH_YOUR_GOOGLE_OAUTH_CLIENT_ID') === 0) {
             return 'not-configured';
-        }
+        }   
 
         const loaded = await this._waitForGoogle(8000);
         if (!loaded) return 'script-blocked';

@@ -5,39 +5,14 @@
 
 <div class="container dn-container dn-page">
     <div class="text-center dn-page-heading mx-auto"><span class="dn-kicker">Plans</span><h1>Bảng giá đơn giản, minh bạch</h1><p>Chọn gói phù hợp với nhu cầu phân tích và theo dõi làn da.</p></div>
-    @if (loading)
-    {
-        <div class="text-center py-5"><div class="spinner-border text-success"></div></div>
-    }
-    else if (!string.IsNullOrWhiteSpace(error))
-    {
-
-        <div class="alert alert-warning">@error</div>
-    }
+    @if (loading) { <div class="text-center py-5"><div class="spinner-border text-success"></div></div> }
+    else if (!string.IsNullOrWhiteSpace(error)) { <div class="alert alert-warning">@error</div> }
     else
     {
-        <div class="row g-4 justify-content-center">
+        <div class="dn-plan-grid">
             @foreach (var plan in plans)
             {
-                <div class="col-md-6 col-xl-4">
-                    <div class="dn-plan-card h-100 @(IsPopular(plan) ? "popular" : "")">
-                        @if (IsPopular(plan))
-                        {
-                            <span class="dn-popular">Phổ biến nhất</span>
-                        }
-                        <span class="dn-kicker">@Text(plan, "tier", "Plan")</span>
-                        <h4>@Text(plan, "name", "Dưỡng Nhan Plan")</h4>
-                        <div class="dn-price">@Price(plan)<small>/tháng</small></div>
-                        <hr />
-                        <ul class="list-unstyled dn-plan-list">
-                            @foreach (var feature in ArrayValues(plan, "features"))
-                            {
-                                <li><i class="ph ph-check" aria-hidden="true"></i>@feature</li>
-                            }
-                        </ul>
-                        <button class="btn @(IsPopular(plan) ? "btn-dn-coral" : "btn-dn-outline") w-100" @onclick="() => Choose(plan)">Chọn gói</button>
-                    </div>
-                </div>
+                <PlanCard Plan="plan" IsCurrent="IsCurrentPlan(plan)" OnChoose="() => Choose(plan)" />
             }
         </div>
     }
@@ -55,8 +30,12 @@
         finally { loading = false; }
     }
 
+    // Subscriptions aren't tracked server-side yet, so every signed-in account is on the free plan.
+    private bool IsCurrentPlan(System.Text.Json.JsonElement plan)
+        => Session.IsAuthenticated && Text(plan, "code", "").Contains("free", StringComparison.OrdinalIgnoreCase);
+
     private void Choose(System.Text.Json.JsonElement plan)
-        => Navigation.NavigateTo(Session.IsAuthenticated ? "/subscription/checkout" : "/login");
+        => Navigation.NavigateTo(Session.IsAuthenticated ? "/subscription/current" : "/register");
 
     private static string Text(System.Text.Json.JsonElement item, string name, string fallback)
     {
@@ -66,51 +45,4 @@
         return fallback;
     }
 
-    private static string Price(System.Text.Json.JsonElement item)
-    {
-        foreach (var key in new[] { "price", "Price", "priceMonthly", "PriceMonthly" })
-        {
-            if (item.TryGetProperty(key, out var p))
-            {
-                if (p.ValueKind == System.Text.Json.JsonValueKind.Number && p.GetDecimal() == 0) return "Miễn phí";
-                if (p.ValueKind == System.Text.Json.JsonValueKind.Number) return $"{p.GetDecimal():N0}₫";
-                return p.ToString();
-            }
-        }
-        return "Liên hệ";
-    }
-
-    private static bool IsPopular(System.Text.Json.JsonElement item)
-        => Text(item, "code", "").Contains("pro", StringComparison.OrdinalIgnoreCase);
-
-    private static IEnumerable<string> ArrayValues(System.Text.Json.JsonElement item, string name)
-    {
-        var raw = name switch
-        {
-            "features" => Text(item, "featuresJson", string.Empty),
-            _ => Text(item, name, string.Empty),
-        };
-
-        if (string.IsNullOrWhiteSpace(raw)) yield break;
-
-        System.Text.Json.JsonDocument? doc = null;
-        try { doc = System.Text.Json.JsonDocument.Parse(raw); }
-        catch { /* not JSON — fall through to a plain split below */ }
-
-        if (doc is not null)
-        {
-            using (doc)
-            {
-                if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array)
-                {
-                    foreach (var v in doc.RootElement.EnumerateArray())
-                        yield return v.ValueKind == System.Text.Json.JsonValueKind.String ? v.GetString() ?? "" : v.ToString();
-                    yield break;
-                }
-            }
-        }
-
-        foreach (var part in raw.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            yield return part;
-    }
 }

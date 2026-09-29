@@ -48,12 +48,20 @@ internal sealed class GoogleLoginEndpoint(
     {
         var clientId = configuration["Google:ClientId"];
 
+        // Without our own client id we cannot check the token was issued for THIS app,
+        // so refuse rather than accept a token minted for any other Google client.
+        if (string.IsNullOrWhiteSpace(clientId) || clientId.StartsWith("REPLACE_", StringComparison.Ordinal))
+        {
+            GoogleLoginEndpointLogs.NotConfigured(logger);
+            AddError(r => r.IdToken, "Google sign-in is not configured on the server (Google:ClientId).");
+            await Send.ErrorsAsync(StatusCodes.Status503ServiceUnavailable, cancellation: ct);
+            return;
+        }
+
         GoogleJsonWebSignature.Payload payload;
         try
         {
-            var settings = string.IsNullOrWhiteSpace(clientId)
-                ? new GoogleJsonWebSignature.ValidationSettings()
-                : new GoogleJsonWebSignature.ValidationSettings { Audience = [clientId] };
+            var settings = new GoogleJsonWebSignature.ValidationSettings { Audience = [clientId] };
 
             payload = await GoogleJsonWebSignature.ValidateAsync(req.IdToken, settings);
         }
@@ -129,17 +137,33 @@ internal sealed class GoogleLoginEndpoint(
     }
 }
 
-internal static partial class GoogleLoginEndpointLogs
+// Hand-written LoggerMessage delegates (no source generator involved), same call shape as before.
+internal static class GoogleLoginEndpointLogs
 {
-    [LoggerMessage(
-        EventId = 1301,
-        Level = LogLevel.Information,
-        Message = "User signed in via Google: {UserId}")]
-    public static partial void UserSignedIn(ILogger logger, Guid userId);
+    private static readonly Action<ILogger, Guid, Exception?> UserSignedInMessage =
+        LoggerMessage.Define<Guid>(
+            LogLevel.Information,
+            new EventId(1301, nameof(UserSignedIn)),
+            "User signed in via Google: {UserId}");
 
-    [LoggerMessage(
-        EventId = 1302,
-        Level = LogLevel.Warning,
-        Message = "Google ID token failed validation")]
-    public static partial void InvalidToken(ILogger logger, Exception exception);
+    private static readonly Action<ILogger, Exception?> InvalidTokenMessage =
+        LoggerMessage.Define(
+            LogLevel.Warning,
+            new EventId(1302, nameof(InvalidToken)),
+            "Google ID token failed validation");
+
+    private static readonly Action<ILogger, Exception?> NotConfiguredMessage =
+        LoggerMessage.Define(
+            LogLevel.Error,
+            new EventId(1303, nameof(NotConfigured)),
+            "Google sign-in attempted but Google:ClientId is not set in DuongNhan.ApiService appsettings");
+
+    public static void UserSignedIn(ILogger logger, Guid userId)
+        => UserSignedInMessage(logger, userId, null);
+
+    public static void InvalidToken(ILogger logger, Exception exception)
+        => InvalidTokenMessage(logger, exception);
+
+    public static void NotConfigured(ILogger logger)
+        => NotConfiguredMessage(logger, null);
 }

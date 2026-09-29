@@ -1,0 +1,95 @@
+@using System.Globalization
+@using System.Text.Json
+
+<article class="dn-plan @Variant">
+    @if (Variant == "pro")
+    {
+        <span class="dn-plan-ribbon">Được khuyên dùng</span>
+    }
+
+    <div class="dn-plan-head">
+        <h3>@Text("name", "Dưỡng Nhan Plan")</h3>
+        @if (IsCurrent)
+        {
+            <span class="dn-plan-current">Đang dùng</span>
+        }
+    </div>
+
+    <p class="dn-plan-desc">@Text("description", string.Empty)</p>
+
+    <div class="dn-plan-price">
+        @if (IsFree)
+        {
+            <span class="dn-plan-amount">Miễn phí</span>
+        }
+        else
+        {
+            <span class="dn-plan-amount">@FormattedPrice <u>đ</u></span>
+            <span class="dn-plan-per">/ tháng</span>
+        }
+    </div>
+
+    <hr class="dn-plan-rule" />
+
+    <div class="dn-plan-benefits-title">Quyền lợi bao gồm:</div>
+    <ul class="dn-plan-features">
+        @foreach (var feature in Features())
+        {
+            <li>
+                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M4 10.5l4 4 8-9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>@feature</span>
+            </li>
+        }
+    </ul>
+
+    <button type="button" class="dn-plan-btn @Variant" disabled="@IsCurrent" @onclick="OnChoose">
+        @(IsCurrent ? "Gói đang kích hoạt" : IsFree ? "Bắt đầu miễn phí" : "Chọn gói này")
+    </button>
+</article>
+
+@code {
+    [Parameter, EditorRequired] public JsonElement Plan { get; set; }
+    [Parameter] public bool IsCurrent { get; set; }
+    [Parameter] public EventCallback OnChoose { get; set; }
+
+    private string Code => Text("code", string.Empty);
+    private bool IsFree => Price() == 0;
+
+    /// <summary>free | pro | vip — drives the colours to match the pricing design.</summary>
+    private string Variant
+        => Code.Contains("pro", StringComparison.OrdinalIgnoreCase) ? "pro"
+         : Code.Contains("vip", StringComparison.OrdinalIgnoreCase) ? "vip"
+         : "free";
+
+    private decimal Price()
+        => Plan.ValueKind == JsonValueKind.Object
+           && Plan.TryGetProperty("price", out var p)
+           && p.ValueKind == JsonValueKind.Number
+            ? p.GetDecimal()
+            : 0m;
+
+    // InvariantGlobalization is on, so build the Vietnamese "99.000" grouping by hand.
+    private string FormattedPrice => Price().ToString("N0", CultureInfo.InvariantCulture).Replace(',', '.');
+
+    private string Text(string name, string fallback)
+        => Plan.ValueKind == JsonValueKind.Object
+           && Plan.TryGetProperty(name, out var p)
+           && p.ValueKind == JsonValueKind.String
+            ? p.GetString() ?? fallback
+            : fallback;
+
+    private IEnumerable<string> Features()
+    {
+        if (Plan.ValueKind != JsonValueKind.Object
+            || !Plan.TryGetProperty("features", out var list)
+            || list.ValueKind != JsonValueKind.Array)
+        {
+            yield break;
+        }
+
+        foreach (var item in list.EnumerateArray())
+            yield return item.ValueKind == JsonValueKind.String ? item.GetString() ?? string.Empty : item.ToString();
+    }
+}

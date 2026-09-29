@@ -60,17 +60,23 @@ internal sealed class VerifyOtpEndpoint(
     }
 }
 
-internal static partial class VerifyOtpEndpointLogs
+internal static class VerifyOtpEndpointLogs
 {
-    [LoggerMessage(
-        EventId = 1403,
-        Level = LogLevel.Information,
-        Message = "OTP verified for {EmailHash}")]
-    public static partial void Verified(ILogger logger, string emailHash);
+    private static readonly Action<ILogger, string, Exception?> VerifiedMessage =
+        LoggerMessage.Define<string>(
+            LogLevel.Information,
+            new EventId(1403, nameof(Verified)),
+            "OTP verified for {EmailHash}");
 
-    [LoggerMessage(
-        EventId = 1404,
-        Level = LogLevel.Warning,
-        Message = "OTP rejected for {EmailHash}")]
-    public static partial void Rejected(ILogger logger, string emailHash);
+    private static readonly Action<ILogger, string, Exception?> RejectedMessage =
+        LoggerMessage.Define<string>(
+            LogLevel.Warning,
+            new EventId(1404, nameof(Rejected)),
+            "OTP rejected for {EmailHash}");
+
+    public static void Verified(ILogger logger, string emailHash)
+        => VerifiedMessage(logger, emailHash, null);
+
+    public static void Rejected(ILogger logger, string emailHash)
+        => RejectedMessage(logger, emailHash, null);
 }

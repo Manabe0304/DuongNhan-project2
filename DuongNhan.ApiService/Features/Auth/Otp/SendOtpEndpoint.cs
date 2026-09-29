@@ -98,29 +98,41 @@ internal sealed class SendOtpEndpoint(
             """;
 }
 
-internal static partial class SendOtpEndpointLogs
+internal static class SendOtpEndpointLogs
 {
-    [LoggerMessage(
-        EventId = 1401,
-        Level = LogLevel.Information,
-        Message = "OTP emailed to {EmailHash}, valid {LifetimeMinutes} minute(s)")]
-    public static partial void CodeSent(ILogger logger, string emailHash, int lifetimeMinutes);
+    private static readonly Action<ILogger, string, int, Exception?> CodeSentMessage =
+        LoggerMessage.Define<string, int>(
+            LogLevel.Information,
+            new EventId(1401, nameof(CodeSent)),
+            "OTP emailed to {EmailHash}, valid {LifetimeMinutes} minute(s)");
 
-    [LoggerMessage(
-        EventId = 1402,
-        Level = LogLevel.Information,
-        Message = "OTP request skipped for unregistered email {EmailHash}")]
-    public static partial void SkippedUnknownEmail(ILogger logger, string emailHash);
+    private static readonly Action<ILogger, string, Exception?> SkippedUnknownEmailMessage =
+        LoggerMessage.Define<string>(
+            LogLevel.Information,
+            new EventId(1402, nameof(SkippedUnknownEmail)),
+            "OTP request skipped for unregistered email {EmailHash}");
 
-    [LoggerMessage(
-        EventId = 1405,
-        Level = LogLevel.Warning,
-        Message = "OTP not sent: SMTP is not configured. Set Smtp:Username and Smtp:Password (e.g. a Gmail App Password) in appsettings or user-secrets.")]
-    public static partial void SmtpNotConfigured(ILogger logger);
+    private static readonly Action<ILogger, Exception?> SmtpNotConfiguredMessage =
+        LoggerMessage.Define(
+            LogLevel.Warning,
+            new EventId(1405, nameof(SmtpNotConfigured)),
+            "OTP not sent: SMTP is not configured. Set Smtp:Username and Smtp:Password (for example a Gmail App Password) in appsettings or user-secrets.");
 
-    [LoggerMessage(
-        EventId = 1406,
-        Level = LogLevel.Error,
-        Message = "Failed to email OTP to {EmailHash}")]
-    public static partial void SendFailed(ILogger logger, string emailHash, Exception exception);
+    private static readonly Action<ILogger, string, Exception?> SendFailedMessage =
+        LoggerMessage.Define<string>(
+            LogLevel.Error,
+            new EventId(1406, nameof(SendFailed)),
+            "Failed to email OTP to {EmailHash}");
+
+    public static void CodeSent(ILogger logger, string emailHash, int lifetimeMinutes)
+        => CodeSentMessage(logger, emailHash, lifetimeMinutes, null);
+
+    public static void SkippedUnknownEmail(ILogger logger, string emailHash)
+        => SkippedUnknownEmailMessage(logger, emailHash, null);
+
+    public static void SmtpNotConfigured(ILogger logger)
+        => SmtpNotConfiguredMessage(logger, null);
+
+    public static void SendFailed(ILogger logger, string emailHash, Exception exception)
+        => SendFailedMessage(logger, emailHash, exception);
 }

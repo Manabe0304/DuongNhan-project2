@@ -1,6 +1,7 @@
 @page "/"
 @inject UiSessionService Session
 @inject DuongNhanApiService Api
+@inject NavigationService Navigation
 
 <PageTitle>Dưỡng Nhan — AI phân tích da</PageTitle>
 
@@ -140,20 +141,10 @@
         }
         else
         {
-            <div class="row g-4 justify-content-center">
+            <div class="dn-plan-grid">
                 @foreach (var plan in plans)
                 {
-                    <div class="col-md-6 col-xl-4">
-                        <div class="dn-plan-card h-100 @(IsPlanPopular(plan) ? "popular" : "")">
-                            @if (IsPlanPopular(plan))
-                            {
-                                <span class="dn-popular">Phổ biến nhất</span>
-                            }
-                            <h4>@PlanText(plan, "name", "Dưỡng Nhan Plan")</h4>
-                            <div class="dn-price">@PlanPrice(plan)<small>/tháng</small></div>
-                            <p class="small text-secondary mb-0">@PlanText(plan, "description", "")</p>
-                        </div>
-                    </div>
+                    <@PlanCard Plan="plan" OnChoose="GoToPricing" />
                 }
             </div>
 
@@ -190,24 +181,6 @@
         finally { loadingPlans = false; }
     }
 
-    private static string PlanText(System.Text.Json.JsonElement item, string name, string fallback)
-    {
-        foreach (var key in new[] { name, char.ToUpperInvariant(name[0]) + name[1..] })
-            if (item.TryGetProperty(key, out var p))
-                return p.ValueKind == System.Text.Json.JsonValueKind.String ? p.GetString() ?? fallback : p.ToString();
-        return fallback;
-    }
+    private void GoToPricing() => Navigation.NavigateTo("/pricing");
 
-    private static string PlanPrice(System.Text.Json.JsonElement item)
-    {
-        foreach (var key in new[] { "price", "Price" })
-        {
-            if (item.TryGetProperty(key, out var p) && p.ValueKind == System.Text.Json.JsonValueKind.Number)
-                return p.GetDecimal() == 0 ? "Miễn phí" : $"{p.GetDecimal():N0}₫";
-        }
-        return "Liên hệ";
-    }
-
-    private static bool IsPlanPopular(System.Text.Json.JsonElement item)
-        => PlanText(item, "code", "").Contains("pro", StringComparison.OrdinalIgnoreCase);
 }

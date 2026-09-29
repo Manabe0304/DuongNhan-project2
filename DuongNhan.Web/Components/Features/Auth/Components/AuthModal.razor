@@ -65,13 +65,10 @@
                     <div class="alert alert-danger small">@error</div>
                 }
 
-                @if (googleStatus is null or "ok")
+                <div id="dn-google-btn" class="dn-google-slot" @key="isRegister"></div>
+                @if (googleStatus is not null and not "ok")
                 {
-                    <div id="dn-google-btn" class="dn-google-slot" @key="isRegister"></div>
-                }
-                else
-                {
-                    <div class="alert alert-warning small mb-0">@GoogleStatusMessage</div>
+                    <div class="alert alert-warning small mt-2 mb-0">@GoogleStatusMessage</div>
                 }
 
                 <div class="dn-divider"><span>Hoặc dùng Email</span></div>
@@ -160,6 +157,8 @@
             stage = Stage.Form;
             displayName = email = password = confirmPassword = otpCode = "";
             error = info = null;
+            googleStatus = null;
+            googleRenderedForRegister = null;
         }
         wasOpen = Modal.IsOpen;
         InvokeAsync(StateHasChanged);
