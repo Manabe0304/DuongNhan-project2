@@ -176,7 +176,11 @@
 
     protected override async Task OnInitializedAsync()
     {
-        try { plans = await Api.GetPlansAsync(); }
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1.5));
+            plans = await Api.GetPlansAsync(cts.Token);
+        }
         catch { /* the teaser is optional decoration — /pricing still works if this fails */ }
         finally { loadingPlans = false; }
     }

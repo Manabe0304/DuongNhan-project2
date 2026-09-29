@@ -1,0 +1,127 @@
+@page "/billing"
+@page "/subscription/billing"
+@inject DuongNhanApiService Api
+
+<div class="container dn-container dn-page">
+    <div class="dn-page-heading">
+        <span class="dn-kicker">Subscription</span>
+        <h1>Hoá đơn & Thanh toán</h1>
+        <p>Xem lịch sử thanh toán và quản lý phương thức thanh toán.</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Current plan card -->
+        <div class="col-12">
+            <div class="dn-card p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="dn-quick-icon">
+                            <i class="ph ph-crown-simple" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <div class="small text-secondary">Gói hiện tại</div>
+                            <strong class="fs-5">@tier</strong>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="/plans" class="btn btn-dn-coral btn-sm" id="btn-upgrade-plan">
+                            <i class="ph ph-arrow-up" aria-hidden="true"></i> Nâng cấp
+                        </a>
+                        <a href="/subscription/current" class="btn btn-dn-outline btn-sm">Chi tiết gói</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage summary -->
+        <div class="col-md-4">
+            <div class="dn-card p-4 h-100">
+                <h6 class="mb-1">Lượt AI Scan đã dùng</h6>
+                <div class="d-flex align-items-baseline gap-1 my-2">
+                    <span class="fs-3 fw-bold">@used</span>
+                    <span class="text-secondary">/ @limit lượt</span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" style="width: @Percent%"></div>
+                </div>
+                <small class="text-secondary d-block mt-2">Chu kỳ hiện tại</small>
+            </div>
+        </div>
+
+        <!-- Billing history placeholder -->
+        <div class="col-md-8">
+            <div class="dn-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Lịch sử hoá đơn</h6>
+                    <span class="badge bg-secondary-subtle text-secondary">Sắp ra mắt</span>
+                </div>
+
+                @if (loadingUsage)
+                {
+                    <div class="text-center py-4"><div class="spinner-border text-success spinner-border-sm"></div></div>
+                }
+                else
+                {
+                    <div class="dn-empty py-4">
+                        <i class="ph ph-receipt" style="font-size: 2.5rem; color: var(--dn-text-muted);" aria-hidden="true"></i>
+                        <p class="mt-3 mb-0">Chưa có hoá đơn nào.</p>
+                        <small class="text-secondary">Hoá đơn sẽ hiển thị sau khi bạn nâng cấp gói.</small>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Payment method -->
+        <div class="col-12">
+            <div class="dn-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0">Phương thức thanh toán</h6>
+                    <button class="btn btn-dn-outline btn-sm" id="btn-add-payment">
+                        <i class="ph ph-plus" aria-hidden="true"></i> Thêm
+                    </button>
+                </div>
+                <div class="dn-empty py-3">
+                    <i class="ph ph-credit-card" style="font-size: 2rem; color: var(--dn-text-muted);" aria-hidden="true"></i>
+                    <p class="mt-2 mb-0 small">Chưa có phương thức thanh toán nào được lưu.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string tier = "Free";
+    private int used, limit = 3;
+    private int Percent => limit <= 0 ? 0 : Math.Min(100, used * 100 / limit);
+    private bool loadingUsage = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1.5));
+            var sub = await Api.GetCurrentSubscriptionAsync(cts.Token);
+            if (sub is { } s)
+            {
+                foreach (var k in new[] { "tier", "Tier", "name", "Name" })
+                    if (s.TryGetProperty(k, out var p)) { tier = p.ToString(); break; }
+            }
+
+            var usage = await Api.GetUsageAsync(cts.Token);
+            if (usage is { } u)
+            {
+                used  = Num(u, "scansUsed",  "used");
+                limit = Num(u, "scansLimit", "limit");
+            }
+        }
+        catch { /* fall back to defaults */ }
+        finally { loadingUsage = false; }
+    }
+
+    private static int Num(System.Text.Json.JsonElement j, string a, string b)
+    {
+        foreach (var k in new[] { a, char.ToUpper(a[0]) + a[1..], b, char.ToUpper(b[0]) + b[1..] })
+            if (j.TryGetProperty(k, out var p) && p.TryGetInt32(out var n)) return n;
+        return 0;
+    }
+}

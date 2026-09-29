@@ -1,0 +1,43 @@
+@page "/checkout/success"
+@inject NavigationService Navigation
+
+<div class="container dn-container dn-page">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="dn-card p-5 text-center">
+                <div class="mb-4" style="animation: dn-pop 0.4s ease;">
+                    <i class="ph-fill ph-check-circle text-success" style="font-size: 5rem;" aria-hidden="true"></i>
+                </div>
+                <span class="dn-kicker">Thanh toán</span>
+                <h1 class="mt-2">Nâng cấp thành công!</h1>
+                <p class="text-secondary">
+                    Gói <strong>@(PlanName ?? "Premium")</strong> đã được kích hoạt cho tài khoản của bạn.<br />
+                    Tận hưởng các tính năng nâng cao ngay bây giờ.
+                </p>
+
+                <div class="dn-card p-3 text-start mt-4 mb-4" style="background: var(--dn-surface-alt);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="dn-quick-icon"><i class="ph ph-crown-simple" aria-hidden="true"></i></div>
+                        <div>
+                            <strong>@(PlanName ?? "Premium")</strong>
+                            <div class="small text-secondary">Đang hoạt động · Kích hoạt ngay bây giờ</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-2">
+                    <a href="/scan" class="btn btn-dn-coral" id="btn-start-scan">
+                        <i class="ph ph-scan" aria-hidden="true"></i> Thực hiện AI Scan ngay
+                    </a>
+                    <a href="/dashboard" class="btn btn-dn-outline" id="btn-goto-dashboard">
+                        Về Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "planName")] public string? PlanName { get; set; }
+}

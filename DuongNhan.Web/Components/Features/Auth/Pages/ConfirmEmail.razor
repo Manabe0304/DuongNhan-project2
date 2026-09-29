@@ -1,0 +1,47 @@
+@page "/confirm-email"
+@inject NavigationService Navigation
+
+<div class="dn-auth-page">
+    <div class="dn-auth-form-wrap">
+        <div class="dn-auth-form text-center">
+            @if (success)
+            {
+                <div class="mb-4">
+                    <i class="ph ph-check-circle text-success" style="font-size: 4rem;" aria-hidden="true"></i>
+                </div>
+                <span class="dn-kicker">Xác thực</span>
+                <h1>Email đã xác thực!</h1>
+                <p class="text-secondary">
+                    Tài khoản của bạn đã được kích hoạt thành công.<br />
+                    Bạn có thể đăng nhập và bắt đầu sử dụng Dưỡng Nhan ngay.
+                </p>
+                <a href="/login" class="btn btn-dn-coral btn-lg w-100 mt-3" id="btn-goto-login">
+                    <i class="ph ph-sign-in" aria-hidden="true"></i> Đăng nhập ngay
+                </a>
+            }
+            else
+            {
+                <div class="mb-4">
+                    <i class="ph ph-x-circle text-danger" style="font-size: 4rem;" aria-hidden="true"></i>
+                </div>
+                <span class="dn-kicker">Xác thực</span>
+                <h1>Liên kết không hợp lệ</h1>
+                <p class="text-secondary">
+                    Liên kết xác thực đã hết hạn hoặc không hợp lệ.<br />
+                    Hãy thực hiện lại luồng xác thực OTP.
+                </p>
+                <a href="/verify-email" class="btn btn-dn-coral btn-lg w-100 mt-3">
+                    <i class="ph ph-envelope" aria-hidden="true"></i> Xác thực lại
+                </a>
+                <a href="/login" class="btn btn-dn-outline w-100 mt-2">Về trang đăng nhập</a>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "status")] public string? Status { get; set; }
+
+    private bool success => Status?.Equals("ok", StringComparison.OrdinalIgnoreCase) == true
+                         || Status?.Equals("confirmed", StringComparison.OrdinalIgnoreCase) == true;
+}

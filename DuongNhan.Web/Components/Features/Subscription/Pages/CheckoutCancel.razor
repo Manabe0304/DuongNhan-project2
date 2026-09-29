@@ -1,0 +1,29 @@
+@page "/checkout/cancel"
+@page "/checkout-cancel"
+
+<div class="container dn-container dn-page">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="dn-card p-5 text-center">
+                <div class="mb-4">
+                    <i class="ph ph-x-circle" style="font-size: 5rem; color: var(--dn-text-muted);" aria-hidden="true"></i>
+                </div>
+                <span class="dn-kicker">Thanh toán</span>
+                <h1 class="mt-2">Đã huỷ thanh toán</h1>
+                <p class="text-secondary">
+                    Không có khoản nào bị trừ. Bạn có thể thử lại bất cứ lúc nào<br />
+                    hoặc tiếp tục sử dụng gói hiện tại.
+                </p>
+
+                <div class="d-flex flex-column gap-2 mt-4">
+                    <a href="/plans" class="btn btn-dn-coral" id="btn-try-again">
+                        <i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i> Thử lại
+                    </a>
+                    <a href="/dashboard" class="btn btn-dn-outline" id="btn-goto-dashboard">
+                        Về Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

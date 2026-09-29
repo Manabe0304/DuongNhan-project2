@@ -1,0 +1,92 @@
+@page "/welcome"
+@page "/onboarding/welcome"
+@inject UiSessionService Session
+@inject NavigationService Navigation
+
+<div class="container dn-container" style="max-width: 680px; padding-top: 3rem; padding-bottom: 4rem;">
+    <!-- Progress dots -->
+    <div class="d-flex justify-content-center gap-2 mb-5">
+        <span class="dn-ob-dot dn-ob-dot--active" aria-label="Bước 1"></span>
+        <span class="dn-ob-dot" aria-label="Bước 2"></span>
+        <span class="dn-ob-dot" aria-label="Bước 3"></span>
+    </div>
+
+    <div class="text-center mb-5">
+        <div class="dn-ob-icon mb-4">
+            <i class="ph ph-sparkle" aria-hidden="true"></i>
+        </div>
+        <span class="dn-kicker">Chào mừng bạn</span>
+        <h1 class="mt-2">Xin chào, @(Session.Name ?? "bạn")! 👋</h1>
+        <p class="text-secondary" style="font-size: 1.05rem; max-width: 500px; margin: 0 auto;">
+            Bạn vừa tham gia <strong>Dưỡng Nhan</strong> — nền tảng chăm sóc da thông minh với AI.
+            Chỉ cần vài bước đơn giản để bắt đầu hành trình làm đẹp khoa học.
+        </p>
+    </div>
+
+    <div class="row g-3 mb-5">
+        <div class="col-md-4">
+            <div class="dn-ob-step-card">
+                <div class="dn-ob-step-num">1</div>
+                <div class="dn-ob-step-icon"><i class="ph ph-camera" aria-hidden="true"></i></div>
+                <h6>Chụp ảnh da</h6>
+                <p class="small text-secondary mb-0">Tải ảnh hoặc chụp trực tiếp bằng camera</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dn-ob-step-card">
+                <div class="dn-ob-step-num">2</div>
+                <div class="dn-ob-step-icon"><i class="ph ph-brain" aria-hidden="true"></i></div>
+                <h6>AI phân tích</h6>
+                <p class="small text-secondary mb-0">Mô hình AI đánh giá tình trạng và mức độ</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="dn-ob-step-card">
+                <div class="dn-ob-step-num">3</div>
+                <div class="dn-ob-step-icon"><i class="ph ph-flask" aria-hidden="true"></i></div>
+                <h6>Nhận gợi ý</h6>
+                <p class="small text-secondary mb-0">Sản phẩm và lời khuyên phù hợp cho bạn</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-column align-items-center gap-3">
+        <a href="/onboarding/how-it-works" class="btn btn-dn-coral btn-lg px-5" id="btn-next-welcome">
+            Bắt đầu ngay <i class="ph ph-arrow-right ms-1" aria-hidden="true"></i>
+        </a>
+        <a href="/dashboard" class="dn-link small" id="btn-skip-onboarding">Bỏ qua, vào Dashboard</a>
+    </div>
+</div>
+
+<style>
+    .dn-ob-dot {
+        width: 10px; height: 10px;
+        border-radius: 50%;
+        background: var(--dn-border, #dee2e6);
+        display: inline-block;
+        transition: background .2s;
+    }
+    .dn-ob-dot--active { background: var(--dn-coral, #e06c4c); width: 28px; border-radius: 5px; }
+    .dn-ob-icon {
+        width: 80px; height: 80px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--dn-coral, #e06c4c) 0%, #f9a380 100%);
+        display: inline-flex; align-items: center; justify-content: center;
+        color: #fff; font-size: 2.2rem;
+        box-shadow: 0 8px 24px rgba(224,108,76,.3);
+    }
+    .dn-ob-step-card {
+        text-align: center; padding: 1.5rem 1rem;
+        border-radius: var(--dn-radius, 1rem);
+        border: 2px solid var(--dn-border, rgba(0,0,0,.08));
+        background: var(--dn-surface, #fff);
+        height: 100%;
+    }
+    .dn-ob-step-num {
+        width: 26px; height: 26px; border-radius: 50%;
+        background: var(--dn-coral, #e06c4c); color: #fff;
+        font-size: .8rem; font-weight: 700;
+        display: inline-flex; align-items: center; justify-content: center;
+        margin-bottom: .75rem;
+    }
+    .dn-ob-step-icon { font-size: 1.8rem; color: var(--dn-coral, #e06c4c); margin-bottom: .5rem; }
+</style>

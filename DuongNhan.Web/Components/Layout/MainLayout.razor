@@ -58,7 +58,7 @@
         <header class="dn-topbar">
             <div class="container-fluid dn-container d-flex align-items-center justify-content-between gap-3">
                 <a class="dn-brand" href="/">
-                    <img class="dn-brand-mark" src="/DuongNhan.jpg" />
+                    <img class="dn-brand-mark" src="/DuongNhan.jpg" alt="Dưỡng Nhan AI" width="40" height="40" style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;" />
                     <span class="d-inline-flex align-items-center gap-2">
                         <span>Dưỡng Nhan</span>
                         <span class="dn-brand-badge">AI</span>
@@ -109,7 +109,9 @@
 
 @code {
     private bool sessionLoaded;
+#pragma warning disable CS0414
     private bool isSidebarOpen;
+#pragma warning restore CS0414
     private int usageUsed;
     private int usageLimit;
 
