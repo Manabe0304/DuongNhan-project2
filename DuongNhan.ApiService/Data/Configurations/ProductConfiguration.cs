@@ -20,6 +20,7 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.Description).HasMaxLength(2000);
         builder.Property(p => p.TargetConditions).HasMaxLength(500);
         builder.Property(p => p.UsageInstructions).HasMaxLength(1000);
+        builder.Property(p => p.AffiliateUrl).HasMaxLength(2000);
 
         builder.HasIndex(p => p.Category);
         builder.HasIndex(p => p.Brand);

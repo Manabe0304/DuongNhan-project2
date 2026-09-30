@@ -88,7 +88,8 @@ internal sealed class RecommendEndpoint(AppDbContext db) : Endpoint<RecommendReq
                 ImageUrl: product.ImageUrl,
                 Description: product.Description,
                 TargetConditions: product.TargetConditions,
-                UsageInstructions: product.UsageInstructions);
+                UsageInstructions: product.UsageInstructions,
+                AffiliateUrl: product.AffiliateUrl);
 
             recommendations.Add(new ProductRecommendationDto(
                 Id: Guid.NewGuid(),

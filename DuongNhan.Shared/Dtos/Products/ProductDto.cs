@@ -9,5 +9,6 @@ public sealed record ProductDto(
     string? ImageUrl,
     string? Description,
     string? TargetConditions,
-    string? UsageInstructions
+    string? UsageInstructions,
+    string? AffiliateUrl
 );
