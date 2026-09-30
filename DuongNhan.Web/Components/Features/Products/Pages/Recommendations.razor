@@ -1,6 +1,7 @@
 @page "/products"
 @page "/recommendations"
 @inject DuongNhanApiService Api
+@inject NavigationManager NavManager
 
 <div class="container dn-container dn-page">
     <div class="dn-page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
@@ -22,7 +23,7 @@
                             <small class="text-secondary">@Text(p,"brand","DuongNhan")</small>
                             <h6 class="mt-1 mb-2">@Text(p,"name","Skin care product")</h6>
                             <div class="d-flex align-items-center justify-content-between mb-3"><span class="fw-bold">@Text(p,"price","—")</span><span class="small dn-rating"><i class="ph-fill ph-star" aria-hidden="true"></i>@Text(p,"rating","4.8")</span></div>
-                            <a href="@Affiliate(p)" target="_blank" class="btn btn-dn-coral btn-sm mt-auto">Xem sản phẩm</a>
+                            <button type="button" @onclick="() => OpenAffiliate(Affiliate(p))" class="btn btn-dn-coral btn-sm mt-auto">Xem sản phẩm</button>
                         </div>
                     </div>
                 </div>
@@ -59,4 +60,12 @@
 
     private static string Affiliate(System.Text.Json.JsonElement item)
         => Text(item, "affiliateUrl", "#");
+
+    private void OpenAffiliate(string url)
+    {
+        if (!string.IsNullOrWhiteSpace(url) && url != "#")
+        {
+            NavManager.NavigateTo(url, forceLoad: true);
+        }
+    }
 }

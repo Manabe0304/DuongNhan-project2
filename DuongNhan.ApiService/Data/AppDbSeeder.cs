@@ -83,6 +83,7 @@ internal static class AppDbSeeder
                     Description = "Sữa rửa mặt dạng gel tạo bọt nhẹ dịu, chứa Ceramide và Niacinamide giúp làm sạch sâu bã nhờn mà không làm khô căng hay tổn thương hàng rào ẩm.",
                     TargetConditions = "Acne,EnlargedPores,Healthy",
                     UsageInstructions = "Lấy một lượng vừa đủ, tạo bọt nhẹ với nước và massage nhẹ nhàng trong 60 giây, rửa sạch với nước ấm. Dùng sáng và tối.",
+                    AffiliateUrl = "https://shopee.vn/product/123456789/cerave-foaming-cleanser?affiliate_id=duongnhan",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -96,6 +97,7 @@ internal static class AppDbSeeder
                     Description = "Gel rửa mặt dành riêng cho da dầu mụn nhạy cảm với nước khoáng khoáng La Roche-Posay và Kẽm PCA giúp điều tiết dầu thừa hiệu quả.",
                     TargetConditions = "Acne,EnlargedPores,SeborrheicDermatitis",
                     UsageInstructions = "Tạo bọt trên lòng bàn tay rồi thoa lên mặt đã làm ướt. Rửa sạch lại với nước và thấm khô.",
+                    AffiliateUrl = "https://shopee.vn/product/234567890/laroche-posay-effaclar?affiliate_id=duongnhan",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -109,6 +111,7 @@ internal static class AppDbSeeder
                     Description = "Dung dịch loại bỏ tế bào chết hóa học chứa 2% Salicylic Acid tan trong dầu, đi sâu vào lỗ chân lông để thông thoáng tắc nghẽn, giảm mụn đầu đen và thu nhỏ lỗ chân lông.",
                     TargetConditions = "Acne,EnlargedPores,SeborrheicDermatitis",
                     UsageInstructions = "Thấm đều ra bông tẩy trang hoặc đổ trực tiếp ra lòng bàn tay rồi vỗ nhẹ lên mặt sau bước làm sạch. Bắt đầu với 2-3 lần/tuần.",
+                    AffiliateUrl = "https://shopee.vn/product/345678901/paulas-choice-bha?affiliate_id=duongnhan",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -122,6 +125,7 @@ internal static class AppDbSeeder
                     Description = "Tinh chất cô đặc với 10% Niacinamide và 1% Muối Kẽm giúp kháng viêm nốt mụn, kiểm soát bã nhờn vượt trội và làm mờ các vết thâm sau mụn.",
                     TargetConditions = "Acne,EnlargedPores,Hyperpigmentation",
                     UsageInstructions = "Thoa 2-3 giọt lên toàn bộ khuôn mặt vào buổi sáng và buổi tối trước các loại kem đặc hơn.",
+                    AffiliateUrl = "https://shopee.vn/product/456789012/the-ordinary-niacinamide?affiliate_id=duongnhan",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -135,6 +139,7 @@ internal static class AppDbSeeder
                     Description = "Serum dưỡng sáng da mờ thâm nám với Vitamin C hoạt tính thế hệ mới kết hợp chiết xuất Bạch Dương Trắng và Hoa Mẫu Đơn giúp giảm rõ rệt đốm nâu và sạm nám.",
                     TargetConditions = "Hyperpigmentation,Melasma",
                     UsageInstructions = "Thoa một vài giọt lên vùng da thâm nám hoặc toàn mặt trước khi thoa kem dưỡng ẩm. Sử dụng đều đặn sáng và tối.",
+                    AffiliateUrl = "https://shopee.vn/product/567890123/kiehls-dark-spot?affiliate_id=duongnhan",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -148,6 +153,7 @@ internal static class AppDbSeeder
                     Description = "Kem dưỡng phục hồi làm dịu da đa công dụng với 5% Panthenol (B5), Madecassoside và phức hợp men vi sinh Tribioma giúp làm dịu tức thì các kích ứng, mẩn đỏ và phục hồi da sau mụn.",
                     TargetConditions = "Eczema,Rosacea,ContactDermatitis,Acne",
                     UsageInstructions = "Thoa 2 lần mỗi ngày lên vùng da cần phục hồi sau khi làm sạch. Thoa lớp mỏng vừa đủ.",
+                    AffiliateUrl = "https://shopee.vn/product/678901234/laroche-posay-cicaplast?affiliate_id=duongnhan",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -161,6 +167,7 @@ internal static class AppDbSeeder
                     Description = "Kem dưỡng ẩm chuyên sâu làm dịu da khô, bong tróc và da nhạy cảm với phức hợp Beta-Glucan, chiết xuất rau má và tinh dầu jojoba giúp duy trì độ ẩm suốt 24h.",
                     TargetConditions = "Healthy,Eczema,Rosacea",
                     UsageInstructions = "Lấy một lượng kem vừa đủ thoa đều khắp mặt và cổ ở bước cuối cùng của chu trình skincare buổi tối.",
+                    AffiliateUrl = "https://shopee.vn/product/789012345/dear-klairs-moist-cream?affiliate_id=duongnhan",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -174,6 +181,7 @@ internal static class AppDbSeeder
                     Description = "Sữa chống nắng kiềm dầu số 1 Nhật Bản với công nghệ Auto Booster chống trôi nước/mồ hôi vượt trội, bảo vệ quang phổ rộng chống tia UVA/UVB và ánh sáng xanh.",
                     TargetConditions = "Hyperpigmentation,Melasma,Healthy,Acne",
                     UsageInstructions = "Lắc đều trước khi dùng. Thoa đều lên mặt và cổ trước khi ra ngoài 20 phút. Thoa lại sau mỗi 2-3 giờ khi hoạt động ngoài trời.",
+                    AffiliateUrl = "https://shopee.vn/product/890123456/anessa-sunscreen?affiliate_id=duongnhan",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -187,6 +195,7 @@ internal static class AppDbSeeder
                     Description = "Tinh chất đặc trị mụn chuyên sâu với phức hợp 10% Hydroxy Complex (AHA, BHA, PHA) và Licochalcone A giúp gom cồi mụn, giảm viêm sưng chỉ sau 1 tuần.",
                     TargetConditions = "Acne,EnlargedPores",
                     UsageInstructions = "Sử dụng một lần mỗi ngày vào buổi tối. Thoa một lượng nhỏ lên vùng da bị mụn sau khi rửa mặt sạch.",
+                    AffiliateUrl = "https://shopee.vn/product/901234567/eucerin-proacne?affiliate_id=duongnhan",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -200,6 +209,7 @@ internal static class AppDbSeeder
                     Description = "Tinh chất chứa 96% dịch nhầy ốc sên tự nhiên giúp cấp nước tức thì, tái tạo độ đàn hồi và làm dịu vùng da sau khi lấy nhân mụn.",
                     TargetConditions = "Healthy,Eczema,Hyperpigmentation",
                     UsageInstructions = "Sau khi làm sạch và dùng toner, thoa một lượng nhỏ lên toàn bộ khuôn mặt rồi vỗ nhẹ để dưỡng chất thẩm thấu.",
+                    AffiliateUrl = "https://shopee.vn/product/012345678/cosrx-snail-essence?affiliate_id=duongnhan",
                     IsActive = true,
                     CreatedAt = now
                 }
