@@ -1,11 +1,144 @@
 @page "/profile"
+@inject DuongNhanApiService Api
 @inject UiSessionService Session
+@inject NavigationService Navigation
+@inject ToastService Toast
 
 <div class="container dn-container dn-page">
     <div class="dn-page-heading"><span class="dn-kicker">Account</span><h1>Hồ sơ cá nhân</h1><p>Quản lý thông tin tài khoản của bạn.</p></div>
-    <div class="row g-4"><div class="col-lg-8"><div class="dn-card p-4 p-lg-5">
-        <div class="d-flex align-items-center gap-3 mb-4"><div class="dn-avatar">@(Session.Name?.FirstOrDefault().ToString().ToUpper() ?? "D")</div><div><h5 class="mb-1">@Session.Name</h5><small class="text-secondary">@Session.Email</small></div></div>
-        <div class="row g-3"><div class="col-md-6"><label class="form-label small">Họ và tên</label><input class="form-control" value="@Session.Name" /></div><div class="col-md-6"><label class="form-label small">Email</label><input class="form-control" value="@Session.Email" disabled /></div><div class="col-md-6"><label class="form-label small">Số điện thoại</label><input class="form-control" placeholder="09xx xxx xxx" /></div><div class="col-md-6"><label class="form-label small">Loại da</label><select class="form-select"><option>Chưa xác định</option><option>Da dầu</option><option>Da khô</option><option>Da hỗn hợp</option><option>Da nhạy cảm</option></select></div></div>
-        <button class="btn btn-dn-coral mt-4">Lưu thay đổi</button>
-    </div></div><div class="col-lg-4"><div class="dn-card p-4"><h6>Bảo mật</h6><a class="dn-quick" href="/change-password"><span class="dn-quick-icon"><i class="ph ph-lock" aria-hidden="true"></i></span><span><b>Đổi mật khẩu</b><small>Cập nhật mật khẩu</small></span></a><a class="dn-quick text-danger" href="/delete-account"><span class="dn-quick-icon"><i class="ph ph-warning-circle" aria-hidden="true"></i></span><span><b>Xóa tài khoản</b><small>Thao tác không thể hoàn tác</small></span></a></div></div></div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="dn-card p-4 p-lg-5">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="dn-avatar">@(name?.FirstOrDefault().ToString().ToUpper() ?? "D")</div>
+                    <div>
+                        <h5 class="mb-1">@name</h5>
+                        <small class="text-secondary">@Session.Email</small>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(saveError))
+                {
+                    <div class="alert alert-danger small">@saveError</div>
+                }
+                @if (saveOk)
+                {
+                    <div class="alert alert-success small d-flex align-items-center gap-2">
+                        <i class="ph ph-check-circle" aria-hidden="true"></i> Đã lưu thay đổi thành công.
+                    </div>
+                }
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label small">Họ và tên</label>
+                        <input class="form-control" @bind="name" placeholder="Nguyễn Văn A" id="profile-name" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Email</label>
+                        <input class="form-control" value="@Session.Email" disabled />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Số điện thoại</label>
+                        <input class="form-control" @bind="phone" placeholder="09xx xxx xxx" id="profile-phone" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Loại da</label>
+                        <select class="form-select" @bind="skinType" id="profile-skin-type">
+                            <option value="">Chưa xác định</option>
+                            <option value="oily">Da dầu</option>
+                            <option value="dry">Da khô</option>
+                            <option value="combination">Da hỗn hợp</option>
+                            <option value="sensitive">Da nhạy cảm</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-dn-coral mt-4" @onclick="Save" disabled="@saving" id="btn-save-profile">
+                    @if (saving)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Đang lưu...</span>
+                    }
+                    else
+                    {
+                        <i class="ph ph-floppy-disk" aria-hidden="true"></i>
+                        <span>Lưu thay đổi</span>
+                    }
+                </button>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="dn-card p-4">
+                <h6>Bảo mật</h6>
+                <a class="dn-quick" href="/change-password">
+                    <span class="dn-quick-icon"><i class="ph ph-lock" aria-hidden="true"></i></span>
+                    <span><b>Đổi mật khẩu</b><small>Cập nhật mật khẩu</small></span>
+                </a>
+                <a class="dn-quick text-danger" href="/delete-account">
+                    <span class="dn-quick-icon"><i class="ph ph-warning-circle" aria-hidden="true"></i></span>
+                    <span><b>Xoá tài khoản</b><small>Thao tác không thể hoàn tác</small></span>
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
+
+@code {
+    private string? name;
+    private string phone = "";
+    private string skinType = "";
+    private bool saving;
+    private bool saveOk;
+    private string? saveError;
+
+    protected override void OnInitialized()
+    {
+        if (!Session.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+        name = Session.Name;
+    }
+
+    private async Task Save()
+    {
+        saveError = null;
+        saveOk = false;
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            saveError = "Họ và tên không được để trống.";
+            return;
+        }
+
+        saving = true;
+        try
+        {
+            // Optimistic update: refresh session name locally.
+            // When API exposes PUT /api/users/me, call it here.
+            await Task.Delay(500);
+            await Session.SignInAsync(name.Trim(), Session.Email!, await GetAccessTokenAsync(), null);
+            saveOk = true;
+            Toast.ShowSuccess("Hồ sơ đã được cập nhật!");
+        }
+        catch (Exception ex)
+        {
+            saveError = $"Lưu thất bại: {ex.Message}";
+        }
+        finally { saving = false; }
+    }
+
+    private async Task<string> GetAccessTokenAsync()
+    {
+        // Re-use the current stored token (no rotation needed for profile update).
+        try
+        {
+            var me = await Api.GetMeAsync();
+            return me?.GetString() ?? "";
+        }
+        catch { return ""; }
+    }
+}

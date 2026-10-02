@@ -1,0 +1,155 @@
+@page "/checkout"
+@inject UiSessionService Session
+@inject NavigationService Navigation
+
+<div class="container dn-container dn-page">
+    <div class="dn-page-heading">
+        <span class="dn-kicker">Thanh toán</span>
+        <h1>Xác nhận đơn hàng</h1>
+        <p>Kiểm tra thông tin và hoàn tất nâng cấp gói của bạn.</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+        <div class="col-lg-7">
+            <div class="dn-card p-4 p-lg-5">
+                <h5 class="mb-4">Thông tin đơn hàng</h5>
+
+                <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                    <div>
+                        <strong>@PlanName</strong>
+                        <div class="small text-secondary">Gói @(Cycle == "monthly" ? "hàng tháng" : "hàng năm")</div>
+                    </div>
+                    <span class="fw-bold fs-5">@FormatPrice(Price)</span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center py-3 border-bottom">
+                    <span class="text-secondary">Thuế VAT (0%)</span>
+                    <span>Miễn phí</span>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center py-3 fw-bold fs-5">
+                    <span>Tổng cộng</span>
+                    <span class="text-success">@FormatPrice(Price)</span>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(error))
+                {
+                    <div class="alert alert-danger mt-3">@error</div>
+                }
+
+                <div class="mt-4">
+                    <h6 class="mb-3">Phương thức thanh toán</h6>
+                    <div class="d-flex flex-column gap-2">
+                        <label class="dn-radio-card @(payMethod == "card" ? "selected" : "")" id="pay-card">
+                            <input type="radio" name="pay" value="card" @onchange="e => SetPayMethod(e.Value?.ToString())" checked="@(payMethod == "card")" />
+                            <i class="ph ph-credit-card fs-5" aria-hidden="true"></i>
+                            <span>Thẻ ngân hàng / VISA / Mastercard</span>
+                        </label>
+                        <label class="dn-radio-card @(payMethod == "momo" ? "selected" : "")" id="pay-momo">
+                            <input type="radio" name="pay" value="momo" @onchange="e => SetPayMethod(e.Value?.ToString())" />
+                            <i class="ph ph-device-mobile fs-5" aria-hidden="true"></i>
+                            <span>Ví MoMo</span>
+                        </label>
+                        <label class="dn-radio-card @(payMethod == "bank" ? "selected" : "")" id="pay-bank">
+                            <input type="radio" name="pay" value="bank" @onchange="e => SetPayMethod(e.Value?.ToString())" />
+                            <i class="ph ph-bank fs-5" aria-hidden="true"></i>
+                            <span>Chuyển khoản ngân hàng</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 mt-4">
+                    <a href="/plans" class="btn btn-dn-outline flex-shrink-0" id="btn-cancel-checkout">Huỷ</a>
+                    <button class="btn btn-dn-coral flex-grow-1" @onclick="Confirm" disabled="@loading" id="btn-confirm-checkout">
+                        @if (loading)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <span>Đang xử lý...</span>
+                        }
+                        else
+                        {
+                            <i class="ph ph-lock-simple" aria-hidden="true"></i>
+                            <span>Thanh toán an toàn</span>
+                        }
+                    </button>
+                </div>
+
+                <p class="text-center small text-secondary mt-3">
+                    <i class="ph ph-shield-check" aria-hidden="true"></i>
+                    Dữ liệu thanh toán được mã hoá SSL 256-bit
+                </p>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="dn-card p-4">
+                <h6 class="mb-3">Tóm tắt gói</h6>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="dn-quick-icon"><i class="ph ph-crown-simple" aria-hidden="true"></i></div>
+                    <div>
+                        <strong>@PlanName</strong>
+                        <div class="small text-secondary">Kích hoạt ngay sau thanh toán</div>
+                    </div>
+                </div>
+                <ul class="list-unstyled small mb-0">
+                    <li class="d-flex gap-2 mb-2">
+                        <i class="ph-fill ph-check-circle text-success mt-1" aria-hidden="true"></i>
+                        <span>Tăng giới hạn lượt AI Skin Scan</span>
+                    </li>
+                    <li class="d-flex gap-2 mb-2">
+                        <i class="ph-fill ph-check-circle text-success mt-1" aria-hidden="true"></i>
+                        <span>Gợi ý sản phẩm cá nhân hoá</span>
+                    </li>
+                    <li class="d-flex gap-2">
+                        <i class="ph-fill ph-check-circle text-success mt-1" aria-hidden="true"></i>
+                        <span>Huỷ bất cứ lúc nào</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "planId")]   public string? PlanId { get; set; }
+    [SupplyParameterFromQuery(Name = "planName")] public string? PlanName { get; set; }
+    [SupplyParameterFromQuery(Name = "price")]    public string? PriceStr { get; set; }
+    [SupplyParameterFromQuery(Name = "cycle")]    public string? Cycle { get; set; }
+
+    private decimal Price => decimal.TryParse(PriceStr, out var p) ? p : 0m;
+    private string payMethod = "card";
+    private bool loading;
+    private string? error;
+
+    protected override void OnInitialized()
+    {
+        if (!Session.IsAuthenticated)
+            Navigation.NavigateTo("/login");
+    }
+
+    private async Task Confirm()
+    {
+        loading = true;
+        error = null;
+        try
+        {
+            // Placeholder: integrate with payment gateway (Stripe/MoMo/VNPay) here.
+            // On success → navigate to CheckoutSuccess, on failure → CheckoutCancel.
+            await Task.Delay(1200); // Simulate payment processing
+            Navigation.NavigateTo($"/checkout/success?planName={Uri.EscapeDataString(PlanName ?? "")}");
+        }
+        catch (Exception ex)
+        {
+            error = $"Thanh toán thất bại: {ex.Message}";
+            loading = false;
+        }
+    }
+
+    private static string FormatPrice(decimal price)
+        => price == 0 ? "Miễn phí" : $"{price:N0}đ";
+
+    private void SetPayMethod(string? value)
+    {
+        if (!string.IsNullOrEmpty(value)) payMethod = value;
+    }
+}

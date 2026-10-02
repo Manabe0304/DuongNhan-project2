@@ -1,0 +1,110 @@
+@page "/data-deletion"
+@page "/delete-data"
+@inject UiSessionService Session
+@inject NavigationService Navigation
+
+<div class="container dn-container dn-page" style="max-width: 800px;">
+    <div class="dn-page-heading">
+        <span class="dn-kicker">Pháp lý</span>
+        <h1>Yêu cầu Xoá dữ liệu</h1>
+        <p class="text-secondary">Quyền xoá dữ liệu của bạn theo quy định bảo vệ dữ liệu cá nhân.</p>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="dn-card p-4 p-lg-5">
+                <div class="dn-legal-body">
+                    <p>
+                        Theo cam kết về quyền riêng tư, bạn có quyền yêu cầu xoá toàn bộ dữ liệu cá nhân
+                        của mình khỏi hệ thống Dưỡng Nhan bất cứ lúc nào.
+                    </p>
+
+                    <h2>Dữ liệu sẽ bị xoá</h2>
+                    <ul>
+                        <li>Thông tin tài khoản (tên, email, mật khẩu)</li>
+                        <li>Toàn bộ hình ảnh da đã tải lên</li>
+                        <li>Lịch sử phân tích AI (DiagnosisRecord)</li>
+                        <li>Lịch sử thanh toán và gói đăng ký</li>
+                        <li>Dữ liệu phiên và token xác thực</li>
+                    </ul>
+
+                    <div class="alert alert-warning d-flex gap-2 align-items-start">
+                        <i class="ph ph-warning flex-shrink-0 mt-1" aria-hidden="true"></i>
+                        <span>
+                            Xoá dữ liệu là <strong>hành động vĩnh viễn</strong> và không thể hoàn tác.
+                            Gói đăng ký đang hoạt động sẽ bị huỷ mà không hoàn tiền.
+                        </span>
+                    </div>
+
+                    <h2>Cách thực hiện</h2>
+
+                    @if (Session.IsAuthenticated)
+                    {
+                        <p>Vì bạn đang đăng nhập, bạn có thể thực hiện trực tiếp:</p>
+                        <a href="/delete-account" class="btn btn-danger mb-4" id="btn-goto-delete-account">
+                            <i class="ph ph-trash me-2" aria-hidden="true"></i> Xoá tài khoản của tôi
+                        </a>
+                    }
+                    else
+                    {
+                        <p>
+                            <strong>Cách 1 (nhanh nhất):</strong> <a href="/login">Đăng nhập</a> rồi vào
+                            <a href="/delete-account">trang xoá tài khoản</a>.
+                        </p>
+                    }
+
+                    <p><strong>Cách 2 — Gửi yêu cầu qua email:</strong></p>
+                    <p>
+                        Gửi email đến <a href="mailto:privacy@duongnhan.vn">privacy@duongnhan.vn</a> với tiêu đề
+                        <code>YÊU CẦU XOÁ DỮ LIỆU</code> và nội dung gồm:
+                    </p>
+                    <ul>
+                        <li>Địa chỉ email đăng ký tài khoản</li>
+                        <li>Xác nhận: "Tôi đồng ý xoá toàn bộ dữ liệu và hiểu rằng hành động này không thể hoàn tác."</li>
+                    </ul>
+
+                    <h2>Thời gian xử lý</h2>
+                    <p>
+                        Chúng tôi xử lý yêu cầu trong vòng <strong>30 ngày làm việc</strong> kể từ ngày nhận được.
+                        Bạn sẽ nhận email xác nhận khi hoàn tất.
+                    </p>
+
+                    <h2>Dữ liệu được giữ lại</h2>
+                    <p>
+                        Một số dữ liệu có thể được giữ lại tối đa 5 năm theo yêu cầu pháp luật về kế toán và thuế
+                        (ví dụ: lịch sử giao dịch). Dữ liệu này sẽ được ẩn danh hoá.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="dn-card p-4">
+                <h6 class="mb-3">Liên kết liên quan</h6>
+                <div class="d-flex flex-column gap-2">
+                    <a class="dn-quick" href="/privacy">
+                        <span class="dn-quick-icon"><i class="ph ph-shield" aria-hidden="true"></i></span>
+                        <span><b>Chính sách Bảo mật</b><small>Xem chi tiết về quyền riêng tư</small></span>
+                    </a>
+                    <a class="dn-quick" href="/contact">
+                        <span class="dn-quick-icon"><i class="ph ph-envelope" aria-hidden="true"></i></span>
+                        <span><b>Liên hệ hỗ trợ</b><small>Gửi câu hỏi cho chúng tôi</small></span>
+                    </a>
+                    @if (Session.IsAuthenticated)
+                    {
+                        <a class="dn-quick text-danger" href="/delete-account">
+                            <span class="dn-quick-icon"><i class="ph ph-trash" aria-hidden="true"></i></span>
+                            <span><b>Xoá tài khoản</b><small>Xoá ngay qua tài khoản</small></span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-3 mt-4 flex-wrap">
+        <a href="/privacy" class="dn-link small">Chính sách Bảo mật</a>
+        <a href="/terms" class="dn-link small">Điều khoản Dịch vụ</a>
+        <a href="/cookies" class="dn-link small">Chính sách Cookie</a>
+    </div>
+</div>

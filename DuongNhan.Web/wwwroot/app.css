@@ -2550,3 +2550,20 @@ h6 {
         border-color: transparent;
         cursor: default;
     }
+
+/* ── Legal pages ────────────────────────────────── */
+.dn-legal-body h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: .6rem;
+    padding-bottom: .35rem;
+    border-bottom: 1px solid var(--dn-border, rgba(0,0,0,.08));
+}
+.dn-legal-body h2:first-of-type { margin-top: 1rem; }
+.dn-legal-body p, .dn-legal-body li { font-size: .9375rem; line-height: 1.75; color: var(--dn-text, #1a1a1a); }
+.dn-legal-body ul { padding-left: 1.5rem; }
+.dn-legal-body li { margin-bottom: .4rem; }
+.dn-legal-body a { color: var(--dn-coral, #e06c4c); }
+.dn-legal-body code { background: rgba(0,0,0,.05); padding: .1rem .35rem; border-radius: .25rem; font-size: .85em; }
+

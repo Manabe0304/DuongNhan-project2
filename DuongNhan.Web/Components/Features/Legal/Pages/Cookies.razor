@@ -1,0 +1,108 @@
+@page "/cookies"
+@page "/cookie-policy"
+
+<div class="container dn-container dn-page" style="max-width: 800px;">
+    <div class="dn-page-heading">
+        <span class="dn-kicker">Pháp lý</span>
+        <h1>Chính sách Cookie</h1>
+        <p class="text-secondary">Cập nhật lần cuối: 01/09/2026</p>
+    </div>
+
+    <div class="dn-card p-4 p-lg-5">
+        <div class="dn-legal-body">
+
+            <p>
+                Trang web Dưỡng Nhan sử dụng cookie và các công nghệ lưu trữ tương tự để cải thiện trải nghiệm người dùng.
+                Trang này giải thích cookie là gì, chúng tôi sử dụng loại gì và bạn kiểm soát chúng như thế nào.
+            </p>
+
+            <h2>1. Cookie là gì?</h2>
+            <p>
+                Cookie là các tệp văn bản nhỏ được lưu trong trình duyệt của bạn khi truy cập trang web.
+                Chúng giúp trang web nhớ thông tin giữa các lần truy cập.
+            </p>
+
+            <h2>2. Loại cookie chúng tôi sử dụng</h2>
+
+            <div class="table-responsive">
+                <table class="table table-bordered small">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Loại</th>
+                            <th>Tên</th>
+                            <th>Mục đích</th>
+                            <th>Thời hạn</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge bg-success-subtle text-success">Cần thiết</span></td>
+                            <td><code>duongnhan_session</code></td>
+                            <td>Duy trì phiên đăng nhập</td>
+                            <td>Phiên trình duyệt</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-success-subtle text-success">Cần thiết</span></td>
+                            <td><code>duongnhan_client_user.*</code></td>
+                            <td>Lưu thông tin người dùng (tên, email) trong localStorage</td>
+                            <td>Không giới hạn (cho đến khi xoá)</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-info-subtle text-info">Chức năng</span></td>
+                            <td><code>dn_theme</code></td>
+                            <td>Ghi nhớ tùy chọn giao diện sáng/tối</td>
+                            <td>1 năm</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge bg-warning-subtle text-warning">Phân tích</span></td>
+                            <td>—</td>
+                            <td>Hiện tại chưa sử dụng cookie phân tích bên thứ ba</td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>3. Cookie của bên thứ ba</h2>
+            <ul>
+                <li>
+                    <strong>Google Sign-In:</strong> Khi bạn đăng nhập bằng Google, Google có thể lưu cookie theo
+                    <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Chính sách bảo mật của Google</a>.
+                </li>
+                <li>
+                    <strong>Cổng thanh toán:</strong> Khi thanh toán, nhà cung cấp cổng thanh toán có thể lưu cookie riêng.
+                </li>
+            </ul>
+
+            <h2>4. Cách kiểm soát cookie</h2>
+            <p>Bạn có thể kiểm soát cookie qua trình duyệt:</p>
+            <ul>
+                <li><strong>Chrome:</strong> Cài đặt → Quyền riêng tư và bảo mật → Cookie</li>
+                <li><strong>Firefox:</strong> Tùy chọn → Quyền riêng tư & Bảo mật</li>
+                <li><strong>Safari:</strong> Tùy chọn → Quyền riêng tư</li>
+                <li><strong>Edge:</strong> Cài đặt → Cookie và quyền trang web</li>
+            </ul>
+            <p class="text-secondary small">
+                Lưu ý: Tắt cookie cần thiết có thể khiến bạn không đăng nhập được vào tài khoản.
+            </p>
+
+            <h2>5. localStorage</h2>
+            <p>
+                Ngoài cookie, chúng tôi sử dụng <code>localStorage</code> của trình duyệt để lưu token xác thực và
+                thông tin phiên. Dữ liệu này không được gửi tự động lên máy chủ và bị xoá khi bạn đăng xuất.
+            </p>
+
+            <h2>6. Liên hệ</h2>
+            <p>
+                Câu hỏi về cookie: <a href="mailto:privacy@duongnhan.vn">privacy@duongnhan.vn</a> hoặc
+                <a href="/contact">trang Liên hệ</a>.
+            </p>
+        </div>
+    </div>
+
+    <div class="d-flex gap-3 mt-4 flex-wrap">
+        <a href="/privacy" class="dn-link small">Chính sách Bảo mật</a>
+        <a href="/terms" class="dn-link small">Điều khoản Dịch vụ</a>
+        <a href="/data-deletion" class="dn-link small">Xoá dữ liệu</a>
+    </div>
+</div>

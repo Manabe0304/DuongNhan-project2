@@ -1,6 +1,7 @@
 @page "/"
 @inject UiSessionService Session
-@inject DuongNhanApiService Api
+@implements IDisposable
+@inject PlanCatalogService PlanCatalog
 @inject NavigationService Navigation
 
 <PageTitle>Dưỡng Nhan — AI phân tích da</PageTitle>
@@ -174,11 +175,20 @@
     private List<System.Text.Json.JsonElement> plans = [];
     private bool loadingPlans = true;
 
+    private readonly CancellationTokenSource cts = new();
+
     protected override async Task OnInitializedAsync()
     {
-        try { plans = await Api.GetPlansAsync(); }
+        try { plans = await PlanCatalog.GetPlansAsync(cts.Token); }
         catch { /* the teaser is optional decoration — /pricing still works if this fails */ }
         finally { loadingPlans = false; }
+    }
+
+    // Leaving the page cancels only this page's request; cancellation is expected, not an error.
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 
     private void GoToPricing() => Navigation.NavigateTo("/pricing");

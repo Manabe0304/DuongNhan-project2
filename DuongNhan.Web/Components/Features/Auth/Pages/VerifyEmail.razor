@@ -1,0 +1,121 @@
+@page "/verify-email"
+@inject DuongNhanApiService Api
+@inject NavigationService Navigation
+
+<div class="dn-auth-page">
+    <div class="dn-auth-form-wrap">
+        <div class="dn-auth-form">
+            <a href="@(Mode == "reset" ? "/forgot-password" : "/register")" class="dn-link small">
+                <i class="ph ph-arrow-left" aria-hidden="true"></i>Quay lại
+            </a>
+            <span class="dn-kicker mt-4">Xác thực</span>
+            <h1>Nhập mã OTP</h1>
+            <p class="text-secondary small">
+                Chúng tôi đã gửi mã 6 số đến <strong>@EmailParam</strong>. Mã có hiệu lực trong 10 phút.
+            </p>
+
+            @if (!string.IsNullOrWhiteSpace(error))
+            {
+                <div class="alert alert-danger small">@error</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(success))
+            {
+                <div class="alert alert-success small">@success</div>
+            }
+
+            <form @onsubmit="Submit" @onsubmit:preventDefault>
+                <div class="mb-3">
+                    <label>Mã OTP</label>
+                    <input class="form-control form-control-lg text-center fw-bold ls-3"
+                           style="letter-spacing: 0.35em; font-size: 1.5rem;"
+                           type="text" inputmode="numeric" maxlength="6"
+                           @bind="code" required placeholder="------"
+                           autofocus id="otp-input" />
+                    <small class="text-secondary">Nhập đúng 6 chữ số từ email của bạn.</small>
+                </div>
+                <button class="btn btn-dn-coral btn-lg w-100 mt-2" disabled="@loading" id="btn-verify-otp">
+                    @if (loading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <span>Đang xác thực...</span>
+                    }
+                    else
+                    {
+                        <i class="ph ph-check-circle" aria-hidden="true"></i>
+                        <span>Xác nhận mã</span>
+                    }
+                </button>
+            </form>
+
+            <div class="text-center small text-secondary mt-4">
+                Không nhận được mã?
+                <button class="btn btn-link p-0 small fw-semibold" @onclick="Resend" disabled="@resending">
+                    @(resending ? "Đang gửi lại..." : "Gửi lại mã")
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "email")] public string? EmailParam { get; set; }
+    [SupplyParameterFromQuery(Name = "mode")]  public string? Mode { get; set; }
+
+    private string code = "";
+    private bool loading;
+    private bool resending;
+    private string? error;
+    private string? success;
+
+    private async Task Submit()
+    {
+        error = null;
+        if (string.IsNullOrWhiteSpace(EmailParam))
+        {
+            error = "Thiếu thông tin email. Vui lòng thử lại từ đầu.";
+            return;
+        }
+
+        loading = true;
+        try
+        {
+            var verified = await Api.VerifyOtpAsync(EmailParam.Trim(), code.Trim());
+            if (!verified)
+            {
+                error = "Mã OTP không đúng hoặc đã hết hạn. Vui lòng thử lại.";
+                return;
+            }
+
+            if (Mode == "reset")
+            {
+                // Redirect to reset-password with the verified email
+                Navigation.NavigateTo($"/reset-password?email={Uri.EscapeDataString(EmailParam)}");
+            }
+            else
+            {
+                success = "Email đã được xác thực thành công! Bạn có thể đăng nhập ngay.";
+                await Task.Delay(1500);
+                Navigation.NavigateTo("/login");
+            }
+        }
+        catch (Exception ex)
+        {
+            error = $"Xác thực thất bại: {ex.Message}";
+        }
+        finally { loading = false; }
+    }
+
+    private async Task Resend()
+    {
+        if (string.IsNullOrWhiteSpace(EmailParam)) return;
+        resending = true;
+        error = null;
+        try
+        {
+            var ok = await Api.SendOtpAsync(EmailParam.Trim());
+            success = ok ? "Đã gửi lại mã OTP mới." : "Không thể gửi lại mã.";
+        }
+        catch { error = "Lỗi khi gửi lại mã OTP."; }
+        finally { resending = false; }
+    }
+}

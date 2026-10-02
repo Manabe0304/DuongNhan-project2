@@ -1,0 +1,163 @@
+@page "/plans"
+@page "/subscription/plans"
+@implements IDisposable
+@inject DuongNhanApiService Api
+@inject PlanCatalogService PlanCatalog
+@inject UiSessionService Session
+@inject NavigationService Navigation
+@using DuongNhan.Shared.Dtos.Subscriptions
+
+<div class="container dn-container dn-page">
+    <div class="text-center dn-page-heading mx-auto">
+        <span class="dn-kicker">Subscription</span>
+        <h1>Chọn gói phù hợp</h1>
+        <p>Nâng cấp để mở khoá thêm lượt phân tích và tính năng nâng cao.</p>
+    </div>
+
+    @if (loading)
+    {
+        <div class="text-center py-5"><div class="spinner-border text-success"></div></div>
+    }
+    else
+    {
+        <div class="dn-plan-grid">
+            @foreach (var plan in plans)
+            {
+                var isCurrent = currentCode.Equals(plan.Code, StringComparison.OrdinalIgnoreCase);
+                var isFree = plan.Code.Contains("free", StringComparison.OrdinalIgnoreCase);
+                <div class="dn-plan-card @(isCurrent ? "dn-plan-card--current" : "") @(!isFree ? "dn-plan-card--highlight" : "")">
+                    @if (!isFree)
+                    {
+                        <div class="dn-plan-badge">Phổ biến</div>
+                    }
+                    <div class="dn-plan-header">
+                        <h3 class="dn-plan-name">@plan.Name</h3>
+                        <div class="dn-plan-price">
+                            @if (plan.Price == 0)
+                            {
+                                <span class="dn-plan-amount">Miễn phí</span>
+                            }
+                            else
+                            {
+                                <span class="dn-plan-amount">@plan.Price.ToString("N0")<small>đ</small></span>
+                                <span class="dn-plan-cycle">/ @(plan.BillingCycle == "monthly" ? "tháng" : "năm")</span>
+                            }
+                        </div>
+                        <p class="dn-plan-desc">@plan.Description</p>
+                    </div>
+
+                    <ul class="dn-plan-features">
+                        <li><i class="ph-fill ph-check-circle text-success" aria-hidden="true"></i>
+                            <span><strong>@plan.MaxScansPerMonth</strong> lượt AI Skin Scan / tháng</span>
+                        </li>
+                        @foreach (var feat in plan.Features ?? [])
+                        {
+                            <li>
+                                <i class="ph-fill ph-check-circle text-success" aria-hidden="true"></i>
+                                <span>@feat</span>
+                            </li>
+                        }
+                    </ul>
+
+                    <div class="mt-auto pt-3">
+                        @if (isCurrent)
+                        {
+                            <button class="btn btn-dn-outline w-100" disabled id="btn-current-@plan.Code">
+                                <i class="ph ph-seal-check" aria-hidden="true"></i> Gói hiện tại
+                            </button>
+                        }
+                        else if (isFree)
+                        {
+                            <button class="btn btn-dn-outline w-100" @onclick="() => Choose(plan)" id="btn-choose-@plan.Code">
+                                Chuyển xuống miễn phí
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-dn-coral w-100" @onclick="() => Choose(plan)" id="btn-choose-@plan.Code">
+                                <i class="ph ph-crown-simple" aria-hidden="true"></i> Nâng cấp ngay
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+
+        <p class="text-center small text-secondary mt-4">
+            <i class="ph ph-lock-simple" aria-hidden="true"></i>
+            Thanh toán bảo mật · Huỷ bất cứ lúc nào · Không tự gia hạn
+        </p>
+    }
+</div>
+
+@code {
+    private static readonly List<PlanDto> DefaultPlans = [
+        new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Cơ bản (Free)", "free", "Dành cho người mới bắt đầu chăm sóc da", 0m, "monthly", 3, ["3 lượt AI Skin Scan / tháng", "Gợi ý sản phẩm cơ bản", "Lưu 3 kết quả phân tích gần nhất"]),
+        new(Guid.Parse("22222222-2222-2222-2222-222222222222"), "Nâng cao (Pro)", "pro_monthly", "Theo dõi làn da chuyên sâu theo tuần", 99000m, "monthly", 30, ["30 lượt AI Skin Scan / tháng", "Theo dõi biểu đồ tiến trình phục hồi da", "Cảnh báo tương tác thành phần mỹ phẩm", "Ưu tiên phản hồi từ AI"]),
+        new(Guid.Parse("33333333-3333-3333-3333-333333333333"), "Chuyên gia (VIP)", "vip_monthly", "Giải pháp toàn diện kết nối Bác sĩ Da liễu", 249000m, "monthly", 100, ["Không giới hạn AI Skin Scan", "Tư vấn 1-1 với Bác sĩ Da liễu hàng tháng", "Lộ trình chăm sóc da cá nhân hoá", "Hỗ trợ ưu tiên 24/7"])
+    ];
+
+    private List<PlanDto> plans = [];
+    private string currentCode = "free";
+    private bool loading = true;
+
+    private readonly CancellationTokenSource cts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var planJson = await PlanCatalog.GetPlansAsync(cts.Token);
+            plans = planJson.Count > 0 ? planJson.Select(ToPlan).ToList() : DefaultPlans;
+
+            // The current subscription is per-user and needs the token from browser storage,
+            // which cannot be read while prerendering. Only ask once the circuit is interactive.
+            if (RendererInfo.IsInteractive)
+            {
+                var sub = await Api.GetCurrentSubscriptionAsync(cts.Token);
+                if (sub is { } s && s.TryGetProperty("code", out var sc))
+                    currentCode = sc.GetString() ?? "free";
+            }
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            // User navigated away: nothing to show.
+        }
+        catch
+        {
+            plans = DefaultPlans;
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private static PlanDto ToPlan(System.Text.Json.JsonElement j) => new(
+        j.TryGetProperty("id", out var id) ? Guid.TryParse(id.GetString(), out var g) ? g : Guid.Empty : Guid.Empty,
+        j.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "",
+        j.TryGetProperty("code", out var c) ? c.GetString() ?? "free" : "free",
+        j.TryGetProperty("description", out var d) ? d.GetString() : null,
+        j.TryGetProperty("price", out var p) && p.TryGetDecimal(out var pr) ? pr : 0m,
+        j.TryGetProperty("billingCycle", out var bc) ? bc.GetString() ?? "monthly" : "monthly",
+        j.TryGetProperty("maxScansPerMonth", out var m) && m.TryGetInt32(out var mi) ? mi : 3,
+        j.TryGetProperty("features", out var f) && f.ValueKind == System.Text.Json.JsonValueKind.Array
+            ? f.EnumerateArray().Select(x => x.GetString() ?? "").Where(x => !string.IsNullOrEmpty(x)).ToList()
+            : new List<string>());
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
+    }
+
+    private void Choose(PlanDto plan)
+    {
+        if (!Session.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/register");
+            return;
+        }
+        Navigation.NavigateTo($"/checkout?planId={plan.Id}&planName={Uri.EscapeDataString(plan.Name)}&price={plan.Price}&cycle={plan.BillingCycle}");
+    }
+}

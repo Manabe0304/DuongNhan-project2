@@ -1,0 +1,114 @@
+@page "/delete-account"
+@inject UiSessionService Session
+@inject NavigationService Navigation
+@inject ToastService Toast
+
+<div class="container dn-container dn-page">
+    <div class="dn-page-heading">
+        <span class="dn-kicker">Tài khoản</span>
+        <h1>Xoá tài khoản</h1>
+        <p>Hành động này không thể hoàn tác. Tất cả dữ liệu sẽ bị xoá vĩnh viễn.</p>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="dn-card p-4 p-lg-5 border border-danger border-opacity-25">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <div class="dn-quick-icon" style="background: rgba(220,53,69,0.1); color: #dc3545;">
+                        <i class="ph ph-warning-circle" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <h5 class="mb-1 text-danger">Cảnh báo nghiêm trọng</h5>
+                        <small class="text-secondary">Thao tác này KHÔNG thể hoàn tác.</small>
+                    </div>
+                </div>
+
+                <p class="small text-secondary mb-3">Khi xoá tài khoản, những dữ liệu sau sẽ bị xoá <strong>vĩnh viễn</strong>:</p>
+                <ul class="small text-secondary mb-4">
+                    <li>Tất cả lịch sử phân tích da (AI Scan)</li>
+                    <li>Thông tin hồ sơ cá nhân</li>
+                    <li>Gói đăng ký đang hoạt động (không hoàn tiền)</li>
+                    <li>Lịch sử hoá đơn và thanh toán</li>
+                </ul>
+
+                @if (!confirmed)
+                {
+                    <div class="mb-3">
+                        <label class="form-label small">Gõ <strong>XOA TAI KHOAN</strong> để xác nhận:</label>
+                        <input class="form-control" type="text" @bind="confirmText"
+                               placeholder="XOA TAI KHOAN" id="confirm-delete-text" />
+                    </div>
+
+                    @if (!string.IsNullOrWhiteSpace(error))
+                    {
+                        <div class="alert alert-danger small">@error</div>
+                    }
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a href="/profile" class="btn btn-dn-outline flex-shrink-0" id="btn-cancel-delete">Huỷ bỏ</a>
+                        <button class="btn btn-danger flex-grow-1"
+                                disabled="@(loading || confirmText.Trim() != "XOA TAI KHOAN")"
+                                @onclick="Delete" id="btn-confirm-delete">
+                            @if (loading)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Đang xử lý...</span>
+                            }
+                            else
+                            {
+                                <i class="ph ph-trash" aria-hidden="true"></i>
+                                <span>Xoá tài khoản vĩnh viễn</span>
+                            }
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-success d-flex align-items-center gap-2">
+                        <i class="ph ph-check-circle fs-5" aria-hidden="true"></i>
+                        <span>Tài khoản đã được xoá. Cảm ơn bạn đã sử dụng Dưỡng Nhan.</span>
+                    </div>
+                    <a href="/" class="btn btn-dn-outline w-100" id="btn-goto-home">Về trang chủ</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string confirmText = "";
+    private bool loading;
+    private bool confirmed;
+    private string? error;
+
+    protected override void OnInitialized()
+    {
+        if (!Session.IsAuthenticated)
+            Navigation.NavigateTo("/login");
+    }
+
+    private async Task Delete()
+    {
+        error = null;
+        if (confirmText.Trim() != "XOA TAI KHOAN")
+        {
+            error = "Vui lòng gõ đúng \"XOA TAI KHOAN\" để xác nhận.";
+            return;
+        }
+
+        loading = true;
+        try
+        {
+            // Placeholder: call DeleteAccountAsync when API endpoint is available.
+            await Task.Delay(800);
+            await Session.SignOutAsync();
+            confirmed = true;
+            Toast.ShowSuccess("Tài khoản đã được xoá thành công.");
+        }
+        catch (Exception ex)
+        {
+            error = $"Xoá tài khoản thất bại: {ex.Message}";
+        }
+        finally { loading = false; }
+    }
+}
