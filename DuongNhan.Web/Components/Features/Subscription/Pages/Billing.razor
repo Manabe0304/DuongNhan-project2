@@ -1,5 +1,6 @@
 @page "/billing"
 @page "/subscription/billing"
+@implements IDisposable
 @inject DuongNhanApiService Api
 
 <div class="container dn-container dn-page">
@@ -95,27 +96,46 @@
     private int Percent => limit <= 0 ? 0 : Math.Min(100, used * 100 / limit);
     private bool loadingUsage = true;
 
+    private readonly CancellationTokenSource cts = new();
+
     protected override async Task OnInitializedAsync()
     {
+        // Per-user data needs the token from browser storage, which cannot be read while
+        // prerendering. Skip the (anonymous, doomed) calls and load once interactive.
+        if (!RendererInfo.IsInteractive)
+            return;
+
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1.5));
-            var sub = await Api.GetCurrentSubscriptionAsync(cts.Token);
-            if (sub is { } s)
+            var subTask = Api.GetCurrentSubscriptionAsync(cts.Token);
+            var usageTask = Api.GetUsageAsync(cts.Token);
+            await Task.WhenAll(subTask, usageTask);
+
+            if (subTask.Result is { } s)
             {
                 foreach (var k in new[] { "tier", "Tier", "name", "Name" })
                     if (s.TryGetProperty(k, out var p)) { tier = p.ToString(); break; }
             }
 
-            var usage = await Api.GetUsageAsync(cts.Token);
-            if (usage is { } u)
+            if (usageTask.Result is { } u)
             {
-                used  = Num(u, "scansUsed",  "used");
+                used = Num(u, "scansUsed", "used");
                 limit = Num(u, "scansLimit", "limit");
             }
         }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            return; // user navigated away
+        }
         catch { /* fall back to defaults */ }
-        finally { loadingUsage = false; }
+
+        loadingUsage = false;
+    }
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 
     private static int Num(System.Text.Json.JsonElement j, string a, string b)

@@ -227,7 +227,6 @@ h6 {
     flex-shrink: 0;
     overflow: hidden;
     background: transparent;
-    object-fit: cover;
 }
 
 .dn-brand-badge {

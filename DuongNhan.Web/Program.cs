@@ -20,6 +20,8 @@ builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<ImageValidationService>();
 builder.Services.AddScoped<DuongNhanApiService>();
+builder.Services.AddMemoryCache();
+builder.Services.AddScoped<PlanCatalogService>();
 builder.Services.AddTransient<AuthHeaderHandler>();
 builder.Services.AddScoped<UiSessionService>();
 builder.Services.AddScoped<AuthModalService>();

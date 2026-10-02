@@ -1,6 +1,8 @@
 @page "/plans"
 @page "/subscription/plans"
+@implements IDisposable
 @inject DuongNhanApiService Api
+@inject PlanCatalogService PlanCatalog
 @inject UiSessionService Session
 @inject NavigationService Navigation
 @using DuongNhan.Shared.Dtos.Subscriptions
@@ -99,37 +101,27 @@
     private string currentCode = "free";
     private bool loading = true;
 
+    private readonly CancellationTokenSource cts = new();
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1.5));
-            var planJson = await Api.GetPlansAsync(cts.Token);
-            if (planJson is { Count: > 0 })
-            {
-                plans = planJson
-                    .Select(j => new PlanDto(
-                        j.TryGetProperty("id", out var id) ? Guid.TryParse(id.GetString(), out var g) ? g : Guid.Empty : Guid.Empty,
-                        j.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "",
-                        j.TryGetProperty("code", out var c) ? c.GetString() ?? "free" : "free",
-                        j.TryGetProperty("description", out var d) ? d.GetString() : null,
-                        j.TryGetProperty("price", out var p) && p.TryGetDecimal(out var pr) ? pr : 0m,
-                        j.TryGetProperty("billingCycle", out var bc) ? bc.GetString() ?? "monthly" : "monthly",
-                        j.TryGetProperty("maxScansPerMonth", out var m) && m.TryGetInt32(out var mi) ? mi : 3,
-                        j.TryGetProperty("features", out var f) && f.ValueKind == System.Text.Json.JsonValueKind.Array
-                            ? f.EnumerateArray().Select(x => x.GetString() ?? "").Where(s => !string.IsNullOrEmpty(s)).ToList()
-                            : new List<string>()
-                    ))
-                    .ToList();
-            }
-            else
-            {
-                plans = DefaultPlans;
-            }
+            var planJson = await PlanCatalog.GetPlansAsync(cts.Token);
+            plans = planJson.Count > 0 ? planJson.Select(ToPlan).ToList() : DefaultPlans;
 
-            var sub = await Api.GetCurrentSubscriptionAsync(cts.Token);
-            if (sub is { } s && s.TryGetProperty("code", out var sc))
-                currentCode = sc.GetString() ?? "free";
+            // The current subscription is per-user and needs the token from browser storage,
+            // which cannot be read while prerendering. Only ask once the circuit is interactive.
+            if (RendererInfo.IsInteractive)
+            {
+                var sub = await Api.GetCurrentSubscriptionAsync(cts.Token);
+                if (sub is { } s && s.TryGetProperty("code", out var sc))
+                    currentCode = sc.GetString() ?? "free";
+            }
+        }
+        catch (OperationCanceledException) when (cts.IsCancellationRequested)
+        {
+            // User navigated away: nothing to show.
         }
         catch
         {
@@ -139,6 +131,24 @@
         {
             loading = false;
         }
+    }
+
+    private static PlanDto ToPlan(System.Text.Json.JsonElement j) => new(
+        j.TryGetProperty("id", out var id) ? Guid.TryParse(id.GetString(), out var g) ? g : Guid.Empty : Guid.Empty,
+        j.TryGetProperty("name", out var n) ? n.GetString() ?? "" : "",
+        j.TryGetProperty("code", out var c) ? c.GetString() ?? "free" : "free",
+        j.TryGetProperty("description", out var d) ? d.GetString() : null,
+        j.TryGetProperty("price", out var p) && p.TryGetDecimal(out var pr) ? pr : 0m,
+        j.TryGetProperty("billingCycle", out var bc) ? bc.GetString() ?? "monthly" : "monthly",
+        j.TryGetProperty("maxScansPerMonth", out var m) && m.TryGetInt32(out var mi) ? mi : 3,
+        j.TryGetProperty("features", out var f) && f.ValueKind == System.Text.Json.JsonValueKind.Array
+            ? f.EnumerateArray().Select(x => x.GetString() ?? "").Where(x => !string.IsNullOrEmpty(x)).ToList()
+            : new List<string>());
+
+    public void Dispose()
+    {
+        cts.Cancel();
+        cts.Dispose();
     }
 
     private void Choose(PlanDto plan)
