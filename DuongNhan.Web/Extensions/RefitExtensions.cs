@@ -6,9 +6,9 @@ namespace DuongNhan.Web.Extensions;
 
 public static class RefitExtensions
 {
-    public static IServiceCollection AddApiClients(this IServiceCollection services)
+    public static IServiceCollection AddApiClients(this IServiceCollection services, IConfiguration configuration)
     {
-        var baseUrl = new Uri("https+http://apiservice");
+        var baseUrl = new Uri(configuration["Api:BaseUrl"] ?? "https+http://apiservice");
 
         services.AddRefitClient<IAuthApi>()
             .ConfigureHttpClient(c => c.BaseAddress = baseUrl)

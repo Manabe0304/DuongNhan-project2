@@ -27,7 +27,7 @@ builder.Services.AddScoped<UiSessionService>();
 builder.Services.AddScoped<AuthModalService>();
 builder.Services.AddScoped<DoctorCatalogService>();
 
-builder.Services.AddApiClients();
+builder.Services.AddApiClients(builder.Configuration);
 
 var app = builder.Build();
 
