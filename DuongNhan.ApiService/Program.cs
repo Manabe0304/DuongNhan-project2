@@ -186,28 +186,21 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Database migration - Development and Production
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
+    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
     await db.Database.MigrateAsync();
 
-    if (app.Environment.IsDevelopment())
-    {
-        var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+    var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+    await AppDbSeeder.SeedAsync(db, timeProvider);
 
-        await AppDbSeeder.SeedAsync(db, timeProvider);
+    // Warm the exact query behind the public plans endpoint (EF query compilation and a pooled
+    // connection) so the first browser request does not pay that cost.
+    _ = await db.Plans.AsNoTracking().Where(p => p.IsActive).OrderBy(p => p.Price).ToListAsync();
 
-        _ = await db.Plans
-            .AsNoTracking()
-            .Where(p => p.IsActive)
-            .OrderBy(p => p.Price)
-            .ToListAsync();
-
-        app.MapOpenApi();
-        app.MapScalarApiReference();
-    }
+    app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseRateLimiter();
