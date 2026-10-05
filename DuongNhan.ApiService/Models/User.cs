@@ -17,4 +17,6 @@ internal sealed class User : IAuditable, ISoftDeletable
     public DateTimeOffset? TokensInvalidatedAt { get; set; }
     public ICollection<RefreshToken> RefreshTokens { get; init; } = [];
     public ICollection<SkinImage> SkinImages { get; init; } = [];
+    public ICollection<UserRole> UserRoles { get; init; } = [];
+    public string? Role => UserRoles.FirstOrDefault()?.Role?.Name;
 }

@@ -129,7 +129,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy(Policies.RequireUser, policy => policy.RequireAuthenticatedUser());
+    .AddPolicy(Policies.RequireUser, policy => policy.RequireAuthenticatedUser())
+    .AddPolicy(Policies.RequireAdmin, policy => policy.RequireRole("Admin"));
 
 // ── Rate limiting ──────────────────────────────────────────────
 builder.Services.AddRateLimiter(options =>
@@ -193,7 +194,8 @@ if (app.Environment.IsDevelopment())
     await db.Database.MigrateAsync();
 
     var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-    await AppDbSeeder.SeedAsync(db, timeProvider);
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
+    await AppDbSeeder.SeedAsync(db, timeProvider, passwordHasher);
 
     // Warm the exact query behind the public plans endpoint (EF query compilation and a pooled
     // connection) so the first browser request does not pay that cost.

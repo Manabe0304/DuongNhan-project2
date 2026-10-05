@@ -1,0 +1,97 @@
+@model List<DuongNhan.Admin.Models.ProductViewModel>
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+}
+
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Quản lý sản phẩm</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="m-0 font-weight-bold text-primary">Danh sách sản phẩm</h6>
+            <div>
+                <a asp-action="Create" class="btn btn-primary btn-sm">
+                    <i class="bi bi-plus"></i> Thêm sản phẩm
+                </a>
+                <a asp-controller="Export" asp-action="AffiliateLinks" class="btn btn-success btn-sm">
+                    <i class="bi bi-download"></i> Export Affiliate
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="productsTable">
+                    <thead>
+                        <tr>
+                            <th>Tên sản phẩm</th>
+                            <th>Thương hiệu</th>
+                            <th>Danh mục</th>
+                            <th>Giá</th>
+                            <th>Affiliate</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var product in Model)
+                        {
+                            <tr>
+                                <td>@product.Name</td>
+                                <td>@product.Brand</td>
+                                <td>@product.Category</td>
+                                <td>@product.Price.ToString("N0") VNĐ</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(product.AffiliateUrl))
+                                    {
+                                        <span class="badge bg-success">Có</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Không</span>
+                                    }
+                                </td>
+                                <td>
+                                    @if (product.IsActive)
+                                    {
+                                        <span class="badge bg-primary">Hoạt động</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Ẩn</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@product.Id" class="btn btn-warning btn-sm">
+                                        <i class="bi bi-pencil"></i> Sửa
+                                    </a>
+                                    <form asp-action="Delete" asp-route-id="@product.Id" method="post" class="d-inline"
+                                          onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

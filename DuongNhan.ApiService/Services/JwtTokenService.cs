@@ -61,7 +61,7 @@ internal sealed class JwtTokenService : IJwtTokenService
             [
                 new Claim(AppClaimTypes.UserId, user.Id.ToString()),
                 new Claim(AppClaimTypes.Email, user.Email),
-                new Claim(AppClaimTypes.Role, "User"),
+                new Claim(AppClaimTypes.Role, user.Role ?? "User"),
                 new Claim(AppClaimTypes.SessionId, sessionId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))
             ])
