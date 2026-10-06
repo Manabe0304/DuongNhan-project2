@@ -25,7 +25,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        try { plans = await Api.GetPlansAsync(); }
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+        try { plans = await Api.GetPlansAsync(cts.Token); }
         catch (Exception ex) { error = $"Không tải được danh sách gói: {ex.Message}"; }
         finally { loading = false; }
     }

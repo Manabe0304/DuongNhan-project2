@@ -179,6 +179,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // The teaser is optional: give up quickly instead of holding the whole page behind
+        // the API's retry/timeout policy (up to ~30 s when the API is unreachable).
+        cts.CancelAfter(TimeSpan.FromSeconds(3));
         try { plans = await PlanCatalog.GetPlansAsync(cts.Token); }
         catch { /* the teaser is optional decoration — /pricing still works if this fails */ }
         finally { loadingPlans = false; }
