@@ -194,11 +194,12 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 
     // Seed plans/products in Development, or in any environment that opts in with
-    // Database__SeedOnStartup=true. The seeder is idempotent (it only inserts into empty tables).
+    // Database__SeedOnStartup=true. The seeder is idempotent (it only inserts missing rows).
     if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:SeedOnStartup"))
     {
         var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-        await AppDbSeeder.SeedAsync(db, timeProvider);
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
+        await AppDbSeeder.SeedAsync(db, timeProvider, passwordHasher);
     }
 }
 
