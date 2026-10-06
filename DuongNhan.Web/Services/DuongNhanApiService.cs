@@ -16,7 +16,8 @@ public sealed class DuongNhanApiService(
     IUserApi users,
     ISkinApi skin,
     IProductApi products,
-    ISubscriptionApi subscriptions)
+    ISubscriptionApi subscriptions,
+    TokenStorage tokens)
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -75,6 +76,21 @@ public sealed class DuongNhanApiService(
 
     public async Task<List<JsonElement>> GetProductsAsync(CancellationToken ct = default)
         => ToJsonList(await products.ListAsync(ct));
+
+    /// <summary>
+    /// Admin-only bulk import. The token is attached explicitly because the HttpClientFactory handler
+    /// runs outside the Blazor circuit and cannot read it from browser storage.
+    /// </summary>
+    public async Task<DuongNhan.Shared.Dtos.Products.ImportProductsResponse> ImportProductsAsync(
+        List<DuongNhan.Shared.Dtos.Products.ImportProductRow> rows, CancellationToken ct = default)
+    {
+        var token = await tokens.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+            throw new InvalidOperationException("Bạn cần đăng nhập bằng tài khoản Admin.");
+
+        return await products.ImportAsync(
+            new DuongNhan.Shared.Dtos.Products.ImportProductsRequest(rows), $"Bearer {token}", ct);
+    }
 
     public async Task<List<JsonElement>> GetRecommendationsAsync(Guid diagnosisId, CancellationToken ct = default)
         => ToJsonList(await products.RecommendAsync(diagnosisId, ct));

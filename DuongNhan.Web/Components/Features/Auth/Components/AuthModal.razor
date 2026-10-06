@@ -264,12 +264,13 @@
     [JSInvokable]
     public async Task OnGoogleCredential(string idToken)
     {
-        loading = true;
-        error = null;
-        await InvokeAsync(StateHasChanged);
-
+        // Runs from a JS callback outside Blazor's normal event pipeline: nothing thrown here may escape.
         try
         {
+            loading = true;
+            error = null;
+            await InvokeAsync(StateHasChanged);
+
             var result = await Api.GoogleLoginAsync(idToken);
             if (string.IsNullOrWhiteSpace(result.AccessToken))
             {
@@ -278,17 +279,29 @@
             }
 
             await Session.SignInAsync(result.UserName ?? "Người dùng Google", result.Email ?? "", result.AccessToken, result.RefreshToken);
-            Modal.Close();
-            Navigation.NavigateTo("/dashboard");
+
+            loading = false;
+            await InvokeAsync(() =>
+            {
+                Modal.Close();
+                Navigation.NavigateTo("/dashboard");
+            });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             error = $"Đăng nhập Google thất bại: {ex.Message}";
         }
         finally
         {
             loading = false;
-            await InvokeAsync(StateHasChanged);
+            try
+            {
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception)
+            {
+                // Circuit/component already gone (e.g. after navigation) — nothing left to refresh.
+            }
         }
     }
 

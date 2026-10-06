@@ -1,4 +1,5 @@
 using DuongNhan.ApiService.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace DuongNhan.ApiService.Data;
@@ -6,8 +7,10 @@ namespace DuongNhan.ApiService.Data;
 internal static class AppDbSeeder
 {
     public static readonly Guid GuestUserId = Guid.Parse("00000000-0000-0000-0000-000000000001");
+    public static readonly Guid AdminUserId = Guid.Parse("00000000-0000-0000-0000-000000000002");
+    public static readonly Guid StaffUserId = Guid.Parse("00000000-0000-0000-0000-000000000003");
 
-    public static async Task SeedAsync(AppDbContext db, TimeProvider timeProvider, CancellationToken ct = default)
+    public static async Task SeedAsync(AppDbContext db, TimeProvider timeProvider, IPasswordHasher<User> passwordHasher, CancellationToken ct = default)
     {
         var now = timeProvider.GetUtcNow();
 
@@ -214,6 +217,48 @@ internal static class AppDbSeeder
                     CreatedAt = now
                 }
             ]);
+        }
+
+        // 4. Seed Roles
+        if (!await db.Roles.IgnoreQueryFilters([AppQueryFilters.SoftDelete]).AnyAsync(ct))
+        {
+            var adminRole = new Role { Name = "Admin", Description = "Quản trị viên hệ thống" };
+            var staffRole = new Role { Name = "Staff", Description = "Nhân viên hỗ trợ" };
+            db.Roles.AddRange(adminRole, staffRole);
+
+            // 5. Seed Admin User (email: admin@duongnhan.ai, password: 123)
+            if (!await db.Users.IgnoreQueryFilters([AppQueryFilters.SoftDelete]).AnyAsync(u => u.Id == AdminUserId, ct))
+            {
+                var adminUser = new User
+                {
+                    Id = AdminUserId,
+                    Email = "admin@duongnhan.ai",
+                    PasswordHash = string.Empty,
+                    DisplayName = "Admin",
+                    Status = "active",
+                    CreatedAt = now
+                };
+                adminUser.PasswordHash = passwordHasher.HashPassword(adminUser, "123");
+                db.Users.Add(adminUser);
+                db.UserRoles.Add(new UserRole { UserId = AdminUserId, RoleId = adminRole.Id });
+            }
+
+            // 6. Seed Staff User (email: staff@duongnhan.ai, password: 123)
+            if (!await db.Users.IgnoreQueryFilters([AppQueryFilters.SoftDelete]).AnyAsync(u => u.Id == StaffUserId, ct))
+            {
+                var staffUser = new User
+                {
+                    Id = StaffUserId,
+                    Email = "staff@duongnhan.ai",
+                    PasswordHash = string.Empty,
+                    DisplayName = "Staff",
+                    Status = "active",
+                    CreatedAt = now
+                };
+                staffUser.PasswordHash = passwordHasher.HashPassword(staffUser, "123");
+                db.Users.Add(staffUser);
+                db.UserRoles.Add(new UserRole { UserId = StaffUserId, RoleId = staffRole.Id });
+            }
         }
 
         await db.SaveChangesAsync(ct);
