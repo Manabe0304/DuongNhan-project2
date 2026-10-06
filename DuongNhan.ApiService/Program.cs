@@ -129,8 +129,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy(Policies.RequireUser, policy => policy.RequireAuthenticatedUser())
-    .AddPolicy(Policies.RequireAdmin, policy => policy.RequireRole("Admin"));
+    .AddPolicy(Policies.RequireUser, policy => policy.RequireAuthenticatedUser());
 
 // ── Rate limiting ──────────────────────────────────────────────
 builder.Services.AddRateLimiter(options =>

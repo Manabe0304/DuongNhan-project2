@@ -1,7 +1,4 @@
 <Solution>
-  <Project Path="DuongNhan.Admin/DuongNhan.Admin.csproj">
-    <Build Solution="Debug|*" Project="false" />
-  </Project>
   <Project Path="DuongNhan.ApiService/DuongNhan.ApiService.csproj" />
   <Project Path="DuongNhan.AppHost/DuongNhan.AppHost.csproj" />
   <Project Path="DuongNhan.ServiceDefaults/DuongNhan.ServiceDefaults.csproj" />

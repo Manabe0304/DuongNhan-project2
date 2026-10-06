@@ -1,4 +1,4 @@
-using DuongNhan.Shared.Contracts;
+﻿using DuongNhan.Shared.Contracts;
 using DuongNhan.Shared.Dtos.Products;
 using Refit;
 
@@ -11,10 +11,4 @@ public interface IProductApi
 
     [Get(ApiRoutes.Products.Recommend)]
     Task<List<ProductRecommendationDto>> RecommendAsync(Guid diagnosisId, CancellationToken ct = default);
-
-    [Post(ApiRoutes.Products.Import)]
-    Task<ImportProductsResponse> ImportAsync(
-        [Body] ImportProductsRequest request,
-        [Header("Authorization")] string authorization,
-        CancellationToken ct = default);
 }
