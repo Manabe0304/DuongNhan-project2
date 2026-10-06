@@ -187,20 +187,25 @@ app.Use(async (context, next) =>
     await next();
 });
 
-if (app.Environment.IsDevelopment())
+// Apply EF Core migrations in every environment (Railway runs as Production), so the
+// tables exist before the first request. Already-applied migrations are skipped.
+using (var scope = app.Services.CreateScope())
 {
-    using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     await db.Database.MigrateAsync();
 
-    var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
-    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
-    await AppDbSeeder.SeedAsync(db, timeProvider, passwordHasher);
+    // Seed plans/products in Development, or in any environment that opts in with
+    // Database__SeedOnStartup=true. The seeder is idempotent (it only inserts missing rows).
+    if (app.Environment.IsDevelopment() || app.Configuration.GetValue<bool>("Database:SeedOnStartup"))
+    {
+        var timeProvider = scope.ServiceProvider.GetRequiredService<TimeProvider>();
+        var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<User>>();
+        await AppDbSeeder.SeedAsync(db, timeProvider, passwordHasher);
+    }
+}
 
-    // Warm the exact query behind the public plans endpoint (EF query compilation and a pooled
-    // connection) so the first browser request does not pay that cost.
-    _ = await db.Plans.AsNoTracking().Where(p => p.IsActive).OrderBy(p => p.Price).ToListAsync();
-
+if (app.Environment.IsDevelopment())
+{
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
