@@ -36,6 +36,7 @@ public static class ApiRoutes
         public const string List = Base;
         public const string Recommend = Base + "/recommend";
         public const string Detail = Base + "/{id:guid}";
+        public const string Import = Base + "/import";
     }
 
     public static class Subscriptions

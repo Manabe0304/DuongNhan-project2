@@ -29,6 +29,9 @@
                 <a asp-action="Create" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus"></i> Thêm sản phẩm
                 </a>
+                <button type="button" class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#importModal">
+                    <i class="bi bi-upload"></i> Import Excel
+                </button>
                 <a asp-controller="Export" asp-action="AffiliateLinks" class="btn btn-success btn-sm">
                     <i class="bi bi-download"></i> Export Affiliate
                 </a>
@@ -93,5 +96,32 @@
                 </table>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <form asp-action="Import" method="post" enctype="multipart/form-data" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Import sản phẩm từ Excel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted">
+                    Chọn file .xlsx có các cột: <strong>Name</strong>, <strong>Affiliate Link</strong> (bắt buộc),
+                    Brand, Category, Price, Image URL, Description, Target Conditions, Usage Instructions.
+                    Sản phẩm mới sẽ được thêm, sản phẩm đã có (trùng link hoặc tên + thương hiệu) sẽ được cập nhật,
+                    các sản phẩm còn lại giữ nguyên.
+                </p>
+                <input type="file" name="file" class="form-control" accept=".xlsx" required />
+                <a asp-action="DownloadImportTemplate" class="small d-inline-block mt-2">
+                    <i class="bi bi-file-earmark-excel"></i> Tải file mẫu
+                </a>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="submit" class="btn btn-primary">Import</button>
+            </div>
+        </form>
     </div>
 </div>

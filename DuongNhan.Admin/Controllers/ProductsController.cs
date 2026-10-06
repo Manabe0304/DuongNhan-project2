@@ -9,11 +9,15 @@ namespace DuongNhan.Admin.Controllers;
 public class ProductsController : Controller
 {
     private readonly ApiService _apiService;
+    private readonly ProductExcelParser _excelParser;
     private readonly ILogger<ProductsController> _logger;
 
-    public ProductsController(ApiService apiService, ILogger<ProductsController> logger)
+    private const long MaxImportFileBytes = 5 * 1024 * 1024;
+
+    public ProductsController(ApiService apiService, ProductExcelParser excelParser, ILogger<ProductsController> logger)
     {
         _apiService = apiService;
+        _excelParser = excelParser;
         _logger = logger;
     }
 
@@ -91,6 +95,65 @@ public class ProductsController : Controller
         {
             TempData["Error"] = "Xóa sản phẩm thất bại.";
         }
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public IActionResult DownloadImportTemplate()
+    {
+        return File(
+            _excelParser.BuildTemplate(),
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "products-import-template.xlsx");
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Import(IFormFile? file)
+    {
+        if (file is null || file.Length == 0)
+        {
+            TempData["Error"] = "Vui lòng chọn file Excel (.xlsx).";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (!string.Equals(Path.GetExtension(file.FileName), ".xlsx", StringComparison.OrdinalIgnoreCase))
+        {
+            TempData["Error"] = "Chỉ hỗ trợ file .xlsx.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        if (file.Length > MaxImportFileBytes)
+        {
+            TempData["Error"] = "File quá lớn (tối đa 5MB).";
+            return RedirectToAction(nameof(Index));
+        }
+
+        await using var stream = file.OpenReadStream();
+        var parsed = _excelParser.Parse(stream);
+
+        if (parsed.Rows.Count == 0)
+        {
+            TempData["Error"] = string.Join(" ", parsed.Errors.Take(5));
+            return RedirectToAction(nameof(Index));
+        }
+
+        var result = await _apiService.ImportProductsAsync(parsed.Rows);
+        if (result == null)
+        {
+            TempData["Error"] = "Nhập sản phẩm thất bại. Kiểm tra quyền Admin và kết nối API.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        _logger.LogInformation("Imported products: {Created} created, {Updated} updated", result.Created, result.Updated);
+
+        TempData["Success"] = $"Nhập thành công: {result.Created} sản phẩm mới, {result.Updated} cập nhật.";
+        if (parsed.Errors.Count > 0 || result.Skipped > 0)
+        {
+            var skipped = parsed.Errors.Count + result.Skipped;
+            TempData["Error"] = $"Bỏ qua {skipped} dòng lỗi. " + string.Join(" ", parsed.Errors.Take(5));
+        }
+
         return RedirectToAction(nameof(Index));
     }
 }

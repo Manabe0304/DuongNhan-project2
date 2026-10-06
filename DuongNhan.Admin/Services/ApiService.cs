@@ -130,4 +130,23 @@ public class ApiService
             return false;
         }
     }
+
+    public async Task<ImportProductsResult?> ImportProductsAsync(List<ImportProductRow> rows)
+    {
+        try
+        {
+            await AddAuthHeaderAsync();
+            var response = await _httpClient.PostAsJsonAsync("/api/products/import", new { products = rows });
+            if (response.IsSuccessStatusCode)
+            {
+                return await response.Content.ReadFromJsonAsync<ImportProductsResult>();
+            }
+            _logger.LogWarning("Failed to import products: {StatusCode}", response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error importing products");
+        }
+        return null;
+    }
 }

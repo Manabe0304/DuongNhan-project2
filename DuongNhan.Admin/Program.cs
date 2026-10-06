@@ -11,6 +11,7 @@ builder.Services.AddHttpClient("ApiClient");
 // Add admin services
 builder.Services.AddSingleton<ApiService>();
 builder.Services.AddScoped<AdminAuthService>();
+builder.Services.AddSingleton<ProductExcelParser>();
 
 // Add authentication
 builder.Services.AddAuthentication("Cookies")
