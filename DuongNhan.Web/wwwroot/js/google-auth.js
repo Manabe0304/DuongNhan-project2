@@ -22,7 +22,7 @@ window.dnGoogleAuth = {
     renderButton: async function (elementId, clientId, dotNetRef, text, width) {
         if (!clientId || clientId.indexOf('REPLACE_WITH_YOUR_GOOGLE_OAUTH_CLIENT_ID') === 0) {
             return 'not-configured';
-        }
+        }   
 
         const loaded = await this._waitForGoogle(8000);
         if (!loaded) return 'script-blocked';
@@ -34,8 +34,7 @@ window.dnGoogleAuth = {
             client_id: clientId,
             callback: (response) => {
                 if (response && response.credential) {
-                    dotNetRef.invokeMethodAsync('OnGoogleCredential', response.credential)
-                        .catch((err) => console.error('Google sign-in callback failed', err));
+                    dotNetRef.invokeMethodAsync('OnGoogleCredential', response.credential);
                 }
             }
         });

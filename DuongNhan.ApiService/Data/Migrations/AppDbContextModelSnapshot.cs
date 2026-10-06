@@ -370,31 +370,6 @@ namespace DuongNhan.ApiService.Data.Migrations
                     b.ToTable("refresh_tokens", (string)null);
                 });
 
-            modelBuilder.Entity("DuongNhan.ApiService.Models.Role", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("roles", (string)null);
-                });
-
             modelBuilder.Entity("DuongNhan.ApiService.Models.SkinImage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -506,24 +481,6 @@ namespace DuongNhan.ApiService.Data.Migrations
                     b.ToTable("users", (string)null);
                 });
 
-            modelBuilder.Entity("DuongNhan.ApiService.Models.UserRole", b =>
-                {
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RoleId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("AssignedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("user_roles", (string)null);
-                });
-
             modelBuilder.Entity("DuongNhan.ApiService.Models.Diagnosis", b =>
                 {
                     b.HasOne("DuongNhan.ApiService.Models.SkinImage", "SkinImage")
@@ -587,33 +544,9 @@ namespace DuongNhan.ApiService.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("DuongNhan.ApiService.Models.UserRole", b =>
-                {
-                    b.HasOne("DuongNhan.ApiService.Models.Role", "Role")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DuongNhan.ApiService.Models.User", "User")
-                        .WithMany("UserRoles")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Role");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("DuongNhan.ApiService.Models.Diagnosis", b =>
                 {
                     b.Navigation("Conditions");
-                });
-
-            modelBuilder.Entity("DuongNhan.ApiService.Models.Role", b =>
-                {
-                    b.Navigation("UserRoles");
                 });
 
             modelBuilder.Entity("DuongNhan.ApiService.Models.SkinImage", b =>
@@ -626,8 +559,6 @@ namespace DuongNhan.ApiService.Data.Migrations
                     b.Navigation("RefreshTokens");
 
                     b.Navigation("SkinImages");
-
-                    b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
         }
