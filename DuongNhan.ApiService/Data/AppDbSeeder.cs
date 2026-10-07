@@ -26,7 +26,7 @@ internal static class AppDbSeeder
                 PhoneNumber = "+84901234567",
                 Status = "active",
                 CreatedAt = now
-            });;
+            });
         }
 
         // 2. Seed Plans
