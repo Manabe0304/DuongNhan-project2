@@ -89,7 +89,6 @@
 
     private async Task LoadProductsAsync()
     {
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
         try { items = await Api.GetProductsAsync(); }
         catch (Exception ex) { error = $"Không tải được sản phẩm từ Product API: {ex.Message}"; }
         finally { loading = false; }
