@@ -71,6 +71,8 @@ internal sealed class LoginEndpoint(
         }
 
         var user = await db.Users
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
             .FirstOrDefaultAsync(u => u.Email == normalizedEmail, ct);
 
         PasswordVerificationResult verification;

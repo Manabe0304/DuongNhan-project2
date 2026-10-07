@@ -18,9 +18,9 @@
                     <a href="/scan" class="btn btn-dn-coral btn-lg dn-btn">
                         <i class="ph ph-scan" aria-hidden="true"></i>Phân tích da miễn phí
                     </a>
-                    <a href="/doctors" class="btn btn-dn-outline btn-lg dn-btn">
+                    @* <a href="/doctors" class="btn btn-dn-outline btn-lg dn-btn">
                         <i class="ph ph-stethoscope" aria-hidden="true"></i>Tìm bác sĩ
-                    </a>
+                    </a> *@
                 </div>
 
                 <ul class="dn-hero-points">
@@ -51,7 +51,7 @@
         <div class="text-center dn-section-heading">
             <span class="dn-kicker">Tất cả trong một</span>
             <h2>Chăm sóc da dựa trên dữ liệu</h2>
-            <p>Không đoán mò. Dưỡng Nhan kết nối phân tích AI, sản phẩm và chuyên gia thành một quy trình đơn giản.</p>
+            <p>Không đoán mò. Dưỡng Nhan kết nối phân tích AI, thành phần an toàn và gợi ý sản phẩm phù hợp thành một quy trình đơn giản.</p>
         </div>
 
         <div class="row g-4">
@@ -73,10 +73,10 @@
             </div>
             <div class="col-md-4">
                 <div class="dn-feature-card">
-                    <div class="dn-icon dark"><i class="ph ph-stethoscope" aria-hidden="true"></i></div>
-                    <h5>Bác sĩ da liễu</h5>
-                    <p>Kết nối với bác sĩ tại bệnh viện và phòng khám uy tín khi cần tư vấn chuyên sâu.</p>
-                    <a href="/doctors" class="dn-link">Tìm bác sĩ<i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+                    <div class="dn-icon dark"><i class="ph ph-chart-line-up" aria-hidden="true"></i></div>
+                    <h5>Theo dõi tiến trình</h5>
+                    <p>Lưu lịch sử quét AI và xem biểu đồ phục hồi làn da trực quan theo từng tuần sử dụng.</p>
+                    <a href="/history" class="dn-link">Xem tiến trình<i class="ph ph-arrow-right" aria-hidden="true"></i></a>
                 </div>
             </div>
         </div>
@@ -100,7 +100,7 @@
                 </div>
                 <div class="dn-step">
                     <span>03</span>
-                    <div><h6>Hành động</h6><p>Nhận gợi ý chăm sóc, sản phẩm và lựa chọn gặp bác sĩ.</p></div>
+                    <div><h6>Hành động</h6><p>Nhận gợi ý chăm sóc, sản phẩm để cải thiện da.</p></div>
                 </div>
             </div>
 
@@ -145,7 +145,7 @@
             <div class="dn-plan-grid">
                 @foreach (var plan in plans)
                 {
-                    <@PlanCard Plan="plan" OnChoose="GoToPricing" />
+                    <PlanCard Plan="plan" OnChoose="GoToPricing" />
                 }
             </div>
 
@@ -179,9 +179,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        // The teaser is optional: give up quickly instead of holding the whole page behind
-        // the API's retry/timeout policy (up to ~30 s when the API is unreachable).
-        cts.CancelAfter(TimeSpan.FromSeconds(3));
         try { plans = await PlanCatalog.GetPlansAsync(cts.Token); }
         catch { /* the teaser is optional decoration — /pricing still works if this fails */ }
         finally { loadingPlans = false; }

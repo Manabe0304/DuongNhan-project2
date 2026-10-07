@@ -225,9 +225,9 @@ h6 {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 50px;
-    height: 50px;
-    border-radius: 25px;
+    width: 44px;
+    height: 44px;
+    border-radius: 22px;
     flex-shrink: 0;
     overflow: hidden;
     background: transparent;
@@ -356,14 +356,14 @@ h6 {
     }
 
     .dn-footer a {
-        display: block;
+        display : block;
         color: #94a3b8;
         padding: .25rem 0;
         font-size: .85rem;
         transition: color .2s ease;
     }
 
-        .dn-footer a:hover {
+        .dn-footer a:not(.dn-social-btn):hover {
             color: #fff;
             text-decoration: none;
             padding-left: .25rem;
@@ -424,7 +424,6 @@ h6 {
 
     .dn-social-btn:hover {
         color: #fff;
-        transform: translateY(-2px);
     }
 
     .dn-social-btn.facebook:hover {

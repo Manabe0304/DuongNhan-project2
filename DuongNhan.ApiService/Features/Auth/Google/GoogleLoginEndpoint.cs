@@ -72,6 +72,15 @@ internal sealed class GoogleLoginEndpoint(
             await Send.ErrorsAsync(StatusCodes.Status401Unauthorized, cancellation: ct);
             return;
         }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or TimeoutException)
+        {
+            // Google's signing certificates could not be downloaded (offline, firewall, slow network).
+            // Report a clean 503 instead of letting the exception escape the endpoint.
+            GoogleLoginEndpointLogs.CertificateFetchFailed(logger, ex);
+            AddError(r => r.IdToken, "Could not reach Google to verify the sign-in. Please try again.");
+            await Send.ErrorsAsync(StatusCodes.Status503ServiceUnavailable, cancellation: ct);
+            return;
+        }
 
         if (!payload.EmailVerified)
         {
@@ -82,7 +91,12 @@ internal sealed class GoogleLoginEndpoint(
 
         var normalizedEmail = payload.Email.Trim().ToLowerInvariant();
 
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail, ct);
+        // Load roles like the password login does, otherwise an Admin signing in with Google
+        // would be issued a token with the default "User" role.
+        var user = await db.Users
+            .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail, ct);
 
         if (user is null)
         {
@@ -157,6 +171,15 @@ internal static class GoogleLoginEndpointLogs
             LogLevel.Error,
             new EventId(1303, nameof(NotConfigured)),
             "Google sign-in attempted but Google:ClientId is not set in DuongNhan.ApiService appsettings");
+
+    private static readonly Action<ILogger, Exception?> CertificateFetchFailedMessage =
+        LoggerMessage.Define(
+            LogLevel.Error,
+            new EventId(1304, nameof(CertificateFetchFailed)),
+            "Could not download Google's signing certificates to validate the ID token");
+
+    public static void CertificateFetchFailed(ILogger logger, Exception exception)
+        => CertificateFetchFailedMessage(logger, exception);
 
     public static void UserSignedIn(ILogger logger, Guid userId)
         => UserSignedInMessage(logger, userId, null);

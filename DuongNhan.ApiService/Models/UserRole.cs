@@ -1,4 +1,4 @@
-namespace DuongNhan.ApiService.Models;
+﻿namespace DuongNhan.ApiService.Models;
 
 internal sealed class UserRole
 {
