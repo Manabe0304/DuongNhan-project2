@@ -2,6 +2,7 @@
 @inject DuongNhanApiService Api
 @inject UiSessionService Session
 @inject NavigationService Navigation
+@inject AnalyticsService Analytics
 
 <div class="container dn-container dn-page">
     <div class="text-center dn-page-heading mx-auto"><span class="dn-kicker">Plans</span><h1>Bảng giá đơn giản, minh bạch</h1><p>Chọn gói phù hợp với nhu cầu phân tích và theo dõi làn da.</p></div>
@@ -34,8 +35,11 @@
     private bool IsCurrentPlan(System.Text.Json.JsonElement plan)
         => Session.IsAuthenticated && Text(plan, "code", "").Contains("free", StringComparison.OrdinalIgnoreCase);
 
-    private void Choose(System.Text.Json.JsonElement plan)
-        => Navigation.NavigateTo(Session.IsAuthenticated ? "/subscription/current" : "/register");
+    private async Task Choose(System.Text.Json.JsonElement plan)
+    {
+        await Analytics.EventAsync("select_plan", new { plan_name = Text(plan, "name", ""), plan_code = Text(plan, "code", "") });
+        Navigation.NavigateTo(Session.IsAuthenticated ? "/subscription/current" : "/register");
+    }
 
     private static string Text(System.Text.Json.JsonElement item, string name, string fallback)
     {

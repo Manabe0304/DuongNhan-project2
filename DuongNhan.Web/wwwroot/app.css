@@ -347,7 +347,7 @@ h6 {
 }
 
     .dn-footer h6 {
-        color: #fff;
+        color: #111827;
         margin-bottom: 1rem;
         font-size: .8rem;
         text-transform: uppercase;
@@ -363,8 +363,8 @@ h6 {
         transition: color .2s ease;
     }
 
-        .dn-footer a:not(.dn-social-btn):hover {
-            color: #fff;
+        .dn-footer a:not(.dn-social-btn, .dn-brand-light):hover {
+            color: #111827;
             text-decoration: none;
             padding-left: .25rem;
         }
@@ -396,8 +396,8 @@ h6 {
     line-height: 1.6;
 }
 
-.dn-brand-light, .dn-brand-light:hover {
-    color: #fff;
+.dn-brand-light {
+    color: #111827;
 }
 
     .dn-brand-light .dn-brand-mark {
@@ -2362,7 +2362,7 @@ h6 {
     align-items: center;
     padding: 0;
     font-size: 1.1rem;
-    color: #fff;
+    color: #111827;
 }
 
 .dn-footer .dn-nav-badge {

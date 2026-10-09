@@ -21,9 +21,12 @@ internal sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.TargetConditions).HasMaxLength(500);
         builder.Property(p => p.UsageInstructions).HasMaxLength(1000);
         builder.Property(p => p.AffiliateUrl).HasMaxLength(2000);
+        builder.Property(p => p.SkinType).HasMaxLength(100).IsRequired().HasDefaultValue("All");
+        builder.Property(p => p.Step).IsRequired();
 
         builder.HasIndex(p => p.Category);
         builder.HasIndex(p => p.Brand);
+        builder.HasIndex(p => p.Step);
 
         builder.HasQueryFilter(AppQueryFilters.SoftDelete, p => p.DeletedAt == null);
     }

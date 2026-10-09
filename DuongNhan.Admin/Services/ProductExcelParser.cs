@@ -9,7 +9,8 @@ namespace DuongNhan.Admin.Services;
 /// Reads products + affiliate links from an .xlsx file. The first row must be a header row.
 /// Header names are matched case/accent-insensitively; English and Vietnamese names are accepted.
 /// Required columns: Name, Affiliate link. Optional: Brand, Category, Price, Image URL, Description,
-/// Target conditions, Usage instructions.
+/// Target conditions, Usage instructions, Skin type (e.g. "Oily,Combination" or "All"), Step (1-5 or a
+/// name such as "Cleanse", "Serum", "Moisturize").
 /// </summary>
 public class ProductExcelParser
 {
@@ -23,6 +24,8 @@ public class ProductExcelParser
         ["description"] = ["description", "mota"],
         ["conditions"] = ["targetconditions", "conditions", "tinhtrangda"],
         ["usage"] = ["usageinstructions", "usage", "huongdansudung", "cachdung"],
+        ["skintype"] = ["skintype", "skin", "loaida", "dacuaban"],
+        ["step"] = ["step", "buoc", "routinestep", "buocskincare"],
         ["affiliate"] = ["affiliateurl", "affiliatelink", "affiliate", "linkaffiliate", "link", "url"],
     };
 
@@ -132,6 +135,8 @@ public class ProductExcelParser
                     TargetConditions = NullIfEmpty(Cell(r, "conditions")),
                     UsageInstructions = NullIfEmpty(Cell(r, "usage")),
                     AffiliateUrl = url,
+                    SkinType = NullIfEmpty(Cell(r, "skintype")),
+                    Step = NullIfEmpty(Cell(r, "step"))
                 });
             }
 
@@ -149,7 +154,7 @@ public class ProductExcelParser
         string[] headers =
         [
             "Name", "Brand", "Category", "Price", "Affiliate Link",
-            "Image URL", "Description", "Target Conditions", "Usage Instructions"
+            "Image URL", "Description", "Target Conditions", "Usage Instructions", "Skin Type", "Step"
         ];
         for (var i = 0; i < headers.Length; i++)
         {
@@ -167,6 +172,8 @@ public class ProductExcelParser
         sheet.Cell(2, 7).Value = "Sữa rửa mặt dịu nhẹ";
         sheet.Cell(2, 8).Value = "Acne,EnlargedPores";
         sheet.Cell(2, 9).Value = "Dùng sáng và tối";
+        sheet.Cell(2, 10).Value = "Oily,Combination";
+        sheet.Cell(2, 11).Value = "Cleanse";
 
         sheet.Columns().AdjustToContents();
 

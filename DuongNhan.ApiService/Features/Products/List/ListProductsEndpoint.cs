@@ -38,7 +38,9 @@ internal sealed class ListProductsEndpoint(AppDbContext db) : EndpointWithoutReq
                 p.Description,
                 p.TargetConditions,
                 p.UsageInstructions,
-                p.AffiliateUrl))
+                p.AffiliateUrl,
+                p.SkinType,
+                p.Step))
             .ToListAsync(ct);
 
         await Send.OkAsync(products, ct);

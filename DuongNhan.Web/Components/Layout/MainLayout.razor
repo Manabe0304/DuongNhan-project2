@@ -5,6 +5,7 @@
 @inject NavigationService Navigation
 @inject DuongNhanApiService Api
 @inject AuthModalService AuthModalState
+@inject AnalyticsService Analytics
 
 <div class="dn-app">
     @if (Session.IsAuthenticated)
@@ -143,6 +144,7 @@
     {
         isSidebarOpen = false;
         _ = InvokeAsync(StateHasChanged);
+        _ = Analytics.PageViewAsync(e.Location, PageTitle);
     }
 
     public void Dispose() => NavManager.LocationChanged -= HandleLocationChanged;
@@ -156,6 +158,10 @@
         {
             await Session.LoadAsync();
             await InvokeAsync(StateHasChanged);
+
+            // GA4: the Google tag is configured with send_page_view=false, so the first page view is sent here.
+            await Analytics.PageViewAsync(NavManager.Uri, PageTitle);
+
 
             if (Session.IsAuthenticated)
             {

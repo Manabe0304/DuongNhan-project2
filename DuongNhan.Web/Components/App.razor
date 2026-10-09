@@ -1,17 +1,38 @@
+@inject IConfiguration Configuration
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#c9356b" />
     <base href="/" />
     <link rel="icon" type="image/png" href="/DuongNhan.jpg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" />
     <link rel="stylesheet" href="@Assets["lib/bootstrap/dist/css/bootstrap.min.css"]" />
     <link rel="stylesheet" href="@Assets["lib/phosphor/regular/style.css"]" />
     <link rel="stylesheet" href="@Assets["lib/phosphor/fill/style.css"]" />
     <link rel="stylesheet" href="@Assets["app.css"]" />
     <link rel="stylesheet" href="@Assets["DuongNhan.Web.styles.css"]" />
+    <link rel="stylesheet" href="@Assets["css/skincare-theme.css"]" />
     <ImportMap />
     <HeadOutlet />
+    <script src="@Assets["js/reveal.js"]"></script>
+
+    @if (Ga4Id is not null)
+    {
+        <!-- Google Analytics 4 -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=@Ga4Id"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() { dataLayer.push(arguments); }
+            window.gtag = gtag;
+            gtag('js', new Date());
+            gtag('config', '@Ga4Id', { 'send_page_view': false });
+        </script>
+    }
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
@@ -19,5 +40,23 @@
     <script src="@Assets["_framework/blazor.web.js"]"></script>
     <script src="@Assets["js/google-auth.js"]"></script>
     <script src="@Assets["js/download.js"]"></script>
+    <script src="@Assets["js/analytics.js"]"></script>
 </body>
 </html>
+
+@code {
+    // <summary>
+    /// GA4 Measurement ID ("G-XXXXXXXXXX") from configuration.
+    /// Validated so it can never inject script. Null disables GA.
+    // </summary>
+    private string? Ga4Id
+    {
+        get
+        {
+            var id = Configuration["Analytics:Ga4MeasurementId"]?.Trim();
+            return !string.IsNullOrEmpty(id) && System.Text.RegularExpressions.Regex.IsMatch(id, "^G-[A-Z0-9]{4,20}$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+                ? id
+                : null;
+        }
+    }
+}

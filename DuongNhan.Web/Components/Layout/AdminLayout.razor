@@ -1,0 +1,137 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject UiSessionService Session
+@inject NavigationManager NavManager
+@inject NavigationService Navigation
+@inject TokenStorage Tokens
+@inject DuongNhanApiService Api
+
+<div class="dn-admin">
+    <div class="dn-admin-backdrop @(isOpen ? "show" : string.Empty)" @onclick="Close"></div>
+
+    <aside class="dn-admin-side @(isOpen ? "open" : string.Empty)">
+        <div class="dn-admin-brand">
+            <img src="/DuongNhan.jpg" alt="" />
+            <div><b>Dưỡng Nhan</b><small>Admin console</small></div>
+        </div>
+
+        <nav class="dn-admin-nav" aria-label="Quản trị">
+            <div class="dn-admin-nav-label">Quản lý</div>
+            <a href="/admin" class="@Active("/admin", exact: true)" @onclick="Close"><i class="ph ph-squares-four" aria-hidden="true"></i>Tổng quan</a>
+            <a href="/admin/users" class="@Active("/admin/users")" @onclick="Close"><i class="ph ph-users-three" aria-hidden="true"></i>Tài khoản</a>
+            <a href="/admin/products" class="@Active("/admin/products")" @onclick="Close"><i class="ph ph-flask" aria-hidden="true"></i>Sản phẩm</a>
+        </nav>
+
+        <div class="dn-admin-foot dn-admin-nav">
+            <a href="/dashboard"><i class="ph ph-arrow-u-up-left" aria-hidden="true"></i>Xem như người dùng</a>
+            <button type="button" @onclick="Logout"><i class="ph ph-sign-out" aria-hidden="true"></i>Đăng xuất</button>
+        </div>
+    </aside>
+
+    <div class="dn-admin-main">
+        <header class="dn-admin-top">
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="dn-sidebar-toggle d-lg-none" @onclick="Open" aria-label="Mở menu">
+                    <i class="ph ph-list" aria-hidden="true"></i>
+                </button>
+                <h1>@Title</h1>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="dn-admin-badge">ADMIN</span>
+                <span class="small text-secondary d-none d-sm-inline">@Session.Email</span>
+            </div>
+        </header>
+
+        <main class="dn-admin-content">
+            @if (!ready)
+            {
+                <div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>
+            }
+            else if (!Session.IsAdmin)
+            {
+                <div class="dn-panel text-center mx-auto" style="max-width:480px">
+                    <i class="ph ph-lock-key" style="font-size:2.5rem;color:var(--dn-rose-400)" aria-hidden="true"></i>
+                    <h5 class="mt-2">Bạn không có quyền truy cập</h5>
+                    <p class="sub">Khu vực này chỉ dành cho tài khoản quản trị viên.</p>
+                    <a href="/" class="btn btn-dn-coral btn-sm">Về trang chủ</a>
+                </div>
+            }
+            else
+            {
+                @Body
+            }
+        </main>
+    </div>
+</div>
+
+<ToastContainer />
+
+@code {
+    private bool ready;
+    private bool isOpen;
+
+    private string Title => new Uri(Navigation.CurrentUrl).AbsolutePath.TrimEnd('/').ToLowerInvariant() switch
+    {
+        "/admin/users" => "Quản lý tài khoản",
+        "/admin/products" => "Quản lý sản phẩm",
+        _ => "Tổng quan hệ thống",
+    };
+
+    protected override void OnInitialized()
+    {
+        // Already signed in within this circuit (e.g. just logged in): no need to wait for storage.
+        ready = Session.IsAuthenticated;
+        NavManager.LocationChanged += HandleLocationChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender || ready) return;
+
+        try { await Session.LoadAsync(); }
+        catch { /* treated as signed out below */ }
+
+        ready = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private string Active(string href, bool exact = false)
+    {
+        var current = new Uri(Navigation.CurrentUrl).AbsolutePath.TrimEnd('/');
+        if (current.Length == 0) current = "/";
+        var match = exact
+            ? current.Equals(href, StringComparison.OrdinalIgnoreCase)
+            : current.Equals(href, StringComparison.OrdinalIgnoreCase)
+              || current.StartsWith(href + "/", StringComparison.OrdinalIgnoreCase);
+        return match ? "active" : string.Empty;
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        isOpen = false;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void Open() => isOpen = true;
+    private void Close() => isOpen = false;
+
+    private async Task Logout()
+    {
+        try
+        {
+            var refresh = await Tokens.GetRefreshTokenAsync();
+            if (!string.IsNullOrWhiteSpace(refresh)) await Api.LogoutAsync(refresh);
+        }
+        catch
+        {
+            // Local sign-out is what matters; server-side revoke is best effort.
+        }
+        finally
+        {
+            await Session.SignOutAsync();
+            Navigation.NavigateTo("/");
+        }
+    }
+
+    public void Dispose() => NavManager.LocationChanged -= HandleLocationChanged;
+}

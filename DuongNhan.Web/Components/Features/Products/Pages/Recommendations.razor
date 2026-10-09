@@ -1,33 +1,38 @@
 @page "/products"
 @page "/recommendations"
+@implements IAsyncDisposable
 @inject DuongNhanApiService Api
 @inject NavigationManager NavManager
-@inject UiSessionService Session
+@inject BrowserStorage Storage
+@inject AnalyticsService Analytics
 @inject IJSRuntime JS
-@inject ProductExcelParser ExcelParser
+
+<PageTitle>Gợi ý chăm sóc da theo bước &amp; loại da — Dưỡng Nhan</PageTitle>
 
 <div class="container dn-container dn-page">
-    <div class="dn-page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
-        <div><span class="dn-kicker">Dermacare</span><h1>Sản phẩm chăm sóc da</h1><p>Khám phá sản phẩm và lựa chọn phù hợp với nhu cầu làn da của bạn.</p></div>
-        <div class="d-flex flex-column gap-2">
-            <div class="dn-search"><input class="form-control" placeholder="Tìm sản phẩm..." @bind="query" @bind:event="oninput" /></div>
-            @if (Session.IsAdmin)
+    <section class="dn-reco-hero" data-reveal="zoom">
+        <span class="dn-kicker">Dermacare</span>
+        <h1>@(view == View.Steps ? "Routine chăm sóc da theo từng bước" : "Sản phẩm chăm sóc da")</h1>
+        <p>Chọn loại da của bạn, chúng tôi sắp xếp sản phẩm theo đúng thứ tự: làm sạch → điều trị → tinh chất → dưỡng ẩm → chống nắng.</p>
+    </section>
+
+    <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center mb-3" data-reveal>
+        <div class="dn-chips" role="group" aria-label="Loại da">
+            <button type="button" class="dn-chip-skin" aria-pressed="@(skinType is null ? "true" : "false")" @onclick="() => SelectSkinTypeAsync(null)">Tất cả loại da</button>
+            @foreach (var t in SkincareCatalog.SkinTypes)
             {
-                <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <label class="btn btn-dn-coral btn-sm mb-0 @(importing ? "disabled" : "")">
-                        <i class="ph ph-upload-simple" aria-hidden="true"></i> @(importing ? "Đang import..." : "Import Excel")
-                        <InputFile OnChange="OnImportFileSelected" accept=".xlsx" class="d-none" disabled="@importing" />
-                    </label>
-                    <a class="small" href="#" @onclick="DownloadTemplate" @onclick:preventDefault>Tải file mẫu</a>
-                </div>
+                var code = t.Code;
+                <button type="button" class="dn-chip-skin" aria-pressed="@(skinType == code ? "true" : "false")" @onclick="() => SelectSkinTypeAsync(code)">@t.Label</button>
             }
         </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <div class="dn-search"><input class="form-control" placeholder="Tìm sản phẩm..." @bind="query" @bind:event="oninput" aria-label="Tìm sản phẩm" /></div>
+            <div class="dn-viewtoggle" role="group" aria-label="Kiểu hiển thị">
+                <button type="button" aria-pressed="@(view == View.Steps ? "true" : "false")" @onclick="() => SetViewAsync(View.Steps)">Theo bước</button>
+                <button type="button" aria-pressed="@(view == View.All ? "true" : "false")" @onclick="() => SetViewAsync(View.All)">Tất cả</button>
+            </div>
+        </div>
     </div>
-
-    @if (!string.IsNullOrWhiteSpace(importMessage))
-    {
-        <div class="alert @(importFailed ? "alert-danger" : "alert-success") mt-3">@importMessage</div>
-    }
 
     @if (loading)
     {
@@ -35,24 +40,71 @@
     }
     else if (!string.IsNullOrWhiteSpace(error))
     {
-
         <div class="alert alert-warning">@error</div>
+    }
+    else if (view == View.Steps)
+    {
+        <nav class="dn-stepnav" aria-label="Các bước routine">
+            @foreach (var step in SkincareCatalog.Steps)
+            {
+                <a href="#step-@step.Number" data-scroll><b>@step.Number</b>@step.Label</a>
+            }
+        </nav>
+
+        @foreach (var step in SkincareCatalog.Steps)
+        {
+            var inStep = Filtered.Where(p => p.Step == step.Number).ToList();
+            <section id="step-@step.Number" class="dn-step-section" data-reveal>
+                <div class="dn-step-head">
+                    <img src="/images/step-@(step.Code).svg" alt="" loading="lazy" />
+                    <div>
+                        <span class="dn-step-num">Bước @step.Number</span>
+                        <h2>@step.Label</h2>
+                        <p>@step.Subtitle</p>
+                    </div>
+                    <span class="dn-step-when"><i class="ph ph-clock" aria-hidden="true"></i> @step.When</span>
+                </div>
+
+                @if (inStep.Count == 0)
+                {
+                    <div class="dn-step-empty">
+                        @(skinType is null
+                            ? "Chưa có sản phẩm cho bước này."
+                            : $"Chưa có sản phẩm cho bước này phù hợp {SkincareCatalog.SkinTypeLabel(skinType).ToLowerInvariant()}.")
+                    </div>
+                }
+                else
+                {
+                    <div class="row g-4">
+                        @for (var i = 0; i < inStep.Count; i++)
+                        {
+                            var item = inStep[i];
+                            <div class="col-sm-6 col-xl-3" data-reveal style="--dn-delay:@(i % 4 * 70)ms">
+                                @ProductCard(item)
+                            </div>
+                        }
+                    </div>
+                }
+            </section>
+        }
+
+        @if (Filtered.Count == 0)
+        {
+            <div class="dn-step-empty text-center">Không tìm thấy sản phẩm nào khớp bộ lọc. Hãy thử chọn “Tất cả loại da”.</div>
+        }
     }
     else
     {
+        @if (Filtered.Count == 0)
+        {
+            <div class="dn-step-empty text-center">Không tìm thấy sản phẩm nào khớp bộ lọc.</div>
+        }
         <div class="row g-4">
-            @foreach (var p in Filtered)
+            @for (var i = 0; i < Filtered.Count; i++)
             {
-                <div class="col-sm-6 col-xl-3">
-                    <div class="dn-product-card h-100">
-                        <div class="dn-product-img"><img src="@Text(p, "image", Text(p, "imageUrl", "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600"))" alt="" /></div>
-                        <div class="p-3 d-flex flex-column h-auto">
-                            <small class="text-secondary">@Text(p, "brand", "DuongNhan")</small>
-                            <h6 class="mt-1 mb-2">@Text(p, "name", "Skin care product")</h6>
-                            <div class="d-flex align-items-center justify-content-between mb-3"><span class="fw-bold">@Text(p, "price", "—")</span><span class="small dn-rating"><i class="ph-fill ph-star" aria-hidden="true"></i>@Text(p, "rating", "4.8")</span></div>
-                            <button type="button" @onclick="() => OpenAffiliate(Affiliate(p))" class="btn btn-dn-coral btn-sm mt-auto">Xem sản phẩm</button>
-                        </div>
-                    </div>
+                var item = Filtered[i];
+                <div class="col-sm-6 col-xl-3" data-reveal style="--dn-delay:@(i % 4 * 70)ms">
+                    @ProductCard(item)
                 </div>
             }
         </div>
@@ -60,113 +112,172 @@
 </div>
 
 @code {
-    private List<System.Text.Json.JsonElement> items = [];
+    private const string SkinTypeKey = "dn.skin_type";
+    private const string FallbackImage = "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=600";
+
+    private enum View { Steps, All }
+
+    private sealed record Item(
+        Guid? Id, string Name, string Brand, string Category, string Price,
+        string Image, string Affiliate, string SkinTypes, int Step, string Rating);
+
+    private List<Item> items = [];
     private string query = "";
+    private string? skinType;
+    private View view;
     private bool loading = true;
     private string? error;
+    private bool spyStarted;
+    private bool trackedView;
 
-    private IEnumerable<System.Text.Json.JsonElement> Filtered
-        => items.Where(x => string.IsNullOrWhiteSpace(query)
-            || Text(x, "name", "").Contains(query, StringComparison.OrdinalIgnoreCase)
-            || Text(x, "brand", "").Contains(query, StringComparison.OrdinalIgnoreCase));
+    private List<Item> Filtered => items
+        .Where(p => SkincareCatalog.SuitsSkinType(p.SkinTypes, skinType))
+        .Where(p => string.IsNullOrWhiteSpace(query)
+            || p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+            || p.Brand.Contains(query, StringComparison.OrdinalIgnoreCase))
+        .OrderBy(p => p.Step).ThenBy(p => p.Name)
+        .ToList();
 
-    private bool importing;
-    private bool importFailed;
-    private string? importMessage;
-    private const long MaxImportBytes = 5 * 1024 * 1024;
-
-    protected override async Task OnInitializedAsync() => await LoadProductsAsync();
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        // Browser storage (where the login token lives) is only readable after the first interactive render.
-        if (firstRender)
+        // /recommendations opens the routine view; /products keeps the plain catalogue grid.
+        var path = new Uri(NavManager.Uri).AbsolutePath;
+        view = path.StartsWith("/recommendations", StringComparison.OrdinalIgnoreCase) ? View.Steps : View.All;
+
+        try
         {
-            await Session.LoadAsync();
-            StateHasChanged();
+            var raw = await Api.GetProductsAsync();
+            items = raw.Select(Parse).ToList();
         }
-    }
-
-    private async Task LoadProductsAsync()
-    {
-        try { items = await Api.GetProductsAsync(); }
         catch (Exception ex) { error = $"Không tải được sản phẩm từ Product API: {ex.Message}"; }
         finally { loading = false; }
     }
 
-    private async Task OnImportFileSelected(InputFileChangeEventArgs e)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        importMessage = null;
-        importFailed = false;
-        importing = true;
+        if (firstRender)
+        {
+            // Browser storage is only readable after the first interactive render.
+            try
+            {
+                var saved = await Storage.GetAsync(SkinTypeKey);
+                if (SkincareCatalog.SkinTypes.Any(t => t.Code == saved))
+                {
+                    skinType = saved;
+                    StateHasChanged();
+                }
+            }
+            catch { /* optional convenience */ }
+        }
 
+        if (!loading && error is null && !trackedView && view == View.Steps)
+        {
+            trackedView = true;
+            await Analytics.EventAsync("view_recommendation", new { source = "routine_steps" });
+        }
+
+        if (view == View.Steps && !loading && error is null && !spyStarted)
+        {
+            spyStarted = true;
+            try { await JS.InvokeVoidAsync("dnScrollSpy.start", ".dn-stepnav"); } catch { }
+        }
+    }
+
+    private async Task SelectSkinTypeAsync(string? code)
+    {
+        skinType = code;
         try
         {
-            var file = e.File;
-            if (!file.Name.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
-            {
-                Fail("Chỉ hỗ trợ file .xlsx.");
-                return;
-            }
-
-            using var buffer = new MemoryStream();
-            await using (var stream = file.OpenReadStream(MaxImportBytes))
-                await stream.CopyToAsync(buffer);
-            buffer.Position = 0;
-
-            var parsed = ExcelParser.Parse(buffer);
-            if (parsed.Rows.Count == 0)
-            {
-                Fail(string.Join(" ", parsed.Errors.Take(5)));
-                return;
-            }
-
-            var result = await Api.ImportProductsAsync(parsed.Rows);
-            await LoadProductsAsync();
-
-            var skipped = parsed.Errors.Count + result.Skipped;
-            importMessage = $"Import thành công: {result.Created} sản phẩm mới, {result.Updated} cập nhật."
-                + (skipped > 0 ? $" Bỏ qua {skipped} dòng lỗi. {string.Join(" ", parsed.Errors.Take(3))}" : "");
+            if (code is null) await Storage.RemoveAsync(SkinTypeKey);
+            else await Storage.SetAsync(SkinTypeKey, code);
         }
-        catch (Exception ex)
-        {
-            Fail($"Import thất bại: {ex.Message}");
-        }
-        finally
-        {
-            importing = false;
-        }
+        catch { /* not persisting is fine */ }
     }
 
-    private void Fail(string message)
+    private async Task SetViewAsync(View next)
     {
-        importFailed = true;
-        importMessage = message;
+        if (view == next) return;
+        view = next;
+        spyStarted = false;
+        if (next == View.All) { try { await JS.InvokeVoidAsync("dnScrollSpy.stop"); } catch { } }
     }
 
-    private async Task DownloadTemplate()
+    private async Task OpenAsync(Item item)
     {
-        var bytes = ExcelParser.BuildTemplate();
-        using var stream = new DotNetStreamReference(new MemoryStream(bytes));
-        await JS.InvokeVoidAsync("dnDownloadFile", "products-import-template.xlsx", stream);
+        await Analytics.EventAsync("select_item", new { item_id = item.Id?.ToString(), item_name = item.Name, destination = "shopee" });
+        await Analytics.EventAsync("affiliate_click", new { item_id = item.Id?.ToString(), item_name = item.Name, item_category = item.Category });
+
+        if (!string.IsNullOrWhiteSpace(item.Affiliate) && item.Affiliate != "#")
+            NavManager.NavigateTo(item.Affiliate, forceLoad: true);
+    }
+
+    private RenderFragment ProductCard(Item p) => @<div class="dn-product-card h-100">
+        <div class="dn-product-img">
+            <img src="@p.Image" alt="@p.Name" loading="lazy" onerror="this.onerror=null;this.src='/images/step-serum.svg'" />
+            <div class="dn-product-tags">
+                <span class="dn-tag">Bước @p.Step</span>
+                @foreach (var code in p.SkinTypes.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Take(2))
+                {
+                    <span class="dn-tag">@SkincareCatalog.SkinTypeLabel(code)</span>
+                }
+            </div>
+        </div>
+        <div class="p-3 d-flex flex-column">
+            <small class="text-secondary">@p.Brand</small>
+            <h6 class="mt-1 mb-2">@p.Name</h6>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <span class="fw-bold">@p.Price</span>
+                <span class="small dn-rating"><i class="ph-fill ph-star" aria-hidden="true"></i>@p.Rating</span>
+            </div>
+            <button type="button" @onclick="() => OpenAsync(p)" class="btn btn-dn-coral btn-sm mt-auto">Xem sản phẩm</button>
+        </div>
+    </div>;
+
+    private static Item Parse(System.Text.Json.JsonElement e)
+    {
+        var category = Text(e, "category", "");
+        var step = Int(e, "step") ?? SkincareCatalog.StepForCategory(category);
+        return new Item(
+            Id: Guid.TryParse(Text(e, "id", ""), out var id) ? id : null,
+            Name: Text(e, "name", "Skin care product"),
+            Brand: Text(e, "brand", "DuongNhan"),
+            Category: category,
+            Price: FormatPrice(e),
+            Image: Text(e, "imageUrl", Text(e, "image", FallbackImage)) is { Length: > 0 } img ? img : FallbackImage,
+            Affiliate: Text(e, "affiliateUrl", "#"),
+            SkinTypes: SkincareCatalog.NormalizeSkinTypes(Text(e, "skinType", "")),
+            Step: Math.Clamp(step, SkincareCatalog.MinStep, SkincareCatalog.MaxStep),
+            Rating: Text(e, "rating", "4.8"));
+    }
+
+    private static string FormatPrice(System.Text.Json.JsonElement e)
+    {
+        foreach (var key in new[] { "price", "Price" })
+        {
+            if (e.TryGetProperty(key, out var p) && p.ValueKind == System.Text.Json.JsonValueKind.Number && p.TryGetDecimal(out var d))
+                return d <= 0 ? "Liên hệ" : d.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', '.') + " ₫";
+        }
+        return "—";
     }
 
     private static string Text(System.Text.Json.JsonElement item, string name, string fallback)
     {
         foreach (var key in new[] { name, char.ToUpperInvariant(name[0]) + name[1..] })
-            if (item.TryGetProperty(key, out var p))
+            if (item.TryGetProperty(key, out var p) && p.ValueKind != System.Text.Json.JsonValueKind.Null)
                 return p.ValueKind == System.Text.Json.JsonValueKind.String ? p.GetString() ?? fallback : p.ToString();
         return fallback;
     }
 
-    private static string Affiliate(System.Text.Json.JsonElement item)
-        => Text(item, "affiliateUrl", "#");
-
-    private void OpenAffiliate(string url)
+    private static int? Int(System.Text.Json.JsonElement item, string name)
     {
-        if (!string.IsNullOrWhiteSpace(url) && url != "#")
-        {
-            NavManager.NavigateTo(url, forceLoad: true);
-        }
+        foreach (var key in new[] { name, char.ToUpperInvariant(name[0]) + name[1..] })
+            if (item.TryGetProperty(key, out var p) && p.ValueKind == System.Text.Json.JsonValueKind.Number && p.TryGetInt32(out var n))
+                return n;
+        return null;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("dnScrollSpy.stop"); } catch { /* circuit may already be gone */ }
     }
 }

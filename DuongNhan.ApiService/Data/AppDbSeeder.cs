@@ -87,6 +87,8 @@ internal static class AppDbSeeder
                     TargetConditions = "Acne,EnlargedPores,Healthy",
                     UsageInstructions = "Lấy một lượng vừa đủ, tạo bọt nhẹ với nước và massage nhẹ nhàng trong 60 giây, rửa sạch với nước ấm. Dùng sáng và tối.",
                     AffiliateUrl = "https://shopee.vn/product/123456789/cerave-foaming-cleanser?affiliate_id=duongnhan",
+                    SkinType = "Oily,Combination,Normal",
+                    Step = 1,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -101,6 +103,8 @@ internal static class AppDbSeeder
                     TargetConditions = "Acne,EnlargedPores,SeborrheicDermatitis",
                     UsageInstructions = "Tạo bọt trên lòng bàn tay rồi thoa lên mặt đã làm ướt. Rửa sạch lại với nước và thấm khô.",
                     AffiliateUrl = "https://shopee.vn/product/234567890/laroche-posay-effaclar?affiliate_id=duongnhan",
+                    SkinType = "Oily,Combination",
+                    Step = 1,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -115,6 +119,8 @@ internal static class AppDbSeeder
                     TargetConditions = "Acne,EnlargedPores,SeborrheicDermatitis",
                     UsageInstructions = "Thấm đều ra bông tẩy trang hoặc đổ trực tiếp ra lòng bàn tay rồi vỗ nhẹ lên mặt sau bước làm sạch. Bắt đầu với 2-3 lần/tuần.",
                     AffiliateUrl = "https://shopee.vn/product/345678901/paulas-choice-bha?affiliate_id=duongnhan",
+                    SkinType = "Oily,Combination",
+                    Step = 2,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -129,6 +135,8 @@ internal static class AppDbSeeder
                     TargetConditions = "Acne,EnlargedPores,Hyperpigmentation",
                     UsageInstructions = "Thoa 2-3 giọt lên toàn bộ khuôn mặt vào buổi sáng và buổi tối trước các loại kem đặc hơn.",
                     AffiliateUrl = "https://shopee.vn/product/456789012/the-ordinary-niacinamide?affiliate_id=duongnhan",
+                    SkinType = "Oily,Combination",
+                    Step = 3,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -143,6 +151,8 @@ internal static class AppDbSeeder
                     TargetConditions = "Hyperpigmentation,Melasma",
                     UsageInstructions = "Thoa một vài giọt lên vùng da thâm nám hoặc toàn mặt trước khi thoa kem dưỡng ẩm. Sử dụng đều đặn sáng và tối.",
                     AffiliateUrl = "https://shopee.vn/product/567890123/kiehls-dark-spot?affiliate_id=duongnhan",
+                    SkinType = "All",
+                    Step = 3,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -157,6 +167,8 @@ internal static class AppDbSeeder
                     TargetConditions = "Eczema,Rosacea,ContactDermatitis,Acne",
                     UsageInstructions = "Thoa 2 lần mỗi ngày lên vùng da cần phục hồi sau khi làm sạch. Thoa lớp mỏng vừa đủ.",
                     AffiliateUrl = "https://shopee.vn/product/678901234/laroche-posay-cicaplast?affiliate_id=duongnhan",
+                    SkinType = "Sensitive,Dry",
+                    Step = 4,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -171,6 +183,8 @@ internal static class AppDbSeeder
                     TargetConditions = "Healthy,Eczema,Rosacea",
                     UsageInstructions = "Lấy một lượng kem vừa đủ thoa đều khắp mặt và cổ ở bước cuối cùng của chu trình skincare buổi tối.",
                     AffiliateUrl = "https://shopee.vn/product/789012345/dear-klairs-moist-cream?affiliate_id=duongnhan",
+                    SkinType = "Dry,Sensitive,Normal",
+                    Step = 4,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -185,6 +199,8 @@ internal static class AppDbSeeder
                     TargetConditions = "Hyperpigmentation,Melasma,Healthy,Acne",
                     UsageInstructions = "Lắc đều trước khi dùng. Thoa đều lên mặt và cổ trước khi ra ngoài 20 phút. Thoa lại sau mỗi 2-3 giờ khi hoạt động ngoài trời.",
                     AffiliateUrl = "https://shopee.vn/product/890123456/anessa-sunscreen?affiliate_id=duongnhan",
+                    SkinType = "All",
+                    Step = 5,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -199,6 +215,8 @@ internal static class AppDbSeeder
                     TargetConditions = "Acne,EnlargedPores",
                     UsageInstructions = "Sử dụng một lần mỗi ngày vào buổi tối. Thoa một lượng nhỏ lên vùng da bị mụn sau khi rửa mặt sạch.",
                     AffiliateUrl = "https://shopee.vn/product/901234567/eucerin-proacne?affiliate_id=duongnhan",
+                    SkinType = "Oily,Combination",
+                    Step = 2,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -213,6 +231,8 @@ internal static class AppDbSeeder
                     TargetConditions = "Healthy,Eczema,Hyperpigmentation",
                     UsageInstructions = "Sau khi làm sạch và dùng toner, thoa một lượng nhỏ lên toàn bộ khuôn mặt rồi vỗ nhẹ để dưỡng chất thẩm thấu.",
                     AffiliateUrl = "https://shopee.vn/product/012345678/cosrx-snail-essence?affiliate_id=duongnhan",
+                    SkinType = "All",
+                    Step = 3,
                     IsActive = true,
                     CreatedAt = now
                 }

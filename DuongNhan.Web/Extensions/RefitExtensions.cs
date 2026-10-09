@@ -26,6 +26,10 @@ public static class RefitExtensions
             .ConfigureHttpClient(c => c.BaseAddress = baseUrl)
             .AddHttpMessageHandler<AuthHeaderHandler>();
 
+        services.AddRefitClient<IAdminApi>()
+            .ConfigureHttpClient(c => c.BaseAddress = baseUrl)
+            .AddHttpMessageHandler<AuthHeaderHandler>();
+        
         services.AddRefitClient<ISubscriptionApi>()
             .ConfigureHttpClient(c => c.BaseAddress = baseUrl)
             .AddHttpMessageHandler<AuthHeaderHandler>();

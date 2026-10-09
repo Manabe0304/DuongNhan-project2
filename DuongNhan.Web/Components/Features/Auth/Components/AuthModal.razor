@@ -5,6 +5,7 @@
 @inject NavigationService Navigation
 @inject IJSRuntime JS
 @inject IConfiguration Configuration
+@inject AnalyticsService Analytics
 
 @if (Modal.IsOpen)
 {
@@ -197,14 +198,19 @@
 
             if (isRegister)
             {
+                await Analytics.EventAsync("sign_up", new { method = "email" });
+
                 // New accounts get an OTP step right away; login skips straight through.
                 await SendOtp();
                 stage = Stage.Otp;
             }
             else
             {
+                await Analytics.EventAsync("login", new { method = "email" });
+
                 Modal.Close();
-                Navigation.NavigateTo("/dashboard");
+                // Admins land on the admin console instead of the customer portal.
+                Navigation.NavigateTo(Session.IsAdmin ? "/admin" : "/dashboard");
             }
         }
         catch (Exception ex)
@@ -281,10 +287,11 @@
             await Session.SignInAsync(result.UserName ?? "Người dùng Google", result.Email ?? "", result.AccessToken, result.RefreshToken);
 
             loading = false;
+            await Analytics.EventAsync("login", new { method = "google" });
             await InvokeAsync(() =>
             {
                 Modal.Close();
-                Navigation.NavigateTo("/dashboard");
+                Navigation.NavigateTo(Session.IsAdmin ? "/admin" : "/dashboard");
             });
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)

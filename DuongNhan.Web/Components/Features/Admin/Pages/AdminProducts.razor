@@ -1,0 +1,262 @@
+@page "/admin/products"
+@layout AdminLayout
+@using DuongNhan.Shared.Dtos.Admin
+@inject AdminApiService Admin
+@inject ProductExcelParser ExcelParser
+@inject ToastService Toasts
+@inject IJSRuntime JS
+
+<PageTitle>Quản trị — Sản phẩm</PageTitle>
+
+<div class="dn-panel" data-reveal>
+    <div class="d-flex flex-wrap gap-3 justify-content-between align-items-start mb-3">
+        <div>
+            <h5>Danh mục sản phẩm</h5>
+            <div class="sub mb-0">Gán <b>Skin Type</b> và <b>Step</b> để trang /recommendations phân nhóm đúng.</div>
+        </div>
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <label class="btn btn-dn-coral btn-sm mb-0 @(importing ? "disabled" : "")">
+                <i class="ph ph-upload-simple" aria-hidden="true"></i> @(importing ? "Đang import..." : "Import Excel")
+                <InputFile OnChange="OnImportFileSelected" accept=".xlsx" class="d-none" disabled="@importing" />
+            </label>
+            <a class="small" href="#" @onclick="DownloadTemplate" @onclick:preventDefault>Tải file mẫu</a>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(importMessage))
+    {
+        <div class="alert @(importFailed ? "alert-danger" : "alert-success") py-2 small">@importMessage</div>
+    }
+
+    <div class="d-flex flex-wrap gap-2 mb-3">
+        <input class="form-control form-control-sm" style="width:230px" placeholder="Tìm tên hoặc thương hiệu..." @bind="query" @bind:event="oninput" />
+        <select class="form-select form-select-sm" style="width:190px" @bind="stepFilter" aria-label="Lọc theo bước">
+            <option value="0">Mọi bước</option>
+            @foreach (var st in SkincareCatalog.Steps)
+            {
+                <option value="@st.Number">@st.Number. @st.Label</option>
+            }
+        </select>
+        <select class="form-select form-select-sm" style="width:170px" @bind="skinFilter" aria-label="Lọc theo loại da">
+            <option value="">Mọi loại da</option>
+            @foreach (var t in SkincareCatalog.SkinTypes)
+            {
+                <option value="@t.Code">@t.Label</option>
+            }
+        </select>
+    </div>
+
+    @if (error is not null)
+    {
+        <div class="alert alert-warning">@error</div>
+    }
+
+    <div class="dn-table-wrap">
+        <table class="dn-table">
+            <thead>
+                <tr><th>Sản phẩm</th><th>Danh mục</th><th>Skin Type</th><th>Step</th><th>Giá</th><th>Hiển thị</th><th></th></tr>
+            </thead>
+            <tbody>
+            @if (loading)
+            {
+                <tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></td></tr>
+            }
+            else if (Filtered.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-secondary py-4">Không có sản phẩm phù hợp.</td></tr>
+            }
+            else
+            {
+                @foreach (var p in Filtered)
+                {
+                    var editingThis = editId == p.Id;
+                    <tr>
+                        <td><div class="fw-semibold">@p.Name</div><small class="text-secondary">@p.Brand</small></td>
+                        <td>@p.Category</td>
+                        <td>
+                            @if (editingThis)
+                            {
+                                <div class="d-flex flex-wrap gap-2" style="max-width:260px">
+                                    <label class="small"><input type="checkbox" checked="@editAll" @onchange="e => editAll = (bool)(e.Value ?? false)" /> Mọi loại da</label>
+                                    @foreach (var t in SkincareCatalog.SkinTypes)
+                                    {
+                                        var code = t.Code;
+                                        <label class="small"><input type="checkbox" disabled="@editAll" checked="@editTypes.Contains(code)"
+                                                                    @onchange="e => ToggleType(code, (bool)(e.Value ?? false))" /> @t.Label</label>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                @foreach (var code in p.SkinType.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                                {
+                                    <span class="dn-pill me-1">@SkincareCatalog.SkinTypeLabel(code)</span>
+                                }
+                            }
+                        </td>
+                        <td>
+                            @if (editingThis)
+                            {
+                                <select class="dn-minisel" @bind="editStep">
+                                    @foreach (var st in SkincareCatalog.Steps)
+                                    {
+                                        <option value="@st.Number">@st.Number. @st.Label</option>
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <span>@(SkincareCatalog.GetStep(p.Step) is { } info ? $"{info.Number}. {info.Label}" : "—")</span>
+                            }
+                        </td>
+                        <td>@p.Price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', '.') ₫</td>
+                        <td><span class="dn-pill @(p.IsActive ? "ok" : "off")">@(p.IsActive ? "Đang hiển thị" : "Đã ẩn")</span></td>
+                        <td class="text-end text-nowrap">
+                            @if (editingThis)
+                            {
+                                <button class="btn btn-sm btn-dn-coral" disabled="@saving" @onclick="() => SaveAsync(p)">Lưu</button>
+                                <button class="btn btn-sm btn-dn-outline" disabled="@saving" @onclick="CancelEdit">Huỷ</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-dn-outline" @onclick="() => BeginEdit(p)">Sửa</button>
+                                <button class="btn btn-sm btn-dn-outline" @onclick="() => ToggleActiveAsync(p)">@(p.IsActive ? "Ẩn" : "Hiện")</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private const long MaxImportBytes = 5 * 1024 * 1024;
+
+    private List<AdminProductDto> items = [];
+    private bool loading = true;
+    private string? error;
+    private string query = "";
+    private int stepFilter;
+    private string skinFilter = "";
+
+    private Guid? editId;
+    private bool editAll;
+    private readonly HashSet<string> editTypes = new(StringComparer.OrdinalIgnoreCase);
+    private int editStep = 1;
+    private bool saving;
+
+    private bool importing;
+    private bool importFailed;
+    private string? importMessage;
+
+    private List<AdminProductDto> Filtered => items.Where(p =>
+            (string.IsNullOrWhiteSpace(query)
+                || p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                || p.Brand.Contains(query, StringComparison.OrdinalIgnoreCase))
+            && (stepFilter == 0 || p.Step == stepFilter)
+            && (string.IsNullOrEmpty(skinFilter) || SkincareCatalog.SuitsSkinType(p.SkinType, skinFilter)))
+        .ToList();
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        error = null;
+        try { items = await Admin.GetProductsAsync(); }
+        catch (Exception ex) { error = $"Không tải được sản phẩm: {ex.Message}"; }
+        finally { loading = false; }
+    }
+
+    private void BeginEdit(AdminProductDto p)
+    {
+        editId = p.Id;
+        editStep = p.Step ?? SkincareCatalog.StepForCategory(p.Category);
+        editTypes.Clear();
+        var stored = p.SkinType.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        editAll = stored.Length == 0 || stored.Any(s => s.Equals(SkincareCatalog.AllSkinTypes, StringComparison.OrdinalIgnoreCase));
+        if (!editAll) foreach (var s in stored) editTypes.Add(s);
+    }
+
+    private void CancelEdit() => editId = null;
+
+    private void ToggleType(string code, bool on)
+    {
+        if (on) editTypes.Add(code); else editTypes.Remove(code);
+    }
+
+    private async Task SaveAsync(AdminProductDto p)
+    {
+        saving = true;
+        try
+        {
+            var skinType = editAll || editTypes.Count == 0 ? SkincareCatalog.AllSkinTypes : string.Join(',', editTypes);
+            Replace(await Admin.UpdateProductAsync(p.Id, skinType, editStep, null));
+            editId = null;
+            Toasts.ShowSuccess("Đã cập nhật sản phẩm.");
+        }
+        catch (Exception ex) { Toasts.ShowError($"Không thể lưu: {ex.Message}"); }
+        finally { saving = false; }
+    }
+
+    private async Task ToggleActiveAsync(AdminProductDto p)
+    {
+        try { Replace(await Admin.UpdateProductAsync(p.Id, null, null, !p.IsActive)); }
+        catch (Exception ex) { Toasts.ShowError($"Không thể cập nhật: {ex.Message}"); }
+    }
+
+    private void Replace(AdminProductDto updated)
+    {
+        var i = items.FindIndex(x => x.Id == updated.Id);
+        if (i >= 0) items[i] = updated;
+    }
+
+    private async Task OnImportFileSelected(InputFileChangeEventArgs e)
+    {
+        importMessage = null;
+        importFailed = false;
+        importing = true;
+
+        try
+        {
+            var file = e.File;
+            if (!file.Name.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase))
+            {
+                Fail("Chỉ hỗ trợ file .xlsx.");
+                return;
+            }
+
+            using var buffer = new MemoryStream();
+            await using (var stream = file.OpenReadStream(MaxImportBytes))
+                await stream.CopyToAsync(buffer);
+            buffer.Position = 0;
+
+            var parsed = ExcelParser.Parse(buffer);
+            if (parsed.Rows.Count == 0)
+            {
+                Fail(string.Join(" ", parsed.Errors.Take(5)));
+                return;
+            }
+
+            var result = await Admin.ImportProductsAsync(parsed.Rows);
+            await LoadAsync();
+
+            var skipped = parsed.Errors.Count + result.Skipped;
+            importMessage = $"Import thành công: {result.Created} sản phẩm mới, {result.Updated} cập nhật."
+                + (skipped > 0 ? $" Bỏ qua {skipped} dòng lỗi. {string.Join(" ", parsed.Errors.Take(3))}" : "");
+        }
+        catch (Exception ex) { Fail($"Import thất bại: {ex.Message}"); }
+        finally { importing = false; }
+    }
+
+    private void Fail(string message) { importFailed = true; importMessage = message; }
+
+    private async Task DownloadTemplate()
+    {
+        var bytes = ExcelParser.BuildTemplate();
+        using var stream = new DotNetStreamReference(new MemoryStream(bytes));
+        await JS.InvokeVoidAsync("dnDownloadFile", "products-import-template.xlsx", stream);
+    }
+}
