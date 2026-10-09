@@ -1,6 +1,12 @@
 @model List<DuongNhan.Admin.Models.ProductViewModel>
 @{
     ViewData["Title"] = "Quản lý sản phẩm";
+
+    var stepNames = new Dictionary<int, string>
+    {
+        [1] = "Làm sạch", [2] = "Điều trị / Tẩy da", [3] = "Tinh chất",
+        [4] = "Dưỡng ẩm", [5] = "Chống nắng", [6] = "Chăm sóc thêm"
+    };
 }
 
 <div class="container-fluid">
@@ -45,6 +51,8 @@
                             <th>Tên sản phẩm</th>
                             <th>Thương hiệu</th>
                             <th>Danh mục</th>
+                            <th>Skin Type</th>
+                            <th>Step</th>
                             <th>Giá</th>
                             <th>Affiliate</th>
                             <th>Trạng thái</th>
@@ -58,6 +66,17 @@
                                 <td>@product.Name</td>
                                 <td>@product.Brand</td>
                                 <td>@product.Category</td>
+                                <td>@(string.IsNullOrWhiteSpace(product.SkinType) ? "All" : product.SkinType.Replace(",", ", "))</td>
+                                <td>
+                                    @if (product.Step is int step)
+                                    {
+                                        <span>@step. @(stepNames.TryGetValue(step, out var stepName) ? stepName : "—")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
                                 <td>@product.Price.ToString("N0") VNĐ</td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(product.AffiliateUrl))
@@ -109,7 +128,7 @@
             <div class="modal-body">
                 <p class="small text-muted">
                     Chọn file .xlsx có các cột: <strong>Name</strong>, <strong>Affiliate Link</strong> (bắt buộc),
-                    Brand, Category, Price, Image URL, Description, Target Conditions, Usage Instructions.
+                    Brand, Category, Price, Image URL, Description, Target Conditions, Usage Instructions, Skin Type, Step.
                     Sản phẩm mới sẽ được thêm, sản phẩm đã có (trùng link hoặc tên + thương hiệu) sẽ được cập nhật,
                     các sản phẩm còn lại giữ nguyên.
                 </p>

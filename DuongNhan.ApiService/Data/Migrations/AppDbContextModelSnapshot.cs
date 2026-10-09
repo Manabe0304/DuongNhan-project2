@@ -282,6 +282,16 @@ namespace DuongNhan.ApiService.Data.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<string>("SkinType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasDefaultValue("All");
+
+                    b.Property<int>("Step")
+                        .HasColumnType("integer");
+
                     b.Property<string>("TargetConditions")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
@@ -298,6 +308,8 @@ namespace DuongNhan.ApiService.Data.Migrations
                     b.HasIndex("Brand");
 
                     b.HasIndex("Category");
+
+                    b.HasIndex("Step");
 
                     b.ToTable("products", (string)null);
                 });

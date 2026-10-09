@@ -20,6 +20,8 @@ builder.Services.AddScoped<ToastService>();
 builder.Services.AddScoped<ThemeService>();
 builder.Services.AddScoped<ImageValidationService>();
 builder.Services.AddScoped<DuongNhanApiService>();
+builder.Services.AddScoped<AdminApiService>();
+builder.Services.AddScoped<AnalyticsService>();
 builder.Services.AddSingleton<ProductExcelParser>();
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<PlanCatalogService>();

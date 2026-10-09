@@ -9,7 +9,9 @@ public sealed record ImportProductRow(
     string? Description,
     string? TargetConditions,
     string? UsageInstructions,
-    string AffiliateUrl
+    string AffiliateUrl,
+    string? SkinType = null,
+    string? Step = null
 );
 
 public sealed record ImportProductsRequest(List<ImportProductRow> Products);

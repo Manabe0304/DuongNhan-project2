@@ -4,6 +4,7 @@
 @inject ImageValidationService ImageValidation
 @inject NavigationService Navigation
 @inject IJSRuntime JS
+@inject AnalyticsService Analytics
 
 <div class="container dn-container dn-page">
     <div class="dn-page-heading">
@@ -103,7 +104,7 @@
 
                 <div class="mt-3 d-flex flex-column gap-2">
                     <a href="/history" class="dn-link">Xem lịch sử phân tích<i class="ph ph-arrow-right" aria-hidden="true"></i></a>
-                    <a href="/doctors" class="dn-link">Cần tư vấn chuyên sâu? Kết nối bác sĩ<i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+                    @* <a href="/doctors" class="dn-link">Cần tư vấn chuyên sâu? Kết nối bác sĩ<i class="ph ph-arrow-right" aria-hidden="true"></i></a> *@
                 </div>
             </div>
         </div>
@@ -192,6 +193,8 @@
 
         try
         {
+            await Analytics.EventAsync("skin_scan_start", new { source = mode.ToString().ToLowerInvariant() });
+
             var upload = await DownscaleAsync(image);
 
             var uploaded = await Api.UploadImageAsync(upload);
@@ -199,11 +202,13 @@
 
             success = true;
             message = "Phân tích da thành công.";
+            await Analytics.EventAsync("skin_scan_complete", new { source = mode.ToString().ToLowerInvariant() });
             Navigation.NavigateTo($"/diagnosis/{uploaded.SkinImageId}");
         }
         catch (Exception ex)
         {
             message = $"Không thể phân tích ảnh: {ex.Message}";
+            await Analytics.EventAsync("skin_scan_error", new { error_type = "api_error" });
         }
         finally
         {

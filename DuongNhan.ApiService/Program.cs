@@ -187,6 +187,15 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// Production opt-in: set Database__MigrateOnStartup=true (e.g. as a Railway variable) to apply pending
+// EF migrations when the API starts. Development always migrates and seeds, see below.
+if (!app.Environment.IsDevelopment() && app.Configuration.GetValue("Database:MigrateOnStartup", false))
+{
+        using var migrationScope = app.Services.CreateScope();
+    var migrationDb = migrationScope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await migrationDb.Database.MigrateAsync();
+}
+
 if (app.Environment.IsDevelopment())
 {
     using var scope = app.Services.CreateScope();

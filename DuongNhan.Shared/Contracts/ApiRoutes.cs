@@ -46,4 +46,13 @@ public static class ApiRoutes
         public const string Usage = Base + "/usage";
         public const string Plans = "/api/plans";
     }
+    public static class Admin
+   {
+        public const string Base = "/api/admin";
+        public const string Stats = Base + "/stats";
+        public const string Users = Base + "/users";
+        public const string UserStatus = Base + "/users/{id:guid}/status";
+        public const string Products = Base + "/products";
+        public const string Product = Base + "/products/{id:guid}";
+    }
 }

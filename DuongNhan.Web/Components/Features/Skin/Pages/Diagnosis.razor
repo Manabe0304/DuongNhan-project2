@@ -1,4 +1,5 @@
 @page "/diagnosis/{Id:guid}"
+@inject AnalyticsService Analytics
 @inject DuongNhanApiService Api
 
 <div class="container dn-container dn-page">
@@ -66,5 +67,8 @@
         }
 
         loading = false;
+
+        // GA4: event name only, never the diagnosis itself (health data must not reach Analytics).
+        if (diagnosis is not null) await Analytics.EventAsync("view_result");
     }
 }

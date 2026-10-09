@@ -1,0 +1,173 @@
+@page "/admin"
+@layout AdminLayout
+@using DuongNhan.Shared.Dtos.Admin
+@inject AdminApiService Admin
+
+<PageTitle>Quản trị — Tổng quan</PageTitle>
+
+@if (loading)
+{
+    <div class="text-center py-5"><div class="spinner-border text-success" role="status"></div></div>
+}
+else if (error is not null)
+{
+    <div class="alert alert-warning d-flex justify-content-between align-items-center">
+        <span>@error</span>
+        <button class="btn btn-sm btn-dn-outline" @onclick="LoadAsync">Thử lại</button>
+    </div>
+}
+else if (stats is { } s)
+{
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3" data-reveal>
+            <div class="dn-kpi"><div class="ico"><i class="ph ph-users-three" aria-hidden="true"></i></div>
+                <small>Tổng tài khoản</small><strong>@s.TotalUsers</strong>
+                <span>+@s.NewUsersLast7Days trong 7 ngày</span></div>
+        </div>
+        <div class="col-6 col-xl-3" data-reveal style="--dn-delay:80ms">
+            <div class="dn-kpi"><div class="ico"><i class="ph ph-user-check" aria-hidden="true"></i></div>
+                <small>Đang hoạt động</small><strong>@s.ActiveUsers</strong>
+                <span>@s.SuspendedUsers bị khoá</span></div>
+        </div>
+        <div class="col-6 col-xl-3" data-reveal style="--dn-delay:160ms">
+            <div class="dn-kpi"><div class="ico"><i class="ph ph-scan" aria-hidden="true"></i></div>
+                <small>Lượt scan</small><strong>@s.TotalScans</strong>
+                <span>+@s.ScansLast7Days trong 7 ngày · @s.TotalDiagnoses kết quả</span></div>
+        </div>
+        <div class="col-6 col-xl-3" data-reveal style="--dn-delay:240ms">
+            <div class="dn-kpi"><div class="ico"><i class="ph ph-flask" aria-hidden="true"></i></div>
+                <small>Sản phẩm</small><strong>@s.TotalProducts</strong>
+                <span>@s.ProductsWithAffiliate có link affiliate · @s.TotalPlans gói</span></div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-8" data-reveal>
+            <div class="dn-panel">
+                <h5>Lượt scan 14 ngày gần nhất</h5>
+                <div class="sub">Theo ngày (UTC)</div>
+                @{ var max = Math.Max(1, (s.ScansPerDay ?? []).Select(d => d.Count).DefaultIfEmpty(0).Max()); }
+                <div class="dn-bars" role="img" aria-label="Biểu đồ lượt scan theo ngày">
+                    @foreach (var d in s.ScansPerDay ?? [])
+                    {
+                        <div title="@d.Day.ToString("dd/MM"): @d.Count">
+                            <span class="small fw-semibold">@(d.Count > 0 ? d.Count.ToString() : "")</span>
+                            <div class="bar" style="height:@(Math.Max(3, d.Count * 100 / max))%"></div>
+                            <small>@d.Day.ToString("dd/MM")</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4" data-reveal style="--dn-delay:100ms">
+            <div class="dn-panel">
+                <h5>Tình trạng da phổ biến</h5>
+                <div class="sub">Chẩn đoán chính</div>
+                @if ((s.TopConditions ?? []).Count == 0)
+                {
+                    <p class="text-secondary small mb-0">Chưa có dữ liệu chẩn đoán.</p>
+                }
+                else
+                {
+                    var top = s.TopConditions!.Max(c => c.Count);
+                    foreach (var c in s.TopConditions!)
+                    {
+                        <div class="dn-hbar"><span class="text-truncate">@c.Label</span>
+                            <div class="track"><div class="fill" style="width:@(c.Count * 100 / Math.Max(1, top))%"></div></div>
+                            <b>@c.Count</b></div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-6" data-reveal>
+            <div class="dn-panel">
+                <h5>Sản phẩm theo bước routine</h5>
+                <div class="sub">Sản phẩm đang hiển thị</div>
+                @{ var stepMax = Math.Max(1, (s.ProductsPerStep ?? []).Select(x => x.Count).DefaultIfEmpty(0).Max()); }
+                @foreach (var x in s.ProductsPerStep ?? [])
+                {
+                    <div class="dn-hbar"><span class="text-truncate">@x.Label</span>
+                        <div class="track"><div class="fill" style="width:@(x.Count * 100 / stepMax)%"></div></div><b>@x.Count</b></div>
+                }
+            </div>
+        </div>
+        <div class="col-lg-6" data-reveal style="--dn-delay:100ms">
+            <div class="dn-panel">
+                <h5>Sản phẩm theo loại da</h5>
+                <div class="sub">Gồm cả sản phẩm “Mọi loại da”</div>
+                @{ var skinMax = Math.Max(1, (s.ProductsPerSkinType ?? []).Select(x => x.Count).DefaultIfEmpty(0).Max()); }
+                @foreach (var x in s.ProductsPerSkinType ?? [])
+                {
+                    <div class="dn-hbar"><span class="text-truncate">@x.Label</span>
+                        <div class="track"><div class="fill" style="width:@(x.Count * 100 / skinMax)%"></div></div><b>@x.Count</b></div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-7" data-reveal>
+            <div class="dn-panel">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div><h5>Tài khoản mới nhất</h5><div class="sub">6 tài khoản đăng ký gần đây</div></div>
+                    <a href="/admin/users" class="small fw-semibold">Quản lý tất cả</a>
+                </div>
+                <div class="dn-table-wrap">
+                    <table class="dn-table">
+                        <thead><tr><th>Email</th><th>Trạng thái</th><th>Ngày tạo</th></tr></thead>
+                        <tbody>
+                        @foreach (var u in s.RecentUsers)
+                        {
+                            <tr><td>@u.Email</td>
+                                <td><span class="dn-pill @(u.Status == "active" ? "ok" : "warn")">@StatusLabel(u.Status)</span></td>
+                                <td>@u.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td></tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-5" data-reveal style="--dn-delay:100ms">
+            <div class="dn-panel">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div><h5>Sản phẩm mới thêm</h5><div class="sub">Đang hiển thị trên website</div></div>
+                    <a href="/admin/products" class="small fw-semibold">Quản lý</a>
+                </div>
+                @foreach (var p in s.TopProducts)
+                {
+                    <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                        <div class="min-w-0"><div class="fw-semibold text-truncate">@p.Name</div><small class="text-secondary">@p.Brand · @p.Category</small></div>
+                        <span class="dn-pill @(p.HasAffiliate ? "ok" : "off")">@(p.HasAffiliate ? "Affiliate" : "Không link")</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private AdminStatsDto? stats;
+    private bool loading = true;
+    private string? error;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        error = null;
+        try { stats = await Admin.GetStatsAsync(); }
+        catch (Exception ex) { error = $"Không tải được số liệu: {ex.Message}"; }
+        finally { loading = false; }
+    }
+
+    private static string StatusLabel(string status) => status switch
+    {
+        "active" => "Hoạt động",
+        "suspended" => "Bị khoá",
+        _ => status
+    };
+}

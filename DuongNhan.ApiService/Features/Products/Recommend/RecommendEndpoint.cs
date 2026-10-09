@@ -63,17 +63,8 @@ internal sealed class RecommendEndpoint(AppDbContext db) : Endpoint<RecommendReq
                 _ => targetList.Contains("healthy") ? 82 : 75
             };
 
-            int stepOrder = product.Category.ToLowerInvariant() switch
-            {
-                "cleanser" => 1,
-                "treatment" => 2,
-                "exfoliant" => 2,
-                "serum" => 3,
-                "essence" => 3,
-                "moisturizer" => 4,
-                "sunscreen" => 5,
-                _ => 6
-            };
+            // An explicit routine step wins; otherwise fall back to the category's default step.
+            int stepOrder = product.Step ?? SkincareCatalog.StepForCategory(product.Category);
 
             string reason = matchCount > 0
                 ? $"Phù hợp tối ưu để điều trị tình trạng {string.Join(" & ", matches.Select(FormatConditionName))} và bảo vệ da toàn diện."
@@ -89,7 +80,9 @@ internal sealed class RecommendEndpoint(AppDbContext db) : Endpoint<RecommendReq
                 Description: product.Description,
                 TargetConditions: product.TargetConditions,
                 UsageInstructions: product.UsageInstructions,
-                AffiliateUrl: product.AffiliateUrl);
+                AffiliateUrl: product.AffiliateUrl,
+                SkinType: product.SkinType,
+                Step: product.Step);
 
             recommendations.Add(new ProductRecommendationDto(
                 Id: Guid.NewGuid(),

@@ -1,0 +1,142 @@
+@page "/admin/users"
+@layout AdminLayout
+@using DuongNhan.Shared.Dtos.Admin
+@inject AdminApiService Admin
+@inject ToastService Toasts
+@inject IJSRuntime JS
+
+<PageTitle>Quản trị — Tài khoản</PageTitle>
+
+<div class="dn-panel" data-reveal>
+    <div class="d-flex flex-wrap gap-2 justify-content-between align-items-end mb-3">
+        <div>
+            <h5>Tài khoản người dùng</h5>
+            <div class="sub mb-0">@total tài khoản · khoá tài khoản sẽ đăng xuất người dùng ngay lập tức</div>
+        </div>
+        <form class="d-flex flex-wrap gap-2" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+            <input class="form-control form-control-sm" style="width:230px" placeholder="Tìm email hoặc tên..." @bind="search" />
+            <select class="form-select form-select-sm" style="width:150px" @bind="status" aria-label="Lọc trạng thái">
+                <option value="">Mọi trạng thái</option>
+                <option value="active">Hoạt động</option>
+                <option value="suspended">Bị khoá</option>
+            </select>
+            <button class="btn btn-dn-coral btn-sm" type="submit"><i class="ph ph-magnifying-glass" aria-hidden="true"></i> Tìm</button>
+        </form>
+    </div>
+
+    @if (error is not null)
+    {
+        <div class="alert alert-warning">@error</div>
+    }
+
+    <div class="dn-table-wrap">
+        <table class="dn-table">
+            <thead>
+                <tr><th>Tài khoản</th><th>Vai trò</th><th>Trạng thái</th><th>Email xác minh</th><th>Scan</th><th>Ngày tạo</th><th></th></tr>
+            </thead>
+            <tbody>
+            @if (loading)
+            {
+                <tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></td></tr>
+            }
+            else if (items.Count == 0)
+            {
+                <tr><td colspan="7" class="text-center text-secondary py-4">Không có tài khoản phù hợp.</td></tr>
+            }
+            else
+            {
+                @foreach (var u in items)
+                {
+                    <tr>
+                        <td><div class="fw-semibold">@(string.IsNullOrWhiteSpace(u.DisplayName) ? "—" : u.DisplayName)</div><small class="text-secondary">@u.Email</small></td>
+                        <td><span class="dn-pill @(IsAdmin(u) ? "" : "off")">@u.Role</span></td>
+                        <td><span class="dn-pill @(u.Status == "active" ? "ok" : "warn")">@(u.Status == "active" ? "Hoạt động" : u.Status == "suspended" ? "Bị khoá" : u.Status)</span></td>
+                        <td>@(u.EmailVerified ? "Đã xác minh" : "Chưa")</td>
+                        <td>@u.ScanCount</td>
+                        <td>@u.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td class="text-end">
+                            @if (IsAdmin(u))
+                            {
+                                <small class="text-secondary">—</small>
+                            }
+                            else if (u.Status == "active")
+                            {
+                                <button class="btn btn-sm btn-dn-outline" disabled="@(busyId == u.Id)" @onclick='() => ToggleAsync(u, "suspended")'>Khoá</button>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-dn-coral" disabled="@(busyId == u.Id)" @onclick='() => ToggleAsync(u, "active")'>Mở khoá</button>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <small class="text-secondary">Trang @pageNo / @TotalPages</small>
+        <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-dn-outline" disabled="@(pageNo <= 1 || loading)" @onclick="() => GoToAsync(pageNo - 1)">‹ Trước</button>
+            <button class="btn btn-sm btn-dn-outline" disabled="@(pageNo >= TotalPages || loading)" @onclick="() => GoToAsync(pageNo + 1)">Sau ›</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private const int PageSize = 15;
+
+    private List<AdminUserDto> items = [];
+    private string search = "";
+    private string status = "";
+    private int pageNo = 1;
+    private int total;
+    private bool loading = true;
+    private string? error;
+    private Guid? busyId;
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(total / (double)PageSize));
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private static bool IsAdmin(AdminUserDto u) => string.Equals(u.Role, "Admin", StringComparison.OrdinalIgnoreCase);
+
+    private Task SearchAsync() { pageNo = 1; return LoadAsync(); }
+
+    private Task GoToAsync(int target) { pageNo = Math.Clamp(target, 1, TotalPages); return LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        loading = true;
+        error = null;
+        try
+        {
+            var result = await Admin.GetUsersAsync(
+                string.IsNullOrWhiteSpace(search) ? null : search.Trim(),
+                string.IsNullOrWhiteSpace(status) ? null : status,
+                pageNo, PageSize);
+            items = result.Items;
+            total = result.Total;
+        }
+        catch (Exception ex) { error = $"Không tải được danh sách: {ex.Message}"; }
+        finally { loading = false; }
+    }
+
+    private async Task ToggleAsync(AdminUserDto user, string newStatus)
+    {
+        var verb = newStatus == "suspended" ? "khoá" : "mở khoá";
+        if (!await JS.InvokeAsync<bool>("confirm", $"Bạn chắc chắn muốn {verb} tài khoản {user.Email}?")) return;
+
+        busyId = user.Id;
+        try
+        {
+            var updated = await Admin.SetUserStatusAsync(user.Id, newStatus);
+            var index = items.FindIndex(x => x.Id == updated.Id);
+            if (index >= 0) items[index] = updated;
+            Toasts.ShowSuccess($"Đã {verb} {user.Email}.");
+        }
+        catch (Exception ex) { Toasts.ShowError($"Không thể {verb}: {ex.Message}"); }
+        finally { busyId = null; }
+    }
+}

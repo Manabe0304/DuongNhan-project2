@@ -11,6 +11,8 @@ public class ImportProductRow
     public string? TargetConditions { get; set; }
     public string? UsageInstructions { get; set; }
     public string AffiliateUrl { get; set; } = string.Empty;
+    public string? SkinType { get; set; }
+    public string? Step { get; set; }
 }
 
 public class ImportProductsResult

@@ -73,6 +73,8 @@ internal sealed class ImportProductsEndpoint(AppDbContext db)
 
             var brand = Truncate(row.Brand?.Trim(), 150) ?? string.Empty;
             var category = Truncate(row.Category?.Trim(), 100);
+            var skinType = string.IsNullOrWhiteSpace(row.SkinType) ? null : SkincareCatalog.NormalizeSkinTypes(row.SkinType);
+            var step = SkincareCatalog.ParseStep(row.Step);
 
             if (!byUrl.TryGetValue(url, out var product))
                 byNameBrand.TryGetValue(Key(name, brand), out product);
@@ -90,6 +92,8 @@ internal sealed class ImportProductsEndpoint(AppDbContext db)
                     TargetConditions = Truncate(row.TargetConditions?.Trim(), 500),
                     UsageInstructions = Truncate(row.UsageInstructions?.Trim(), 1000),
                     AffiliateUrl = Truncate(url, 2000),
+                    SkinType = skinType ?? SkincareCatalog.AllSkinTypes,
+                    Step = step ?? SkincareCatalog.StepForCategory(category),
                     IsActive = true
                 };
                 db.Products.Add(product);
@@ -106,6 +110,9 @@ internal sealed class ImportProductsEndpoint(AppDbContext db)
                 if (!string.IsNullOrWhiteSpace(row.Description)) product.Description = Truncate(row.Description.Trim(), 2000);
                 if (!string.IsNullOrWhiteSpace(row.TargetConditions)) product.TargetConditions = Truncate(row.TargetConditions.Trim(), 500);
                 if (!string.IsNullOrWhiteSpace(row.UsageInstructions)) product.UsageInstructions = Truncate(row.UsageInstructions.Trim(), 1000);
+                if (skinType is not null) product.SkinType = skinType;
+                    if (step is not null) product.Step = step;
+                    else if (product.Step is null) product.Step = SkincareCatalog.StepForCategory(product.Category);
                 product.IsActive = true;
                 updated++;
             }

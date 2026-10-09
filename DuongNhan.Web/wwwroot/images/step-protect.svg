@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="protect">
+  <circle cx="48" cy="48" r="46" fill="#FDE7EE"/>
+  <circle cx="48" cy="48" r="46" fill="none" stroke="#fff" stroke-width="2"/>
+  <circle cx="48" cy="40" r="14" fill="#F4A6BD"/>
+  <g stroke="#E8739A" stroke-width="3" stroke-linecap="round">
+    <path d="M48 16v6M48 58v6M24 40h6M66 40h6M31 23l4 4M61 53l4 4M65 23l-4 4M35 53l-4 4"/>
+  </g>
+  <rect x="34" y="52" width="28" height="30" rx="8" fill="#fff" stroke="#F4A6BD" stroke-width="2"/>
+  <rect x="40" y="46" width="16" height="9" rx="3" fill="#C9356B"/>
+  <text x="48" y="72" text-anchor="middle" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#C9356B">SPF</text>
+</svg>

@@ -66,6 +66,13 @@
     </nav>
 
     <div class="dn-side-bottom">
+        @if (Session.IsAdmin)
+        {
+            <a href="/admin" class="dn-upgrade-cta" @onclick="RequestClose">
+                <i class="ph ph-squares-four" aria-hidden="true"></i>
+                <span>Trang quản trị</span>
+            </a>
+        }
         @if (!IsPro)
         {
             <a href="/pricing" class="dn-upgrade-cta" @onclick="RequestClose">

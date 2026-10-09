@@ -10,6 +10,10 @@ public class ProductViewModel
     public string? ImageUrl { get; set; }
     public string? Description { get; set; }
     public string? AffiliateUrl { get; set; }
+    /// <summary>Comma-separated skin types ("Oily,Combination") or "All".</summary>
+    public string? SkinType { get; set; }
+    /// <summary>Skincare routine step 1-6 (cleanse, treat, serum, moisturize, protect, extra).</summary>
+    public int? Step { get; set; }
     public bool IsActive { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? UpdatedAt { get; set; }
