@@ -23,9 +23,15 @@ public sealed class AdminApiService(IAdminApi admin, IProductApi products, Token
     public async Task<List<AdminProductDto>> GetProductsAsync(CancellationToken ct = default)
         => await admin.GetProductsAsync(await BearerAsync(), ct);
 
-    public async Task<AdminProductDto> UpdateProductAsync(
-        Guid id, string? skinType, int? step, bool? isActive, CancellationToken ct = default)
-        => await admin.UpdateProductAsync(id, new UpdateAdminProductRequest(skinType, step, isActive), await BearerAsync(), ct);
+    public async Task<AdminProductDto> CreateProductAsync(SaveAdminProductRequest request, CancellationToken ct = default)
+        => await admin.CreateProductAsync(request, await BearerAsync(), ct);
+
+    /// <summary>Only non-null fields of <paramref name="request"/> change.</summary>
+    public async Task<AdminProductDto> UpdateProductAsync(Guid id, SaveAdminProductRequest request, CancellationToken ct = default)
+        => await admin.UpdateProductAsync(id, request, await BearerAsync(), ct);
+
+    public async Task DeleteProductAsync(Guid id, CancellationToken ct = default)
+        => await admin.DeleteProductAsync(id, await BearerAsync(), ct);
 
     public async Task<ImportProductsResponse> ImportProductsAsync(List<ImportProductRow> rows, CancellationToken ct = default)
         => await products.ImportAsync(new ImportProductsRequest(rows), await BearerAsync(), ct);

@@ -88,7 +88,7 @@ internal static class AppDbSeeder
                     UsageInstructions = "Lấy một lượng vừa đủ, tạo bọt nhẹ với nước và massage nhẹ nhàng trong 60 giây, rửa sạch với nước ấm. Dùng sáng và tối.",
                     AffiliateUrl = "https://shopee.vn/product/123456789/cerave-foaming-cleanser?affiliate_id=duongnhan",
                     SkinType = "Oily,Combination,Normal",
-                    Step = 1,
+                    Step = 2,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -104,7 +104,7 @@ internal static class AppDbSeeder
                     UsageInstructions = "Tạo bọt trên lòng bàn tay rồi thoa lên mặt đã làm ướt. Rửa sạch lại với nước và thấm khô.",
                     AffiliateUrl = "https://shopee.vn/product/234567890/laroche-posay-effaclar?affiliate_id=duongnhan",
                     SkinType = "Oily,Combination",
-                    Step = 1,
+                    Step = 2,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -120,7 +120,7 @@ internal static class AppDbSeeder
                     UsageInstructions = "Thấm đều ra bông tẩy trang hoặc đổ trực tiếp ra lòng bàn tay rồi vỗ nhẹ lên mặt sau bước làm sạch. Bắt đầu với 2-3 lần/tuần.",
                     AffiliateUrl = "https://shopee.vn/product/345678901/paulas-choice-bha?affiliate_id=duongnhan",
                     SkinType = "Oily,Combination",
-                    Step = 2,
+                    Step = 3,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -130,13 +130,13 @@ internal static class AppDbSeeder
                     Brand = "The Ordinary",
                     Category = "Serum",
                     Price = 210000,
-                    ImageUrl = "https://images.unsplash.com/photo-1608248597359-57353f86eb79?w=500",
+                    ImageUrl = "https://product.hstatic.net/200000617989/product/anh-03_d8b36e207c6e49209b3742eae52822a6_1024x1024.png",
                     Description = "Tinh chất cô đặc với 10% Niacinamide và 1% Muối Kẽm giúp kháng viêm nốt mụn, kiểm soát bã nhờn vượt trội và làm mờ các vết thâm sau mụn.",
                     TargetConditions = "Acne,EnlargedPores,Hyperpigmentation",
                     UsageInstructions = "Thoa 2-3 giọt lên toàn bộ khuôn mặt vào buổi sáng và buổi tối trước các loại kem đặc hơn.",
                     AffiliateUrl = "https://shopee.vn/product/456789012/the-ordinary-niacinamide?affiliate_id=duongnhan",
                     SkinType = "Oily,Combination",
-                    Step = 3,
+                    Step = 4,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -152,7 +152,7 @@ internal static class AppDbSeeder
                     UsageInstructions = "Thoa một vài giọt lên vùng da thâm nám hoặc toàn mặt trước khi thoa kem dưỡng ẩm. Sử dụng đều đặn sáng và tối.",
                     AffiliateUrl = "https://shopee.vn/product/567890123/kiehls-dark-spot?affiliate_id=duongnhan",
                     SkinType = "All",
-                    Step = 3,
+                    Step = 4,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -168,7 +168,7 @@ internal static class AppDbSeeder
                     UsageInstructions = "Thoa 2 lần mỗi ngày lên vùng da cần phục hồi sau khi làm sạch. Thoa lớp mỏng vừa đủ.",
                     AffiliateUrl = "https://shopee.vn/product/678901234/laroche-posay-cicaplast?affiliate_id=duongnhan",
                     SkinType = "Sensitive,Dry",
-                    Step = 4,
+                    Step = 5,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -184,7 +184,7 @@ internal static class AppDbSeeder
                     UsageInstructions = "Lấy một lượng kem vừa đủ thoa đều khắp mặt và cổ ở bước cuối cùng của chu trình skincare buổi tối.",
                     AffiliateUrl = "https://shopee.vn/product/789012345/dear-klairs-moist-cream?affiliate_id=duongnhan",
                     SkinType = "Dry,Sensitive,Normal",
-                    Step = 4,
+                    Step = 5,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -200,7 +200,7 @@ internal static class AppDbSeeder
                     UsageInstructions = "Lắc đều trước khi dùng. Thoa đều lên mặt và cổ trước khi ra ngoài 20 phút. Thoa lại sau mỗi 2-3 giờ khi hoạt động ngoài trời.",
                     AffiliateUrl = "https://shopee.vn/product/890123456/anessa-sunscreen?affiliate_id=duongnhan",
                     SkinType = "All",
-                    Step = 5,
+                    Step = 6,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -210,13 +210,13 @@ internal static class AppDbSeeder
                     Brand = "Eucerin",
                     Category = "Treatment",
                     Price = 490000,
-                    ImageUrl = "https://images.unsplash.com/photo-1608248597359-57353f86eb79?w=500",
+                    ImageUrl = "https://cdn.nhathuoclongchau.com.vn/unsafe/2560x0/filters:quality(90):format(webp)/ESHOP_2026_54_00e650dfd1.jpg",
                     Description = "Tinh chất đặc trị mụn chuyên sâu với phức hợp 10% Hydroxy Complex (AHA, BHA, PHA) và Licochalcone A giúp gom cồi mụn, giảm viêm sưng chỉ sau 1 tuần.",
                     TargetConditions = "Acne,EnlargedPores",
                     UsageInstructions = "Sử dụng một lần mỗi ngày vào buổi tối. Thoa một lượng nhỏ lên vùng da bị mụn sau khi rửa mặt sạch.",
                     AffiliateUrl = "https://shopee.vn/product/901234567/eucerin-proacne?affiliate_id=duongnhan",
                     SkinType = "Oily,Combination",
-                    Step = 2,
+                    Step = 7,
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -232,7 +232,23 @@ internal static class AppDbSeeder
                     UsageInstructions = "Sau khi làm sạch và dùng toner, thoa một lượng nhỏ lên toàn bộ khuôn mặt rồi vỗ nhẹ để dưỡng chất thẩm thấu.",
                     AffiliateUrl = "https://shopee.vn/product/012345678/cosrx-snail-essence?affiliate_id=duongnhan",
                     SkinType = "All",
-                    Step = 3,
+                    Step = 4,
+                    IsActive = true,
+                    CreatedAt = now
+                },
+                new Product
+                {
+                    Name = "Bioderma Sensibio H2O Micellar Water",
+                    Brand = "Bioderma",
+                    Category = "MakeupRemover",
+                    Price = 330000,
+                    ImageUrl = "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500",
+                    Description = "Nước tẩy trang micellar dịu nhẹ, lấy sạch lớp trang điểm và bụi bẩn mà không gây khô căng, phù hợp cả da nhạy cảm.",
+                    TargetConditions = "Healthy,Eczema,Rosacea",
+                    UsageInstructions = "Thấm nước tẩy trang ra bông cotton, lau nhẹ nhàng lên mặt và vùng mắt rồi tiếp tục bước rửa mặt.",
+                    AffiliateUrl = "https://shopee.vn/search?keyword=Bioderma%20Sensibio%20H2O",
+                    SkinType = "All",
+                    Step = 1,
                     IsActive = true,
                     CreatedAt = now
                 }

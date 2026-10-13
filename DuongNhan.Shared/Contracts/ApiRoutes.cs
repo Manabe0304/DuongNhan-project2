@@ -19,6 +19,7 @@ public static class ApiRoutes
         public const string Base = "/api/users";
         public const string Me = Base + "/me";
         public const string UpdateProfile = Base + "/me";
+        public const string ChangePassword = Base + "/me/password";
     }
 
     public static class Skin
@@ -47,7 +48,7 @@ public static class ApiRoutes
         public const string Plans = "/api/plans";
     }
     public static class Admin
-   {
+    {
         public const string Base = "/api/admin";
         public const string Stats = Base + "/stats";
         public const string Users = Base + "/users";

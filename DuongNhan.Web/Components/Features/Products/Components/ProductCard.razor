@@ -1,0 +1,118 @@
+@inject IJSRuntime JS
+
+@* Product card used by /products and /recommendations. Pass MatchPercentage/Reason for the personalised variant. *@
+<article class="dn-pcard">
+    <div class="dn-pcard-media">
+        @if (!string.IsNullOrWhiteSpace(Product.Image))
+        {
+            <img src="@Product.Image" alt="@Product.Name" loading="lazy"
+                 onerror="this.onerror=null;this.src='/images/step-serum.svg';this.classList.add('is-fallback')" />
+        }
+        else
+        {
+            <img class="is-fallback" src="/images/step-serum.svg" alt="" loading="lazy" />
+        }
+
+        @if (Product.IsShopee)
+        {
+            <span class="dn-pcard-mall">Mall</span>
+        }
+        <span class="dn-pcard-step" title="@StepLabel"><StepIcon Step="Product.Step" /></span>
+        @if (!string.IsNullOrWhiteSpace(Product.Category))
+        {
+            <span class="dn-pcard-cat">@Product.Category</span>
+        }
+    </div>
+
+    <div class="dn-pcard-body">
+        <div class="dn-pcard-brandrow">
+            <span class="dn-pcard-brand">@Product.Brand</span>
+            @if (Product.MatchPercentage is { } match)
+            {
+                <span class="dn-pcard-match">@match% khớp</span>
+            }
+        </div>
+
+        <h3 class="dn-pcard-title">@Product.Name</h3>
+
+        <div class="dn-pcard-meta">
+            <span class="dn-pcard-price">@Product.PriceText</span>
+            <span class="dn-pcard-trust"><i class="ph ph-seal-check" aria-hidden="true"></i> Chính hãng</span>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Product.Reason))
+        {
+            <p class="dn-pcard-reason"><i class="ph ph-info" aria-hidden="true"></i><span><b>Lý do gợi ý:</b> @Product.Reason</span></p>
+        }
+        else if (!string.IsNullOrWhiteSpace(Product.Description))
+        {
+            <p class="dn-pcard-desc">@Product.Description</p>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Product.Usage) && Product.MatchPercentage is not null)
+        {
+            <p class="dn-pcard-usage"><b>Cách dùng:</b> @Product.Usage</p>
+        }
+
+        <div class="dn-pcard-tags">
+            @foreach (var code in Product.SkinTypeCodes.Take(3))
+            {
+                <span class="dn-tag-skin">@SkincareCatalog.SkinTypeLabel(code)</span>
+            }
+            @foreach (var c in Product.Conditions.Take(2))
+            {
+                <span class="dn-tag-cond">#@c</span>
+            }
+        </div>
+    </div>
+
+    <div class="dn-pcard-foot">
+        @if (HasLink)
+        {
+            <a class="dn-btn-shopee" href="@Product.AffiliateUrl" target="_blank" rel="noopener noreferrer sponsored"
+               @onclick="() => OnOpen.InvokeAsync(Product)">
+                <i class="ph ph-shopping-bag" aria-hidden="true"></i><span>Mua trên Shopee</span><i class="ph ph-arrow-up-right" aria-hidden="true"></i>
+            </a>
+            <button type="button" class="dn-btn-copy" title="Sao chép link Shopee" aria-label="Sao chép link Shopee" @onclick="CopyAsync">
+                <i class="ph @(copied ? "ph-check" : "ph-copy")" aria-hidden="true"></i>
+            </button>
+        }
+        else
+        {
+            <span class="dn-pcard-nolink">Chưa có link mua hàng</span>
+        }
+    </div>
+    @if (copied)
+    {
+        <div class="dn-pcard-copied" role="status">Đã sao chép link Shopee!</div>
+    }
+</article>
+
+@code {
+    [Parameter, EditorRequired] public ProductCardModel Product { get; set; } = default!;
+    [Parameter] public EventCallback<ProductCardModel> OnOpen { get; set; }
+
+    private bool copied;
+
+    private bool HasLink => !string.IsNullOrWhiteSpace(Product.AffiliateUrl) && Product.AffiliateUrl != "#";
+    private string StepLabel => SkincareCatalog.GetStep(Product.Step)?.Label ?? string.Empty;
+
+    private async Task CopyAsync()
+    {
+        if (!HasLink) return;
+
+        try
+        {
+            copied = await JS.InvokeAsync<bool>("dnCopyText", Product.AffiliateUrl);
+        }
+        catch
+        {
+            copied = false;
+        }
+
+        if (!copied) return;
+        StateHasChanged();
+        await Task.Delay(2000);
+        copied = false;
+    }
+}

@@ -44,21 +44,21 @@
         </div>
     </div>
 </section>
-<svg class="dn-wave" viewBox="0 0 1440 56" preserveAspectRatio="none" aria-hidden="true"><path fill="currentColor" d="M0 0h1440v20c-240 44-480 44-720 20S240-8 0 28Z" transform="scale(1 1)"/></svg>
+<svg class="dn-wave" viewBox="0 0 1440 56" preserveAspectRatio="none" aria-hidden="true"><path fill="currentColor" d="M0 0h1440v20c-240 44-480 44-720 20S240-8 0 28Z" transform="scale(1 1)" /></svg>
 
 <section class="dn-section" id="routine">
     <div class="container dn-container">
         <div class="text-center dn-section-heading" data-reveal>
-            <span class="dn-kicker">Routine 5 bước</span>
+            <span class="dn-kicker">Routine 7 bước</span>
             <h2>Sắp xếp sản phẩm đúng thứ tự</h2>
             <p>Mỗi bước có vai trò riêng. Chọn sản phẩm phù hợp loại da của bạn để routine hiệu quả và dịu nhẹ.</p>
         </div>
         <div class="dn-routine">
-            @foreach (var (step, i) in SkincareCatalog.Steps.Where(x => x.Number <= 5).Select((x, i) => (x, i)))
+            @foreach (var (step, i) in SkincareCatalog.Steps.Select((x, i) => (x, i)))
             {
-                <a class="dn-routine-item" href="/recommendations#step-@step.Number" data-reveal="zoom" style="--dn-delay:@(i * 90)ms">
+                <a class="dn-routine-item" href="/products" data-reveal="zoom" style="--dn-delay:@(i * 70)ms">
                     <img src="/images/step-@(step.Code).svg" alt="" loading="lazy" />
-                    <b>@step.Number. @step.Label</b>
+                    <b>@step.Label</b>
                     <small>@step.When</small>
                 </a>
             }

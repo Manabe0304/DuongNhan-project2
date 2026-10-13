@@ -111,8 +111,8 @@ internal sealed class ImportProductsEndpoint(AppDbContext db)
                 if (!string.IsNullOrWhiteSpace(row.TargetConditions)) product.TargetConditions = Truncate(row.TargetConditions.Trim(), 500);
                 if (!string.IsNullOrWhiteSpace(row.UsageInstructions)) product.UsageInstructions = Truncate(row.UsageInstructions.Trim(), 1000);
                 if (skinType is not null) product.SkinType = skinType;
-                    if (step is not null) product.Step = step;
-                    else if (product.Step is null) product.Step = SkincareCatalog.StepForCategory(product.Category);
+                if (step is not null) product.Step = step;
+                else if (product.Step is null or < SkincareCatalog.MinStep) product.Step = SkincareCatalog.StepForCategory(product.Category);
                 product.IsActive = true;
                 updated++;
             }

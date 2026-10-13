@@ -1,0 +1,168 @@
+@page "/products"
+@inject DuongNhanApiService Api
+@inject BrowserStorage Storage
+@inject AnalyticsService Analytics
+
+<PageTitle>Sản phẩm chăm sóc da — Dưỡng Nhan</PageTitle>
+
+<div class="container dn-container dn-page">
+    <section class="dn-pagehead" data-reveal>
+        <div>
+            <span class="dn-kicker">Shopee Mall chính hãng</span>
+            <h1>Sản phẩm chăm sóc da</h1>
+            <p>Lọc theo loại da và bước trong routine để chọn đúng sản phẩm. Muốn gợi ý riêng cho làn da của bạn?</p>
+        </div>
+        <a href="/recommendations" class="btn btn-dn-coral dn-btn"><i class="ph ph-sparkle" aria-hidden="true"></i> Gợi ý cho riêng bạn</a>
+    </section>
+
+    <div class="dn-toolbar" data-reveal>
+        <div class="dn-search">
+            <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+            <input class="form-control" placeholder="Tìm theo tên hoặc thương hiệu..." @bind="query" @bind:event="oninput" aria-label="Tìm sản phẩm" />
+        </div>
+        <select class="form-select dn-sort" @bind="sort" aria-label="Sắp xếp">
+            <option value="default">Sắp xếp: Theo routine</option>
+            <option value="price-asc">Giá: thấp đến cao</option>
+            <option value="price-desc">Giá: cao đến thấp</option>
+            <option value="name">Tên A → Z</option>
+        </select>
+    </div>
+
+    <div class="dn-filters" data-reveal>
+        <div class="dn-chips" role="group" aria-label="Loại da">
+            <button type="button" class="dn-chip-skin" aria-pressed="@Pressed(skinType is null)" @onclick="() => SelectSkinTypeAsync(null)">Mọi loại da</button>
+            @foreach (var t in SkincareCatalog.SkinTypes)
+            {
+                var code = t.Code;
+                <button type="button" class="dn-chip-skin" aria-pressed="@Pressed(skinType == code)" @onclick="() => SelectSkinTypeAsync(code)">@t.Label</button>
+            }
+        </div>
+
+        <div class="dn-steprow" role="group" aria-label="Bước trong routine">
+            <button type="button" class="dn-stepchip" aria-pressed="@Pressed(stepFilter == 0)" @onclick="() => stepFilter = 0">Tất cả</button>
+            @foreach (var step in SkincareCatalog.Steps)
+            {
+                var n = step.Number;
+                <button type="button" class="dn-stepchip" aria-pressed="@Pressed(stepFilter == n)" @onclick="() => stepFilter = n" title="@step.Label">
+                    <StepIcon Step="n" /><span>@step.Label</span>
+                </button>
+            }
+        </div>
+    </div>
+
+    @if (loading)
+    {
+        <div class="dn-card p-5 text-center"><div class="spinner-border text-success" role="status"></div></div>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-warning">@error</div>
+    }
+    else
+    {
+        var shown = Filtered;
+        <p class="dn-count" role="status">@shown.Count sản phẩm</p>
+
+        @if (shown.Count == 0)
+        {
+            <div class="dn-step-empty text-center">Không có sản phẩm nào khớp bộ lọc. Hãy thử chọn “Mọi loại da” hoặc “Tất cả” bước.</div>
+        }
+        else
+        {
+            <div class="dn-pgrid">
+                @for (var i = 0; i < shown.Count; i++)
+                {
+                    var item = shown[i];
+                    <div data-reveal style="--dn-delay:@(i % 3 * 70)ms">
+                        <ProductCard Product="item" OnOpen="TrackOpenAsync" />
+                    </div>
+                }
+            </div>
+        }
+    }
+</div>
+
+@code {
+    private const string SkinTypeKey = "dn.skin_type";
+
+    private List<ProductCardModel> items = [];
+    private string query = "";
+    private string sort = "default";
+    private string? skinType;
+    private int stepFilter;
+    private bool loading = true;
+    private string? error;
+
+    private static string Pressed(bool on) => on ? "true" : "false";
+
+    private List<ProductCardModel> Filtered
+    {
+        get
+        {
+            var list = items
+                .Where(p => SkincareCatalog.SuitsSkinType(p.SkinTypes, skinType))
+                .Where(p => stepFilter == 0 || p.Step == stepFilter)
+                .Where(p => string.IsNullOrWhiteSpace(query)
+                    || p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                    || p.Brand.Contains(query, StringComparison.OrdinalIgnoreCase));
+
+            return (sort switch
+            {
+                "price-asc" => list.OrderBy(p => p.Price),
+                "price-desc" => list.OrderByDescending(p => p.Price),
+                "name" => list.OrderBy(p => p.Name),
+                _ => list.OrderBy(p => p.Step).ThenBy(p => p.Name)
+            }).ToList();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            items = (await Api.GetProductsAsync()).Select(e => ProductCardModel.FromJson(e)).ToList();
+        }
+        catch (Exception ex)
+        {
+            error = $"Không tải được sản phẩm: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Same preference the profile page saves; browser storage is only readable after the first render.
+        try
+        {
+            var saved = await Storage.GetAsync(SkinTypeKey);
+            if (SkincareCatalog.SkinTypes.Any(t => t.Code == saved))
+            {
+                skinType = saved;
+                StateHasChanged();
+            }
+        }
+        catch { /* optional convenience */ }
+    }
+
+    private async Task SelectSkinTypeAsync(string? code)
+    {
+        skinType = code;
+        try
+        {
+            if (code is null) await Storage.RemoveAsync(SkinTypeKey);
+            else await Storage.SetAsync(SkinTypeKey, code);
+        }
+        catch { /* not persisting is fine */ }
+    }
+
+    private async Task TrackOpenAsync(ProductCardModel item)
+    {
+        await Analytics.EventAsync("select_item", new { item_id = item.Id?.ToString(), item_name = item.Name, destination = "shopee" });
+        await Analytics.EventAsync("affiliate_click", new { item_id = item.Id?.ToString(), item_name = item.Name, item_category = item.Category });
+    }
+}

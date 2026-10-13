@@ -1,0 +1,155 @@
+@inject DuongNhanApiService Api
+@inject UiSessionService Session
+@inject BrowserStorage Storage
+@inject ToastService Toast
+
+@* Personal-information form: name and phone are saved to the account (PUT /api/users/me);
+   the declared skin type is a per-browser preference used to pre-filter products and recommendations. *@
+<form @onsubmit="SaveAsync" @onsubmit:preventDefault>
+    @if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="alert alert-danger small" role="alert">@error</div>
+    }
+    @if (saved)
+    {
+        <div class="alert alert-success small d-flex align-items-center gap-2" role="status">
+            <i class="ph ph-check-circle" aria-hidden="true"></i> Đã lưu thay đổi thành công.
+        </div>
+    }
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label small fw-semibold" for="profile-name">Họ và tên</label>
+            <input class="form-control" @bind="name" placeholder="Nguyễn Văn A" id="profile-name" maxlength="100" autocomplete="name" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-semibold" for="profile-email">Email</label>
+            <input class="form-control" value="@Session.Email" id="profile-email" disabled />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label small fw-semibold" for="profile-phone">Số điện thoại</label>
+            <input class="form-control" @bind="phone" placeholder="09xx xxx xxx" id="profile-phone" maxlength="30" autocomplete="tel" inputmode="tel" />
+        </div>
+        <div class="col-12">
+            <span class="form-label small fw-semibold d-block mb-2">Loại da của bạn</span>
+            <div class="dn-chips" role="group" aria-label="Loại da">
+                <button type="button" class="dn-chip-skin" aria-pressed="@(skinType is null ? "true" : "false")" @onclick="() => skinType = null">Chưa xác định</button>
+                @foreach (var t in SkincareCatalog.SkinTypes)
+                {
+                    var code = t.Code;
+                    <button type="button" class="dn-chip-skin" aria-pressed="@(skinType == code ? "true" : "false")" @onclick="() => skinType = code">@t.Label</button>
+                }
+            </div>
+            <small class="text-secondary d-block mt-2">Dùng để lọc sẵn sản phẩm phù hợp trong mục Sản phẩm.</small>
+        </div>
+    </div>
+
+    <button class="btn btn-dn-coral mt-4" disabled="@saving" id="btn-save-profile">
+        @if (saving)
+        {
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            <span>Đang lưu...</span>
+        }
+        else
+        {
+            <i class="ph ph-floppy-disk" aria-hidden="true"></i>
+            <span>Lưu thay đổi</span>
+        }
+    </button>
+</form>
+
+@code {
+    private const string SkinTypeKey = "dn.skin_type";
+
+    /// <summary>Raised after a successful save with the chosen skin type code (null = not set).</summary>
+    [Parameter] public EventCallback<string?> OnSaved { get; set; }
+
+    /// <summary>Raised once the stored skin type has been read, so the summary card can show it.</summary>
+    [Parameter] public EventCallback<string?> OnSkinTypeLoaded { get; set; }
+
+    private string name = "";
+    private string phone = "";
+    private string? skinType;
+    private bool saving;
+    private bool saved;
+    private string? error;
+
+    protected override void OnInitialized() => name = Session.Name ?? "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        try
+        {
+            var me = await Api.GetMeTypedAsync();
+            name = me.DisplayName ?? name;
+            phone = me.PhoneNumber ?? "";
+
+            var stored = await Storage.GetAsync(SkinTypeKey);
+            skinType = SkincareCatalog.SkinTypes.Any(t => t.Code == stored) ? stored : null;
+
+            await OnSkinTypeLoaded.InvokeAsync(skinType);
+            StateHasChanged();
+        }
+        catch
+        {
+            // The form still works with what the session knows; saving will report any real problem.
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        error = null;
+        saved = false;
+
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            error = "Họ và tên không được để trống.";
+            return;
+        }
+
+        saving = true;
+        try
+        {
+            var updated = await Api.UpdateProfileAsync(name.Trim(), string.IsNullOrWhiteSpace(phone) ? null : phone.Trim());
+            await Session.UpdateNameAsync(updated.DisplayName ?? name);
+
+            if (skinType is null) await Storage.RemoveAsync(SkinTypeKey);
+            else await Storage.SetAsync(SkinTypeKey, skinType);
+
+            saved = true;
+            Toast.ShowSuccess("Hồ sơ đã được cập nhật!");
+            await OnSaved.InvokeAsync(skinType);
+        }
+        catch (Refit.ApiException ex)
+        {
+            error = ReadApiError(ex) ?? "Không thể lưu hồ sơ. Vui lòng kiểm tra lại thông tin.";
+        }
+        catch (Exception ex)
+        {
+            error = $"Lưu thất bại: {ex.Message}";
+        }
+        finally
+        {
+            saving = false;
+        }
+    }
+
+    private static string? ReadApiError(Refit.ApiException ex)
+    {
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(ex.Content ?? "{}");
+            if (doc.RootElement.TryGetProperty("errors", out var errors) && errors.ValueKind == System.Text.Json.JsonValueKind.Object)
+            {
+                foreach (var group in errors.EnumerateObject())
+                    foreach (var message in group.Value.EnumerateArray())
+                        return message.GetString();
+            }
+        }
+        catch { /* generic message */ }
+
+        return null;
+    }
+}

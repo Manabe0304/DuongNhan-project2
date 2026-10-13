@@ -6,6 +6,7 @@
 @inject DuongNhanApiService Api
 @inject AuthModalService AuthModalState
 @inject AnalyticsService Analytics
+@inject UsageState Usage
 
 <div class="dn-app">
     @if (Session.IsAuthenticated)
@@ -26,11 +27,13 @@
                     </div>
 
                     <div class="d-flex align-items-center gap-2">
-                        @if (usageLimit > 0)
+                        @if (Usage.Current is { } usage)
                         {
-                            <a href="/pricing" class="dn-usage-pill d-none d-md-inline-flex">
-                                <span class="dn-dot"></span>
-                                <span>Lượt quét: <strong>@usageUsed/@usageLimit</strong></span>
+                            <a href="/pricing" class="dn-usage-pill @UsageClass(usage)"
+                               title="Gói @usage.PlanName: còn @usage.ScansRemaining lượt quét trong tháng">
+                                <i class="ph ph-scan" aria-hidden="true"></i>
+                                <span class="dn-usage-plan d-none d-md-inline">@usage.PlanName</span>
+                                <span class="dn-usage-count"><strong>@usage.ScansUsed/@usage.ScansLimit</strong><span class="d-none d-sm-inline"> lượt quét</span></span>
                             </a>
                         }
 
@@ -113,8 +116,6 @@
 #pragma warning disable CS0414
     private bool isSidebarOpen;
 #pragma warning restore CS0414
-    private int usageUsed;
-    private int usageLimit;
 
     private string Initials
     {
@@ -138,7 +139,18 @@
         _ => "Dưỡng Nhan AI",
     };
 
-    protected override void OnInitialized() => NavManager.LocationChanged += HandleLocationChanged;
+    protected override void OnInitialized()
+    {
+        NavManager.LocationChanged += HandleLocationChanged;
+        Usage.Changed += HandleUsageChanged;
+    }
+
+    private void HandleUsageChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private static string UsageClass(UsageCounterDto usage)
+        => usage.ScansLimit > 0 && usage.ScansRemaining <= 0 ? "is-empty"
+         : usage.ScansLimit > 0 && usage.ScansRemaining <= 1 ? "is-low"
+         : string.Empty;
 
     private void HandleLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
     {
@@ -147,7 +159,11 @@
         _ = Analytics.PageViewAsync(e.Location, PageTitle);
     }
 
-    public void Dispose() => NavManager.LocationChanged -= HandleLocationChanged;
+    public void Dispose()
+    {
+        NavManager.LocationChanged -= HandleLocationChanged;
+        Usage.Changed -= HandleUsageChanged;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -164,15 +180,7 @@
 
 
             if (Session.IsAuthenticated)
-            {
-                var usage = await Api.GetUsageAsync();
-                if (usage is { } u)
-                {
-                    usageUsed = ReadInt(u, "scansUsedThisMonth", "scansUsed", "used");
-                    usageLimit = ReadInt(u, "scansLimit", "limit");
-                    await InvokeAsync(StateHasChanged);
-                }
-            }
+                await Usage.RefreshAsync();
         }
         catch
         {
@@ -195,17 +203,4 @@
 
     private void OpenSidebar() => isSidebarOpen = true;
     private Task CloseSidebar() { isSidebarOpen = false; return Task.CompletedTask; }
-
-    private static int ReadInt(System.Text.Json.JsonElement j, params string[] keys)
-    {
-        foreach (var key in keys)
-        {
-            foreach (var candidate in new[] { key, char.ToUpperInvariant(key[0]) + key[1..] })
-            {
-                if (j.TryGetProperty(candidate, out var p) && p.TryGetInt32(out var n))
-                    return n;
-            }
-        }
-        return 0;
-    }
 }

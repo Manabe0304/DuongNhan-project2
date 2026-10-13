@@ -1,4 +1,5 @@
 using DuongNhan.ApiService.Data;
+using DuongNhan.ApiService.Features.Skin;
 using DuongNhan.ApiService.Models;
 using DuongNhan.Shared.Contracts;
 using DuongNhan.Shared.Dtos.Products;
@@ -23,7 +24,7 @@ internal sealed class RecommendEndpoint(AppDbContext db) : Endpoint<RecommendReq
         Summary(s =>
         {
             s.Summary = "Get product recommendations for diagnosis";
-            s.Description = "Returns a personalized list of skincare products tailored to the conditions found in the skin diagnosis.";
+            s.Description = "Returns a personalized routine (one group of products per skincare step) tailored to the conditions and skin type found in the skin diagnosis.";
             s.Responses[200] = "List of product recommendations.";
         });
     }
@@ -39,6 +40,12 @@ internal sealed class RecommendEndpoint(AppDbContext db) : Endpoint<RecommendReq
             .Select(c => c.ConditionCode.ToLowerInvariant())
             .ToHashSet() ?? ["healthy"];
 
+        // The diagnosis' skin type narrows products to those suited to it. The AI answers in free text
+        // ("Da hỗn hợp thiên dầu"), so map it to catalogue codes; an empty list means "do not filter".
+        IReadOnlyList<string> skinTypes = diagnosis is null
+            ? []
+            : SkincareCatalog.InferSkinTypes(DiagnosisMapping.ToDto(diagnosis).SkinType);
+
         var allProducts = await db.Products
             .Where(p => p.IsActive)
             .AsNoTracking()
@@ -48,6 +55,9 @@ internal sealed class RecommendEndpoint(AppDbContext db) : Endpoint<RecommendReq
 
         foreach (var product in allProducts)
         {
+            // Skip products explicitly made for other skin types ("All" always passes).
+            if (!SkincareCatalog.SuitsAnySkinType(product.SkinType, skinTypes)) continue;
+
             var targetList = (product.TargetConditions ?? "")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Select(t => t.ToLowerInvariant())
@@ -63,12 +73,19 @@ internal sealed class RecommendEndpoint(AppDbContext db) : Endpoint<RecommendReq
                 _ => targetList.Contains("healthy") ? 82 : 75
             };
 
+            var skinMatch = skinTypes.Count > 0
+                && !product.SkinType.Equals(SkincareCatalog.AllSkinTypes, StringComparison.OrdinalIgnoreCase)
+                && SkincareCatalog.SuitsAnySkinType(product.SkinType, skinTypes);
+            if (skinMatch) matchPercentage = Math.Min(99, matchPercentage + 3);
+
             // An explicit routine step wins; otherwise fall back to the category's default step.
-            int stepOrder = product.Step ?? SkincareCatalog.StepForCategory(product.Category);
+            int stepOrder = SkincareCatalog.ResolveStep(product.Step, product.Category);
 
             string reason = matchCount > 0
                 ? $"Phù hợp tối ưu để điều trị tình trạng {string.Join(" & ", matches.Select(FormatConditionName))} và bảo vệ da toàn diện."
-                : $"Sản phẩm căn bản giúp duy trì độ ẩm và củng cố hàng rào bảo vệ da trong chu trình skincare.";
+                : "Sản phẩm căn bản giúp duy trì độ ẩm và củng cố hàng rào bảo vệ da trong chu trình skincare.";
+            if (skinMatch)
+                reason += $" Dành cho {string.Join(" / ", skinTypes.Select(t => SkincareCatalog.SkinTypeLabel(t).ToLowerInvariant()))}.";
 
             var productDto = new ProductDto(
                 Id: product.Id,
@@ -97,7 +114,7 @@ internal sealed class RecommendEndpoint(AppDbContext db) : Endpoint<RecommendReq
         var result = recommendations
             .GroupBy(r => r.StepOrder)
             .OrderBy(g => g.Key)
-            .SelectMany(g => g.OrderByDescending(r => r.MatchPercentage).Take(2))
+            .SelectMany(g => g.OrderByDescending(r => r.MatchPercentage).Take(3))
             .ToList();
 
         await Send.OkAsync(result, ct);
@@ -111,6 +128,7 @@ internal sealed class RecommendEndpoint(AppDbContext db) : Endpoint<RecommendReq
         "rosacea" => "Đỏ da & Giãn mao mạch",
         "eczema" => "Khô rát nhạy cảm",
         "melasma" => "Sạm nám da",
+        "seborrheicdermatitis" => "Viêm da tiết bã",
         _ => code
     };
 }

@@ -47,6 +47,18 @@ public sealed class UiSessionService(
             provider.SetUser(Name, Email);
     }
 
+    /// <summary>Updates the display name after a profile save, without touching the stored tokens.</summary>
+    public async Task UpdateNameAsync(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name) || Email is null) return;
+
+        Name = name.Trim();
+        await storage.SetAsync(UserKey + ".name", Name);
+
+        if (authState is AuthStateProvider provider)
+            provider.SetUser(Name, Email);
+    }
+
     public async Task SignOutAsync()
     {
         await tokens.ClearAsync();

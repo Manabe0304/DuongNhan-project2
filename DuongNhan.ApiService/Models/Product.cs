@@ -16,7 +16,7 @@ internal sealed class Product : IAuditable, ISoftDeletable
     public string? AffiliateUrl { get; set; }
     /// <summary>Comma-separated skin type codes ("Oily,Combination") or "All". See SkincareCatalog.</summary>
     public string SkinType { get; set; } = "All";
-    /// <summary>Routine step 1-6 (cleanse → extra). Null falls back to the category's default step.</summary>
+    /// <summary>Routine step 1-7 (makeup removal → additional care). Null falls back to the category's default step.</summary>
     public int? Step { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; }

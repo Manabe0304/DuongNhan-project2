@@ -1,0 +1,21 @@
+@using DuongNhan.Shared.Contracts
+@* Shows a routine step as an icon (never a number). Use Illustration for the larger coloured artwork. *@
+@if (Info is not null)
+{
+    if (Illustration)
+    {
+        <img class="dn-step-art @Class" src="/images/step-@(Info.Code).svg" alt="@Info.Label" title="@Info.Label" loading="lazy" />
+    }
+    else
+    {
+        <i class="ph @Info.Icon dn-step-icon @Class" role="img" aria-label="@Info.Label" title="@Info.Label"></i>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired] public int Step { get; set; }
+    [Parameter] public bool Illustration { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    private SkincareStepInfo? Info => SkincareCatalog.GetStep(Step);
+}

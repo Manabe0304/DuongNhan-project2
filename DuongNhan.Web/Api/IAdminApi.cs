@@ -38,10 +38,22 @@ public interface IAdminApi
         [Header("Authorization")] string authorization,
         CancellationToken ct = default);
 
+    [Post(ApiRoutes.Admin.Products)]
+    Task<AdminProductDto> CreateProductAsync(
+        [Body] SaveAdminProductRequest body,
+        [Header("Authorization")] string authorization,
+        CancellationToken ct = default);
+
     [Put("/api/admin/products/{id}")]
     Task<AdminProductDto> UpdateProductAsync(
         Guid id,
-        [Body] UpdateAdminProductRequest body,
+        [Body] SaveAdminProductRequest body,
+        [Header("Authorization")] string authorization,
+        CancellationToken ct = default);
+
+    [Delete("/api/admin/products/{id}")]
+    Task DeleteProductAsync(
+        Guid id,
         [Header("Authorization")] string authorization,
         CancellationToken ct = default);
 }

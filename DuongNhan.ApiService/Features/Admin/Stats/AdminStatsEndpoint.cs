@@ -94,7 +94,7 @@ internal sealed class AdminStatsEndpoint(AppDbContext db, TimeProvider clock) : 
         var perStep = SkincareCatalog.Steps
             .Select(step => new AdminLabelCountDto(
                 step.Label,
-                catalogue.Count(p => (p.Step ?? SkincareCatalog.StepForCategory(p.Category)) == step.Number)))
+                catalogue.Count(p => SkincareCatalog.ResolveStep(p.Step, p.Category) == step.Number)))
             .ToList();
 
         var perSkinType = SkincareCatalog.SkinTypes

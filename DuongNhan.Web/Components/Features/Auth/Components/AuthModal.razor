@@ -6,6 +6,7 @@
 @inject IJSRuntime JS
 @inject IConfiguration Configuration
 @inject AnalyticsService Analytics
+@inject UsageState Usage
 
 @if (Modal.IsOpen)
 {
@@ -207,6 +208,7 @@
             else
             {
                 await Analytics.EventAsync("login", new { method = "email" });
+                await Usage.RefreshAsync();
 
                 Modal.Close();
                 // Admins land on the admin console instead of the customer portal.
@@ -288,6 +290,7 @@
 
             loading = false;
             await Analytics.EventAsync("login", new { method = "google" });
+            await Usage.RefreshAsync();
             await InvokeAsync(() =>
             {
                 Modal.Close();

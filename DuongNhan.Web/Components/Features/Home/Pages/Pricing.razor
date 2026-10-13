@@ -5,7 +5,7 @@
 @inject AnalyticsService Analytics
 
 <div class="container dn-container dn-page">
-    <div class="text-center dn-page-heading mx-auto"><span class="dn-kicker">Plans</span><h1>Bảng giá đơn giản, minh bạch</h1><p>Chọn gói phù hợp với nhu cầu phân tích và theo dõi làn da.</p></div>
+    <div class="text-center dn-page-heading"><span class="dn-kicker">Plans</span><h1>Bảng giá đơn giản, minh bạch</h1><p>Chọn gói phù hợp với nhu cầu phân tích và theo dõi làn da.</p></div>
     @if (loading) { <div class="text-center py-5"><div class="spinner-border text-success"></div></div> }
     else if (!string.IsNullOrWhiteSpace(error)) { <div class="alert alert-warning">@error</div> }
     else

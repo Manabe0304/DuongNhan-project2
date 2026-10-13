@@ -26,11 +26,11 @@
         <!-- Google Analytics 4 -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=@Ga4Id"></script>
         <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag() { dataLayer.push(arguments); }
-            window.gtag = gtag;
-            gtag('js', new Date());
-            gtag('config', '@Ga4Id', { 'send_page_view': false });
+                window.dataLayer = window.dataLayer || [];
+                function gtag() { dataLayer.push(arguments); }
+                window.gtag = gtag;
+                gtag('js', new Date());
+                gtag('config', '@Ga4Id', { 'send_page_view': false });
         </script>
     }
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -41,6 +41,7 @@
     <script src="@Assets["js/google-auth.js"]"></script>
     <script src="@Assets["js/download.js"]"></script>
     <script src="@Assets["js/analytics.js"]"></script>
+    <script src="@Assets["js/dn-ui.js"]"></script>
 </body>
 </html>
 

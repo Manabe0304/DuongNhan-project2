@@ -1,144 +1,103 @@
 @page "/profile"
-@inject DuongNhanApiService Api
+@implements IDisposable
 @inject UiSessionService Session
 @inject NavigationService Navigation
-@inject ToastService Toast
+@inject UsageState Usage
+
+<PageTitle>Hồ sơ cá nhân — Dưỡng Nhan</PageTitle>
 
 <div class="container dn-container dn-page">
-    <div class="dn-page-heading"><span class="dn-kicker">Account</span><h1>Hồ sơ cá nhân</h1><p>Quản lý thông tin tài khoản của bạn.</p></div>
+    <section class="dn-pagehead" data-reveal>
+        <div>
+            <span class="dn-kicker">Tài khoản &amp; hồ sơ da</span>
+            <h1>Hồ sơ cá nhân</h1>
+            <p>Quản lý thông tin tài khoản, loại da và bảo mật của bạn.</p>
+        </div>
+    </section>
 
     <div class="row g-4">
-        <div class="col-lg-8">
-            <div class="dn-card p-4 p-lg-5">
-                <div class="d-flex align-items-center gap-3 mb-4">
-                    <div class="dn-avatar">@(name?.FirstOrDefault().ToString().ToUpper() ?? "D")</div>
-                    <div>
-                        <h5 class="mb-1">@name</h5>
-                        <small class="text-secondary">@Session.Email</small>
-                    </div>
-                </div>
+        <div class="col-lg-4" data-reveal>
+            <aside class="dn-card dn-profile-card">
+                <div class="dn-avatar dn-avatar-lg">@Initial</div>
+                <h2 class="dn-profile-name">@(Session.Name ?? "Tài khoản")</h2>
+                <p class="dn-profile-email">@Session.Email</p>
 
-                @if (!string.IsNullOrWhiteSpace(saveError))
+                @if (Usage.Current is { } u)
                 {
-                    <div class="alert alert-danger small">@saveError</div>
-                }
-                @if (saveOk)
-                {
-                    <div class="alert alert-success small d-flex align-items-center gap-2">
-                        <i class="ph ph-check-circle" aria-hidden="true"></i> Đã lưu thay đổi thành công.
+                    <span class="dn-plan-badge"><i class="ph ph-crown-simple" aria-hidden="true"></i> Gói @u.PlanName</span>
+
+                    <div class="dn-usage-meter" role="img" aria-label="Đã dùng @u.ScansUsed trên @u.ScansLimit lượt quét">
+                        <div class="dn-usage-meter-top"><span>Lượt quét tháng này</span><b>@u.ScansUsed/@u.ScansLimit</b></div>
+                        <div class="dn-usage-meter-bar"><span style="width:@UsagePercent(u)%"></span></div>
                     </div>
                 }
 
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label small">Họ và tên</label>
-                        <input class="form-control" @bind="name" placeholder="Nguyễn Văn A" id="profile-name" />
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small">Email</label>
-                        <input class="form-control" value="@Session.Email" disabled />
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small">Số điện thoại</label>
-                        <input class="form-control" @bind="phone" placeholder="09xx xxx xxx" id="profile-phone" />
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label small">Loại da</label>
-                        <select class="form-select" @bind="skinType" id="profile-skin-type">
-                            <option value="">Chưa xác định</option>
-                            <option value="oily">Da dầu</option>
-                            <option value="dry">Da khô</option>
-                            <option value="combination">Da hỗn hợp</option>
-                            <option value="sensitive">Da nhạy cảm</option>
-                        </select>
-                    </div>
-                </div>
+                <dl class="dn-profile-facts">
+                    <div><dt>Loại da khai báo</dt><dd>@(skinType is null ? "Chưa xác định" : SkincareCatalog.SkinTypeLabel(skinType))</dd></div>
+                </dl>
 
-                <button class="btn btn-dn-coral mt-4" @onclick="Save" disabled="@saving" id="btn-save-profile">
-                    @if (saving)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        <span>Đang lưu...</span>
-                    }
-                    else
-                    {
-                        <i class="ph ph-floppy-disk" aria-hidden="true"></i>
-                        <span>Lưu thay đổi</span>
-                    }
-                </button>
-            </div>
+                <a href="/pricing" class="btn btn-dn-outline w-100"><i class="ph ph-sparkle" aria-hidden="true"></i> Nâng cấp gói quét</a>
+                <div class="dn-profile-links">
+                    <a href="/history"><i class="ph ph-clock-counter-clockwise" aria-hidden="true"></i> Lịch sử phân tích</a>
+                    <a href="/recommendations"><i class="ph ph-sparkle" aria-hidden="true"></i> Gợi ý cho tôi</a>
+                </div>
+            </aside>
         </div>
 
-        <div class="col-lg-4">
-            <div class="dn-card p-4">
-                <h6>Bảo mật</h6>
-                <a class="dn-quick" href="/change-password">
-                    <span class="dn-quick-icon"><i class="ph ph-lock" aria-hidden="true"></i></span>
-                    <span><b>Đổi mật khẩu</b><small>Cập nhật mật khẩu</small></span>
-                </a>
-                <a class="dn-quick text-danger" href="/delete-account">
-                    <span class="dn-quick-icon"><i class="ph ph-warning-circle" aria-hidden="true"></i></span>
-                    <span><b>Xoá tài khoản</b><small>Thao tác không thể hoàn tác</small></span>
-                </a>
+        <div class="col-lg-8" data-reveal style="--dn-delay:80ms">
+            <div class="dn-card p-4 p-lg-5">
+                <div class="dn-tabs" role="tablist" aria-label="Cài đặt tài khoản">
+                    <button type="button" role="tab" id="tab-info" aria-selected="@(tab == Tab.Info ? "true" : "false")" aria-controls="panel-info" @onclick="() => tab = Tab.Info">
+                        <i class="ph ph-user-circle" aria-hidden="true"></i><span>Thông tin cá nhân</span>
+                    </button>
+                    <button type="button" role="tab" id="tab-password" aria-selected="@(tab == Tab.Password ? "true" : "false")" aria-controls="panel-password" @onclick="() => tab = Tab.Password">
+                        <i class="ph ph-key" aria-hidden="true"></i><span>Đổi mật khẩu</span>
+                    </button>
+                </div>
+
+                <div role="tabpanel" id="panel-info" aria-labelledby="tab-info" hidden="@(tab != Tab.Info)">
+                    <ProfileForm OnSaved="OnSkinTypeChanged" OnSkinTypeLoaded="OnSkinTypeChanged" />
+                </div>
+                <div role="tabpanel" id="panel-password" aria-labelledby="tab-password" hidden="@(tab != Tab.Password)">
+                    @if (tab == Tab.Password)
+                    {
+                        <ChangePasswordForm />
+                    }
+                </div>
+
+                <hr class="my-4" />
+                <a class="dn-danger-link" href="/delete-account"><i class="ph ph-warning-circle" aria-hidden="true"></i> Xoá tài khoản (không thể hoàn tác)</a>
             </div>
         </div>
     </div>
 </div>
 
 @code {
-    private string? name;
-    private string phone = "";
-    private string skinType = "";
-    private bool saving;
-    private bool saveOk;
-    private string? saveError;
+    private enum Tab { Info, Password }
+
+    private Tab tab = Tab.Info;
+    private string? skinType;
+
+    private string Initial => string.IsNullOrWhiteSpace(Session.Name) ? "D" : Session.Name.Trim()[..1].ToUpperInvariant();
+
+    private static int UsagePercent(DuongNhan.Shared.Dtos.Subscriptions.UsageCounterDto u)
+        => u.ScansLimit <= 0 ? 0 : Math.Clamp(u.ScansUsed * 100 / u.ScansLimit, 0, 100);
 
     protected override void OnInitialized()
     {
+        Usage.Changed += HandleUsageChanged;
+
         if (!Session.IsAuthenticated)
-        {
             Navigation.NavigateTo("/login");
-            return;
-        }
-        name = Session.Name;
     }
 
-    private async Task Save()
+    private void HandleUsageChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void OnSkinTypeChanged(string? code)
     {
-        saveError = null;
-        saveOk = false;
-
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            saveError = "Họ và tên không được để trống.";
-            return;
-        }
-
-        saving = true;
-        try
-        {
-            // Optimistic update: refresh session name locally.
-            // When API exposes PUT /api/users/me, call it here.
-            await Task.Delay(500);
-            await Session.SignInAsync(name.Trim(), Session.Email!, await GetAccessTokenAsync(), null);
-            saveOk = true;
-            Toast.ShowSuccess("Hồ sơ đã được cập nhật!");
-        }
-        catch (Exception ex)
-        {
-            saveError = $"Lưu thất bại: {ex.Message}";
-        }
-        finally { saving = false; }
+        skinType = code;
+        StateHasChanged();
     }
 
-    private async Task<string> GetAccessTokenAsync()
-    {
-        // Re-use the current stored token (no rotation needed for profile update).
-        try
-        {
-            var me = await Api.GetMeAsync();
-            return me?.GetString() ?? "";
-        }
-        catch { return ""; }
-    }
+    public void Dispose() => Usage.Changed -= HandleUsageChanged;
 }

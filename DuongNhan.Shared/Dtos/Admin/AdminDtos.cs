@@ -1,9 +1,6 @@
 namespace DuongNhan.Shared.Dtos.Admin;
 
-/// <summary>
-/// Dashboard metrics for the admin area. The first block of properties keeps the exact shape the
-/// standalone DuongNhan.Admin MVC app already deserialises, so both admin UIs can share one endpoint.
-/// </summary>
+/// <summary>Dashboard metrics for the admin area (/admin in the Web app).</summary>
 public sealed record AdminStatsDto(
     int TotalUsers,
     int ActiveUsers,
@@ -55,6 +52,22 @@ public sealed record AdminProductDto(
     string SkinType,
     int? Step,
     bool IsActive,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? Description = null,
+    string? TargetConditions = null,
+    string? UsageInstructions = null);
 
-public sealed record UpdateAdminProductRequest(string? SkinType, int? Step, bool? IsActive);
+/// <summary>Full product payload for create. Update uses the same shape with every field optional.</summary>
+public sealed record SaveAdminProductRequest(
+    string? Name,
+    string? Brand,
+    string? Category,
+    decimal? Price,
+    string? ImageUrl,
+    string? Description,
+    string? TargetConditions,
+    string? UsageInstructions,
+    string? AffiliateUrl,
+    string? SkinType,
+    int? Step,
+    bool? IsActive);

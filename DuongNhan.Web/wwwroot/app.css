@@ -519,6 +519,7 @@ h6 {
 
 .dn-page-heading {
     margin-bottom: 1.5rem;
+    text-align: center;
 }
 
     .dn-page-heading h1 {
@@ -529,6 +530,7 @@ h6 {
         color: var(--dn-muted);
         margin: 0;
         max-width: 70ch;
+        text-align: center;
     }
 
 .dn-display {
@@ -2096,22 +2098,18 @@ h6 {
 }
 
     .dn-side-link:hover {
-        color: #fff;
+        color: #111827;
         background: rgba(255, 255, 255, .06);
     }
 
     .dn-side-link.danger {
-        color: #fda4af;
+        color: #c9616e;
     }
 
     .dn-side-link.danger:hover {
-        color: #fecdd3;
+        color: #ed7987;
         background: rgba(244, 63, 94, .1);
     }
-
-        .dn-side-link.danger:hover {
-            color: #fecdd3;
-        }
 
 .dn-sidebar-close {
     display: none;

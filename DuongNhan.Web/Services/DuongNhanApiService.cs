@@ -74,6 +74,16 @@ public sealed class DuongNhanApiService(
     public async Task<JsonElement?> GetMeAsync(CancellationToken ct = default)
         => await ToJsonAsync(await users.GetMeAsync(ct));
 
+    public async Task<DuongNhan.Shared.Dtos.Users.UserDto> GetMeTypedAsync(CancellationToken ct = default)
+        => await users.GetMeAsync(ct);
+
+    public async Task<DuongNhan.Shared.Dtos.Users.UserDto> UpdateProfileAsync(
+        string displayName, string? phoneNumber, CancellationToken ct = default)
+        => await users.UpdateMeAsync(new DuongNhan.Shared.Dtos.Users.UpdateProfileRequest(displayName, phoneNumber), ct);
+
+    public async Task ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken ct = default)
+        => await users.ChangePasswordAsync(new DuongNhan.Shared.Dtos.Users.ChangePasswordRequest(currentPassword, newPassword), ct);
+
     public async Task<List<JsonElement>> GetProductsAsync(CancellationToken ct = default)
         => ToJsonList(await products.ListAsync(ct));
 
@@ -126,6 +136,9 @@ public sealed class DuongNhanApiService(
 
     public async Task<JsonElement?> GetCurrentSubscriptionAsync(CancellationToken ct = default)
         => await ToJsonAsync(await subscriptions.GetCurrentAsync(ct));
+
+    public async Task<DuongNhan.Shared.Dtos.Subscriptions.UsageCounterDto> GetUsageTypedAsync(CancellationToken ct = default)
+        => await subscriptions.GetUsageAsync(ct);
 
     public async Task<JsonElement?> GetUsageAsync(CancellationToken ct = default)
         => await ToJsonAsync(await subscriptions.GetUsageAsync(ct));

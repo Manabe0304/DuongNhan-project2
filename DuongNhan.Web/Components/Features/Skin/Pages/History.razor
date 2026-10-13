@@ -1,36 +1,41 @@
 @page "/history"
 @inject DuongNhanApiService Api
 
+<PageTitle>Lịch sử phân tích — Dưỡng Nhan</PageTitle>
+
 <div class="container dn-container dn-page">
-    <div class="dn-page-heading d-flex flex-wrap justify-content-between align-items-end gap-3">
+    <section class="dn-pagehead" data-reveal>
         <div>
-            <span class="dn-kicker">Your Progress</span>
+            <span class="dn-kicker">Nhật ký chăm sóc da</span>
             <h1>Lịch sử phân tích</h1>
-            <p>Theo dõi những lần scan trước và xem lại kết quả bất cứ lúc nào.</p>
+            <p>Theo dõi tiến trình của làn da qua từng lần scan và xem lại kết quả bất cứ lúc nào.</p>
         </div>
-        <a href="/scan" class="btn btn-dn-coral">Scan da ngay</a>
-    </div>
+        <a href="/scan" class="btn btn-dn-coral dn-btn"><i class="ph ph-sparkle" aria-hidden="true"></i> Thực hiện lần quét mới</a>
+    </section>
 
     @if (loading)
     {
         <div class="dn-card p-5 text-center">
-            <div class="spinner-border text-success"></div>
+            <div class="spinner-border text-success" role="status"></div>
         </div>
     }
     else if (items.Count == 0)
     {
-        <div class="dn-empty">
-            <h5>Chưa có lịch sử</h5>
-            <p>Hãy thực hiện lần phân tích đầu tiên để bắt đầu theo dõi tiến triển của làn da.</p>
-            <a href="/scan" class="btn btn-dn-coral">Scan da ngay</a>
+        <div class="dn-empty" data-reveal>
+            <i class="ph ph-clock-counter-clockwise dn-empty-icon" aria-hidden="true"></i>
+            <h5>Chưa có dữ liệu chẩn đoán nào</h5>
+            <p>Bạn chưa thực hiện lần quét nào. Hãy chụp hoặc tải ảnh để nhận kết quả phân tích đầu tiên.</p>
+            <a href="/scan" class="btn btn-dn-coral">Quét da ngay bây giờ</a>
         </div>
     }
     else
     {
-        <div class="row g-3">
-            @foreach (var item in items)
+        <p class="dn-count">@items.Count lần phân tích gần nhất</p>
+        <div class="dn-hist-list">
+            @for (var i = 0; i < items.Count; i++)
             {
-                <div class="col-md-6 col-xl-4">
+                var item = items[i];
+                <div data-reveal style="--dn-delay:@(Math.Min(i, 5) * 60)ms">
                     <HistoryListItem Item="item" />
                 </div>
             }

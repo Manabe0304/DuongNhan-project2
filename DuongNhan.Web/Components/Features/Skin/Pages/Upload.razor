@@ -5,6 +5,7 @@
 @inject NavigationService Navigation
 @inject IJSRuntime JS
 @inject AnalyticsService Analytics
+@inject UsageState Usage
 
 <div class="container dn-container dn-page">
     <div class="dn-page-heading">
@@ -203,6 +204,7 @@
             success = true;
             message = "Phân tích da thành công.";
             await Analytics.EventAsync("skin_scan_complete", new { source = mode.ToString().ToLowerInvariant() });
+            await Usage.RefreshAsync(); // top-bar scan counter
             Navigation.NavigateTo($"/diagnosis/{uploaded.SkinImageId}");
         }
         catch (Exception ex)
