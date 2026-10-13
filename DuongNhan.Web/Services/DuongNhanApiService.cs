@@ -138,10 +138,20 @@ public sealed class DuongNhanApiService(
         => await ToJsonAsync(await subscriptions.GetCurrentAsync(ct));
 
     public async Task<DuongNhan.Shared.Dtos.Subscriptions.UsageCounterDto> GetUsageTypedAsync(CancellationToken ct = default)
-        => await subscriptions.GetUsageAsync(ct);
+        => await subscriptions.GetUsageAsync(await BearerAsync(), ct);
 
     public async Task<JsonElement?> GetUsageAsync(CancellationToken ct = default)
-        => await ToJsonAsync(await subscriptions.GetUsageAsync(ct));
+        => await ToJsonAsync(await subscriptions.GetUsageAsync(await BearerAsync(), ct));
+
+    /// <summary>Reads the access token from browser storage (inside the circuit) for an explicit Authorization header.</summary>
+    private async Task<string> BearerAsync()
+    {
+        var token = await tokens.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token))
+            throw new InvalidOperationException("Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.");
+
+        return $"Bearer {token}";
+    }
 
     private static T NewRequest<T>(params (string Name, object? Value)[] values) where T : class
     {
