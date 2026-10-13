@@ -126,9 +126,13 @@ internal sealed class RecommendEndpoint(AppDbContext db) : Endpoint<RecommendReq
         "enlargedpores" => "Lỗ chân lông to",
         "hyperpigmentation" => "Thâm mụn & Sắc tố",
         "rosacea" => "Đỏ da & Giãn mao mạch",
-        "eczema" => "Khô rát nhạy cảm",
+        "eczema" => "Da khô & Nhạy cảm",
         "melasma" => "Sạm nám da",
         "seborrheicdermatitis" => "Viêm da tiết bã",
+        "contactdermatitis" => "Kích ứng da",
+        "psoriasis" => "Vảy nến",
+        "fungalinfection" => "Nấm da",
+        "healthy" => "Da khỏe mạnh",
         _ => code
     };
 }

@@ -47,7 +47,7 @@ public sealed record ProductCardModel(
             AffiliateUrl: NullIfEmpty(Text(e, "affiliateUrl")),
             Conditions: Text(e, "targetConditions")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                .Where(c => !c.Equals("healthy", StringComparison.OrdinalIgnoreCase))
+                .Where(c => !HiddenCodes.Contains(c))
                 .Select(ConditionLabel)
                 .ToList(),
             SkinTypes: SkincareCatalog.NormalizeSkinTypes(Text(e, "skinType")),
@@ -69,15 +69,37 @@ public sealed record ProductCardModel(
         return order is >= SkincareCatalog.MinStep and <= SkincareCatalog.MaxStep ? model with { Step = order.Value } : model;
     }
 
+    /// <summary>Codes that are stored in TargetConditions but are not shown as a "#tag" on the card.</summary>
+    private static readonly HashSet<string> HiddenCodes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "healthy",
+        "allskintypes" // old Excel files put the skin type here; it is shown through SkinTypes instead
+    };
+
     public static string ConditionLabel(string code) => code.Trim().ToLowerInvariant() switch
     {
-        "acne" => "Mụn",
+        // Skin conditions
+        "acne" or "acnecare" => "Mụn",
         "enlargedpores" => "Lỗ chân lông to",
         "hyperpigmentation" => "Thâm & sắc tố",
         "rosacea" => "Đỏ da",
         "eczema" => "Da khô / chàm",
         "melasma" => "Nám da",
         "seborrheicdermatitis" => "Viêm da tiết bã",
+        "contactdermatitis" => "Kích ứng da",
+        "psoriasis" => "Vảy nến",
+        "fungalinfection" => "Nấm da",
+
+        // Product goals
+        "makeupremoval" => "Tẩy trang",
+        "deepcleansing" => "Làm sạch sâu",
+        "facialcleansing" => "Làm sạch da mặt",
+        "phbalance" => "Cân bằng pH",
+        "hydration" => "Cấp nước",
+        "moisturizing" => "Dưỡng ẩm",
+        "skinrepair" => "Phục hồi da",
+        "antiaging" => "Chống lão hóa",
+        "skinbrightening" => "Làm sáng da",
         _ => code
     };
 
