@@ -48,6 +48,12 @@
                 <option value="@t.Code">@t.Label</option>
             }
         </select>
+        <select class="form-select form-select-sm dn-admin-pagesize" style="width:130px" @bind="pageSize" aria-label="Số dòng mỗi trang">
+            @foreach (var size in PageSizes)
+            {
+                <option value="@size">@size / trang</option>
+            }
+        </select>
     </div>
 
     @if (error is not null)
@@ -55,25 +61,134 @@
         <div class="alert alert-warning">@error</div>
     }
 
-    <div class="dn-table-wrap">
+    @{ 
+        var filtered = Filtered;
+        var totalPages = Math.Max(1, (int)Math.Ceiling(filtered.Count / (double)pageSize));
+        var current = Math.Clamp(page, 1, totalPages); // e.g. after deleting the last row of the last page
+        var pageRows = filtered.Skip((current - 1) * pageSize).Take(pageSize).ToList();
+    
+        // The editor is drawn inside the table, in place of the row being edited (or at the top for "Thêm sản phẩm"),
+        // so it opens where the admin is already looking instead of in a fixed overlay.
+        RenderFragment formPanel = @<div class="dn-inline-edit dn-scroll-anchor" id="admin-edit-form">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0 fw-bold">@(editingId is null ? "Thêm sản phẩm" : "Sửa sản phẩm")</h6>
+                <button type="button" class="btn-close" aria-label="Đóng" @onclick="CloseForm" disabled="@saving"></button>
+        
+            </div>
+            <div class="dn-admin-form">
+                @if (formError is not null)
+                {
+                    <div class="alert alert-danger small" role="alert">@formError</div>
+                }
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold" for="pf-name">Tên sản phẩm *</label>
+                        <input class="form-control" id="pf-name" @bind="form.Name" maxlength="255" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="pf-brand">Thương hiệu</label>
+                        <input class="form-control" id="pf-brand" @bind="form.Brand" maxlength="150" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="pf-cat">Danh mục</label>
+                        <input class="form-control" id="pf-cat" list="pf-cats" @bind="form.Category" maxlength="100" />
+                        <datalist id="pf-cats">
+                            @foreach (var c in Categories)
+                            {
+                                <option value="@c"></option>
+                            }
+                        </datalist>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="pf-price">Giá (₫)</label>
+                        <input class="form-control" id="pf-price" type="number" min="0" step="1000" @bind="form.Price" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold" for="pf-step">Bước routine</label>
+                        <select class="form-select" id="pf-step" @bind="form.Step">
+                            @foreach (var st in SkincareCatalog.Steps)
+                            {
+                                <option value="@st.Number">@st.Label</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <span class="form-label small fw-semibold d-block mb-1">Loại da phù hợp</span>
+                        <div class="d-flex flex-wrap gap-3">
+                            <label class="small"><input type="checkbox" checked="@form.AllSkin" @onchange="e => form.AllSkin = (bool)(e.Value ?? false)" /> Mọi loại da</label>
+                            @foreach (var t in SkincareCatalog.SkinTypes)
+                            {
+                                var code = t.Code;
+                                <label class="small">
+                                    <input type="checkbox" disabled="@form.AllSkin" checked="@form.SkinTypes.Contains(code)"
+                                            @onchange="e => form.ToggleSkin(code, (bool)(e.Value ?? false))" /> @t.Label
+                                </label>
+                            }
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold" for="pf-url">Link affiliate (Shopee) *</label>
+                        <input class="form-control" id="pf-url" @bind="form.AffiliateUrl" maxlength="2000" placeholder="https://shopee.vn/..." />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold" for="pf-img">Link ảnh</label>
+                        <input class="form-control" id="pf-img" @bind="form.ImageUrl" maxlength="1000" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold" for="pf-desc">Mô tả</label>
+                        <textarea class="form-control" id="pf-desc" rows="2" @bind="form.Description" maxlength="2000"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold" for="pf-cond">Tình trạng da nhắm tới (cách nhau bằng dấu phẩy)</label>
+                        <input class="form-control" id="pf-cond" @bind="form.TargetConditions" maxlength="500" placeholder="Acne,EnlargedPores,Healthy" />
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold" for="pf-use">Cách dùng</label>
+                        <textarea class="form-control" id="pf-use" rows="2" @bind="form.UsageInstructions" maxlength="1000"></textarea>
+                    </div>
+                    <div class="col-12"><label class="small"><input type="checkbox" @bind="form.IsActive" /> Hiển thị trên website</label></div>
+                </div>
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-dn-outline" @onclick="CloseForm" disabled="@saving">Huỷ</button>
+                    <button type="button" class="btn btn-dn-coral" @onclick="SaveAsync" disabled="@saving">@(saving ? "Đang lưu..." : "Lưu")</button>
+                </div>
+            </div>
+        </div>;
+    }
+
+    <div class="dn-table-wrap dn-scroll-anchor" id="admin-products-top">
         <table class="dn-table">
             <thead>
                 <tr><th>Sản phẩm</th><th>Danh mục</th><th>Skin Type</th><th>Step</th><th>Giá</th><th>Hiển thị</th><th></th></tr>
             </thead>
             <tbody>
+                @if (formOpen && editingId is null)
+                {
+                    <tr class="dn-edit-row"><td colspan="7">@formPanel</td></tr>
+                }
                 @if (loading)
                 {
                     <tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></td></tr>
                 }
-                else if (Filtered.Count == 0)
+                else if (filtered.Count == 0)
                 {
                     <tr><td colspan="7" class="text-center text-secondary py-4">Không có sản phẩm phù hợp.</td></tr>
                 }
                 else
                 {
-                    @foreach (var p in Filtered)
+                    @foreach (var p in pageRows)
                     {
-                        <tr>
+                        if (formOpen && editingId == p.Id)
+                        {
+                            <tr class="dn-edit-row" @key="p.Id">
+                                <td colspan="7">
+                                    @formPanel
+                                </td>
+                            </tr>
+                            continue;
+                        }
+
+                        <tr @key="p.Id">
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     @if (!string.IsNullOrWhiteSpace(p.ImageUrl))
@@ -113,88 +228,12 @@
             </tbody>
         </table>
     </div>
-</div>
 
-<Modal IsOpen="formOpen" Title="@(editingId is null ? "Thêm sản phẩm" : "Sửa sản phẩm")" OnClose="CloseForm">
-    <div class="dn-admin-form">
-        @if (formError is not null)
-        {
-            <div class="alert alert-danger small" role="alert">@formError</div>
-        }
-        <div class="row g-3">
-            <div class="col-12">
-                <label class="form-label small fw-semibold" for="pf-name">Tên sản phẩm *</label>
-                <input class="form-control" id="pf-name" @bind="form.Name" maxlength="255" />
-            </div>
-            <div class="col-md-6">
-                <label class="form-label small fw-semibold" for="pf-brand">Thương hiệu</label>
-                <input class="form-control" id="pf-brand" @bind="form.Brand" maxlength="150" />
-            </div>
-            <div class="col-md-6">
-                <label class="form-label small fw-semibold" for="pf-cat">Danh mục</label>
-                <input class="form-control" id="pf-cat" list="pf-cats" @bind="form.Category" maxlength="100" />
-                <datalist id="pf-cats">
-                    @foreach (var c in Categories)
-                    {
-                        <option value="@c"></option>
-                    }
-                </datalist>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label small fw-semibold" for="pf-price">Giá (₫)</label>
-                <input class="form-control" id="pf-price" type="number" min="0" step="1000" @bind="form.Price" />
-            </div>
-            <div class="col-md-6">
-                <label class="form-label small fw-semibold" for="pf-step">Bước routine</label>
-                <select class="form-select" id="pf-step" @bind="form.Step">
-                    @foreach (var st in SkincareCatalog.Steps)
-                    {
-                        <option value="@st.Number">@st.Label</option>
-                    }
-                </select>
-            </div>
-            <div class="col-12">
-                <span class="form-label small fw-semibold d-block mb-1">Loại da phù hợp</span>
-                <div class="d-flex flex-wrap gap-3">
-                    <label class="small"><input type="checkbox" checked="@form.AllSkin" @onchange="e => form.AllSkin = (bool)(e.Value ?? false)" /> Mọi loại da</label>
-                    @foreach (var t in SkincareCatalog.SkinTypes)
-                    {
-                        var code = t.Code;
-                        <label class="small">
-                            <input type="checkbox" disabled="@form.AllSkin" checked="@form.SkinTypes.Contains(code)"
-                                   @onchange="e => form.ToggleSkin(code, (bool)(e.Value ?? false))" /> @t.Label
-                        </label>
-                    }
-                </div>
-            </div>
-            <div class="col-12">
-                <label class="form-label small fw-semibold" for="pf-url">Link affiliate (Shopee) *</label>
-                <input class="form-control" id="pf-url" @bind="form.AffiliateUrl" maxlength="2000" placeholder="https://shopee.vn/..." />
-            </div>
-            <div class="col-12">
-                <label class="form-label small fw-semibold" for="pf-img">Link ảnh</label>
-                <input class="form-control" id="pf-img" @bind="form.ImageUrl" maxlength="1000" />
-            </div>
-            <div class="col-12">
-                <label class="form-label small fw-semibold" for="pf-desc">Mô tả</label>
-                <textarea class="form-control" id="pf-desc" rows="2" @bind="form.Description" maxlength="2000"></textarea>
-            </div>
-            <div class="col-12">
-                <label class="form-label small fw-semibold" for="pf-cond">Tình trạng da nhắm tới (cách nhau bằng dấu phẩy)</label>
-                <input class="form-control" id="pf-cond" @bind="form.TargetConditions" maxlength="500" placeholder="Acne,EnlargedPores,Healthy" />
-            </div>
-            <div class="col-12">
-                <label class="form-label small fw-semibold" for="pf-use">Cách dùng</label>
-                <textarea class="form-control" id="pf-use" rows="2" @bind="form.UsageInstructions" maxlength="1000"></textarea>
-            </div>
-            <div class="col-12"><label class="small"><input type="checkbox" @bind="form.IsActive" /> Hiển thị trên website</label></div>
-        </div>
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <button type="button" class="btn btn-dn-outline" @onclick="CloseForm" disabled="@saving">Huỷ</button>
-            <button type="button" class="btn btn-dn-coral" @onclick="SaveAsync" disabled="@saving">@(saving ? "Đang lưu..." : "Lưu")</button>
-        </div>
-    </div>
-</Modal>
+    @if (!loading)
+    {
+        <Pagination Page="current" TotalPages="totalPages" TotalItems="filtered.Count" PageSize="pageSize" PageChanged="GoToPageAsync" />
+    }
+</div>
 
 @code {
     private const long MaxImportBytes = 5 * 1024 * 1024;
@@ -231,11 +270,28 @@
     private List<AdminProductDto> items = [];
     private bool loading = true;
     private string? error;
-    private string query = "";
-    private int stepFilter;
-    private string skinFilter = "";
+    private static readonly int[] PageSizes = [10, 20, 50, 100];
+
+    private int page = 1;
+    private int pageSizeValue = 20;
+    private string queryValue = "";
+    private int stepFilterValue;
+    private string skinFilterValue = "";
+
+    // Changing a filter or the page size returns to page 1 and closes the editor (its row may no longer be on screen)
+    private string query { get => queryValue; set { queryValue = value; ResetPaging(); } }
+    private int stepFilter { get => stepFilterValue; set { stepFilterValue = value; ResetPaging(); } }
+    private string skinFilter { get => skinFilterValue; set { skinFilterValue = value; ResetPaging(); } }
+    private int pageSize { get => pageSizeValue; set { pageSizeValue = value; ResetPaging(); } }
+
+    private void ResetPaging()
+    {
+        page = 1;
+        formOpen = false;
+    }
 
     private bool formOpen;
+    private bool scrollToForm;
     private Guid? editingId;
     private ProductForm form = new();
     private string? formError;
@@ -255,6 +311,23 @@
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Bring the freshly opened editor fully into view (it is taller than the row it replaced).
+        if (!scrollToForm || !formOpen) return;
+        scrollToForm = false;
+        try { await JS.InvokeVoidAsync("dnScrollToId", "admin-edit-form"); }
+        catch { /* scrolling is a nicety */ }
+    }
+
+    private async Task GoToPageAsync(int newPage)
+    {
+        page = newPage;
+        formOpen = false;
+        try { await JS.InvokeVoidAsync("dnScrollToId", "admin-products-top"); }
+        catch { /* scrolling is a nicety */ }
+    }
+   
     private static string FormatPrice(decimal price)
         => price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', '.') + " ₫";
 
@@ -275,6 +348,7 @@
         form = new ProductForm();
         formError = null;
         formOpen = true;
+        scrollToForm = true;
     }
 
     private void BeginEdit(AdminProductDto p)
@@ -301,6 +375,7 @@
 
         formError = null;
         formOpen = true;
+        scrollToForm = true;
     }
 
     private void CloseForm() => formOpen = false;

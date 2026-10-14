@@ -1,4 +1,4 @@
-﻿using DuongNhan.ApiService.Data;
+using DuongNhan.ApiService.Data;
 using DuongNhan.Shared.Contracts;
 using DuongNhan.Shared.Dtos.Skin;
 using FastEndpoints;
@@ -18,17 +18,21 @@ internal sealed class GetHistoryEndpoint(AppDbContext db) : EndpointWithoutReque
         Summary(s =>
         {
             s.Summary = "List previous skin diagnoses";
-            s.Description = "Returns the most recent diagnoses for the authenticated user, or for the demo account when anonymous.";
+            s.Description = "Returns the most recent diagnoses for the authenticated user, or an empty list when anonymous.";
             s.Responses[200] = "Diagnoses ordered newest first.";
         });
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        // Anonymous visitors scan as the demo account, mirroring the upload endpoint.
-        var userId = AppDbSeeder.GuestUserId;
+        // History is private to the signed-in account. Anonymous scans are stored under the shared guest
+        // user, so returning them here would leak every visitor's scans to everyone else.
         var claim = User.FindFirst(AppClaimTypes.UserId)?.Value;
-        if (Guid.TryParse(claim, out var parsed)) userId = parsed;
+        if (!Guid.TryParse(claim, out var userId))
+        {
+            await Send.OkAsync([], ct);
+            return;
+        }
 
         var diagnoses = await db.Diagnoses
             .AsNoTracking()

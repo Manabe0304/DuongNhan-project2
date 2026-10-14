@@ -44,6 +44,18 @@ internal sealed class DiagnoseEndpoint(
             return;
         }
 
+        // A scan owned by a real account can only be diagnosed by that account.
+        // Guest scans (anonymous uploads) stay open to whoever holds the id.
+        if (skinImage.UserId != AppDbSeeder.GuestUserId)
+        {
+            var claim = User.FindFirst(AppClaimTypes.UserId)?.Value;
+            if (!Guid.TryParse(claim, out var callerId) || callerId != skinImage.UserId)
+            {
+                await Send.NotFoundAsync(ct);
+                return;
+            }
+        }
+
         // Re-use an existing diagnosis so repeated visits do not burn AI calls.
         var diagnosis = await db.Diagnoses
             .Include(d => d.Conditions)

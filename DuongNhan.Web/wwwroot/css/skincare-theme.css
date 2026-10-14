@@ -1049,7 +1049,8 @@ h1, h2, .dn-display, .dn-display-sm {
 }
 
     .dn-bars > div {
-        flex: 1;
+        flex: 1 1 0;
+        min-width: 0;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
@@ -1071,7 +1072,23 @@ h1, h2, .dn-display, .dn-display-sm {
     .dn-bars small {
         font-size: .62rem;
         color: var(--dn-muted);
+        white-space: nowrap;
     }
+@media (max-width: 575.98px) {
+    .dn-bars {
+        gap: 3px; 
+    }
+
+        .dn-bars > div
+        {
+            gap: 4px;
+        }
+
+        .dn-bars small,
+        .dn-bars > div > span {
+            font-size: .6rem;
+        }
+}
 
 @keyframes dnGrow {
     from {
@@ -1083,6 +1100,107 @@ h1, h2, .dn-display, .dn-display-sm {
     }
 }
 
+/* ── Pagination (shared Pagination component) ───────────── */
+.dn-scroll-anchor {
+    scroll-margin-top: calc(var(--dn-topbar-h) + 16px);
+}
+
+.dn-pager {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .6rem;
+    margin: 1.75rem 0 .5rem;
+}
+
+.dn-pager .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: .3rem;
+}
+
+    .dn-pager .pagination .page-item .page-link {
+        min-width: 2.4rem;
+        height: 2.4rem;
+        margin-left: 0;
+        padding: 0 .6rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--dn-line-strong);
+        border-radius: 999px;
+        background: var(--dn-surface);
+        color: var(--dn-primary);
+        font-weight: 600;
+    }
+
+        .dn-pager .pagination .page-item .page-link:hover {
+            background: var(--dn-rose-100);
+            color: var(--dn-primary-hover);
+        }
+
+        .dn-pager .pagination .page-item .page-link:focus-visible {
+            outline: 2px solid var(--dn-primary);
+            outline-offset: 2px;
+            box-shadow: none;
+        }
+
+    .dn-pager .pagination .page-item.active .page-link {
+        background: var(--dn-primary);
+        border-color: var(--dn-primary);
+        color: #fff;
+    }
+
+    .dn-pager .pagination .page-item.disabled .page-link {
+        opacity: .45;
+        pointer-events: none;
+        background: transparent;
+    }
+
+@media (max-width: 575.98px) {
+    .dn-pager .pagination {
+        gap: .2rem;
+    }
+
+        .dn-pager .pagination .page-item .page-link {
+            min-width: 2rem;
+            height: 2rem;
+            padding: 0 .4rem;
+            font-size: .85rem;
+        }
+}
+
+.dn-admin-pagesize {
+    margin-left: auto;
+}
+
+/* ── Inline product editor (replaces the row being edited) ── */
+.dn-table tbody tr.dn-edit-row:hover {
+    background: transparent;
+}
+
+.dn-table tbody tr.dn-edit-row > td {
+    padding: .75rem .25rem;
+}
+
+.dn-inline-edit {
+    background: var(--dn-soft);
+    border: 1px solid var(--dn-line-strong);
+    border-radius: 16px;
+    padding: 1.1rem 1.25rem 1.25rem;
+    box-shadow: 0 6px 22px rgba(201, 53, 107, .08);
+}
+
+@media (max-width: 991.98px) {
+    /* The table is wider than a phone and scrolls sideways; keep the editor pinned to the visible width. */
+    .dn-inline-edit {
+        position: sticky;
+        left: 0;
+        box-sizing: border-box;
+        width: calc(100vw - 3.4rem);
+        max-width: 100%;
+    }
+}
 .dn-hbar {
     display: grid;
     grid-template-columns: minmax(120px, 38%) 1fr 28px;

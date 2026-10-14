@@ -1,19 +1,37 @@
+@* Compact pager: first/last page, a window around the current page and "…" for the gaps,
+   so 20+ pages still fit on a phone. TotalItems/PageSize are optional and add the "x–y / total" line. *@
+
 @if (TotalPages > 1)
 {
-    <nav>
-        <ul class="pagination justify-content-center">
-            <li class="page-item @(Page == 1 ? "disabled" : "")">
-                <button class="page-link" @onclick="() => GoTo(Page - 1)">Previous</button>
+    <nav class="dn-pager" aria-label="Phân trang">
+        @if (TotalItems > 0 && PageSize > 0)
+        {
+            <p class="dn-pager-summary" role="status">Hiển thị @FirstItem–@LastItem / @TotalItems</p>
+        }
+        <ul class="pagination mb-0">
+            <li class="page-item @(Page <= 1 ? "disabled" : "")">
+                <button type="button" class="page-link" disabled="@(Page <= 1)" aria-label="Trang trước"
+                        @onclick="() => GoTo(Page - 1)"><i class="ph ph-caret-left" aria-hidden="true"></i></button>
             </li>
-            @for (int i = 1; i <= TotalPages; i++)
+            @foreach (var n in VisiblePages())
             {
-                var p = i;
-                <li class="page-item @(p == Page ? "active" : "")">
-                    <button class="page-link" @onclick="() => GoTo(p)">@p</button>
-                </li>
+                if (n == 0)
+                {
+                    <li class="page-item disabled" aria-hidden="true"><span class="page-link">…</span></li>
+                }
+                else
+                {
+                    var target = n;
+                    <li class="page-item @(target == Page ? "active" : "")">
+                        <button type="button" class="page-link" aria-label="Trang @target"
+                                aria-current="@(target == Page ? "page" : null)"
+                                @onclick="() => GoTo(target)">@target</button>
+                    </li>
+                }
             }
-            <li class="page-item @(Page == TotalPages ? "disabled" : "")">
-                <button class="page-link" @onclick="() => GoTo(Page + 1)">Next</button>
+            <li class="page-item @(Page >= TotalPages ? "disabled" : "")">
+                <button type="button" class="page-link" disabled="@(Page >= TotalPages)" aria-label="Trang sau"
+                        @onclick="() => GoTo(Page + 1)"><i class="ph ph-caret-right" aria-hidden="true"></i></button>
             </li>
         </ul>
     </nav>
@@ -24,9 +42,38 @@
     [Parameter] public int TotalPages { get; set; } = 1;
     [Parameter] public EventCallback<int> PageChanged { get; set; }
 
+    /// <summary>Optional: total rows across all pages, for the "Hiển thị x–y / total" line.</summary>
+    [Parameter] public int TotalItems { get; set; }
+    [Parameter] public int PageSize { get; set; }
+
+    private int FirstItem => (Page - 1) * PageSize + 1;
+    private int LastItem => Math.Min(Page * PageSize, TotalItems);
+
+    /// <summary>Page numbers to draw; 0 stands for a "…" gap.</summary>
+    private IEnumerable<int> VisiblePages()
+    {
+        var pages = new SortedSet<int> { 1, TotalPages };
+        for (var i = Page - 1; i <= Page + 1; i++)
+        {
+            if (i >= 1 && i <= TotalPages) pages.Add(i);
+        }
+
+        var previous = 0;
+        foreach (var n in pages)
+        {
+            if (previous != 0)
+            {
+                if (n - previous == 2) yield return previous + 1; // a single hidden page: just show it
+                else if (n - previous > 2) yield return 0;
+            }
+            yield return n;
+            previous = n;
+        }
+    }
+
     private async Task GoTo(int p)
     {
-        if (p < 1 || p > TotalPages) return;
+        if (p < 1 || p > TotalPages || p == Page) return;
         await PageChanged.InvokeAsync(p);
     }
 }

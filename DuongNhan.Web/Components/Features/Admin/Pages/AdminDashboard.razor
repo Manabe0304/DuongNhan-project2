@@ -63,7 +63,7 @@ else if (stats is { } s)
                         <div title="@d.Day.ToString("dd/MM"): @d.Count">
                             <span class="small fw-semibold">@(d.Count > 0 ? d.Count.ToString() : "")</span>
                             <div class="bar" style="height:@(Math.Max(3, d.Count * 100 / max))%"></div>
-                            <small>@d.Day.ToString("dd/MM")</small>
+                            <small><span class="d-none d-sm-inline">@d.Day.ToString("dd/MM")</span><span class="d-sm-none">@d.Day.ToString("dd")</span></small>
                         </div>
                     }
                 </div>

@@ -2,6 +2,7 @@
 @inject DuongNhanApiService Api
 @inject BrowserStorage Storage
 @inject AnalyticsService Analytics
+@inject IJSRuntime JS
 
 <PageTitle>Sản phẩm chăm sóc da — Dưỡng Nhan</PageTitle>
 
@@ -61,7 +62,10 @@
     else
     {
         var shown = Filtered;
-        <p class="dn-count" role="status">@shown.Count sản phẩm</p>
+        var totalPages = Math.Max(1, (int)Math.Ceiling(shown.Count / (double)PageSize));
+        var current = Math.Clamp(page, 1, totalPages); // the list can shrink under us (filters), never show an empty page
+        var pageItems = shown.Skip((current - 1) * PageSize).Take(PageSize).ToList();
+        <p id="products-top" class="dn-count dn-scroll-anchor" role="status">@shown.Count sản phẩm</p>
 
         @if (shown.Count == 0)
         {
@@ -70,14 +74,17 @@
         else
         {
             <div class="dn-pgrid">
-                @for (var i = 0; i < shown.Count; i++)
+                @for (var i = 0; i < pageItems.Count; i++)
                 {
-                    var item = shown[i];
+                    var item = pageItems[i];
                     <div data-reveal style="--dn-delay:@(i % 3 * 70)ms">
                         <ProductCard Product="item" OnOpen="TrackOpenAsync" />
                     </div>
                 }
             </div>
+
+            <Pagination Page="current" TotalPages="totalPages" TotalItems="shown.Count" PageSize="PageSize"
+                        PageChanged="GoToPageAsync" />
         }
     }
 </div>
@@ -85,11 +92,22 @@
 @code {
     private const string SkinTypeKey = "dn.skin_type";
 
+    // 20 fills the 1/2/4-column grid evenly (5 rows on desktop); 3-column widths end on a short last row.
+    private const int PageSize = 20;
+
     private List<ProductCardModel> items = [];
-    private string query = "";
-    private string sort = "default";
-    private string? skinType;
-    private int stepFilter;
+    private int page = 1;
+
+    // Changing any filter/sort/search returns to page 1 (otherwise the visitor could land on an empty page).
+    private string queryValue = "";
+    private string sortValue = "default";
+    private string? skinTypeValue;
+    private int stepFilterValue;
+
+    private string query { get => queryValue; set { queryValue = value; page = 1; } }
+    private string sort { get => sortValue; set { sortValue = value; page = 1; } }
+    private string? skinType { get => skinTypeValue; set { skinTypeValue = value; page = 1; } }
+    private int stepFilter { get => stepFilterValue; set { stepFilterValue = value; page = 1; } }
     private bool loading = true;
     private string? error;
 
@@ -147,6 +165,13 @@
             }
         }
         catch { /* optional convenience */ }
+    }
+
+    private async Task GoToPageAsync(int newPage)
+    {
+        page = newPage;
+        try { await JS.InvokeVoidAsync("dnScrollToId", "products-top"); }
+        catch { /* scrolling is a nicety */ }
     }
 
     private async Task SelectSkinTypeAsync(string? code)

@@ -108,28 +108,28 @@ public sealed class DuongNhanApiService(
     public async Task<ApiResult> UploadAsync(IBrowserFile file, CancellationToken ct = default)
     {
         await using var stream = file.OpenReadStream(Constants.AppConstants.MaxUploadBytes, ct);
-        var response = await skin.UploadAsync(new StreamPart(stream, file.Name, file.ContentType), ct);
+        var response = await skin.UploadAsync(new StreamPart(stream, file.Name, file.ContentType), await TryBearerAsync(), ct);
         return ApiResult.From(response);
     }
 
     public async Task<JsonElement?> DiagnoseAsync(Guid id, CancellationToken ct = default)
-        => await ToJsonAsync(await skin.DiagnoseAsync(id, ct));
+        => await ToJsonAsync(await skin.DiagnoseAsync(id, await TryBearerAsync(), ct));
 
     public async Task<DiagnosisDto?> DiagnoseTypedAsync(Guid id, CancellationToken ct = default)
-        => await skin.DiagnoseAsync(id, ct);
+        => await skin.DiagnoseAsync(id, await TryBearerAsync(), ct);
 
     /// <summary>Uploads a normalised capture (camera or file) as multipart/form-data.</summary>
     public async Task<UploadSkinResponse> UploadImageAsync(SkinImageInput input, CancellationToken ct = default)
     {
         using var stream = new MemoryStream(input.Bytes, writable: false);
-        return await skin.UploadAsync(new StreamPart(stream, input.FileName, input.ContentType), ct);
+        return await skin.UploadAsync(new StreamPart(stream, input.FileName, input.ContentType), await TryBearerAsync(), ct);
     }
 
     public async Task<List<DiagnosisDto>> GetHistoryTypedAsync(CancellationToken ct = default)
-        => await skin.GetHistoryAsync(ct);
+        => await skin.GetHistoryAsync(await TryBearerAsync(), ct);
 
     public async Task<List<JsonElement>> GetHistoryAsync(CancellationToken ct = default)
-        => ToJsonList(await skin.GetHistoryAsync(ct));
+        => ToJsonList(await skin.GetHistoryAsync(await TryBearerAsync(), ct));
 
     public async Task<List<JsonElement>> GetPlansAsync(CancellationToken ct = default)
         => ToJsonList(await subscriptions.GetPlansAsync(ct));
@@ -151,6 +151,21 @@ public sealed class DuongNhanApiService(
             throw new InvalidOperationException("Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.");
 
         return $"Bearer {token}";
+    }
+
+    /// <summary>Like <see cref="BearerAsync"/> but returns null for signed-out visitors (guest scans).</summary>
+    private async Task<string?> TryBearerAsync()
+    {
+        try
+        {
+            var token = await tokens.GetAccessTokenAsync();
+            return string.IsNullOrWhiteSpace(token) ? null : $"Bearer {token}";
+        }
+        catch (InvalidOperationException)
+        {
+            // Prerendering: browser storage is not reachable yet.
+            return null;
+        }
     }
 
     private static T NewRequest<T>(params (string Name, object? Value)[] values) where T : class
