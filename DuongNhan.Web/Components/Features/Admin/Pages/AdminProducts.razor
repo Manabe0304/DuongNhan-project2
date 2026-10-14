@@ -17,6 +17,8 @@
         </div>
         <div class="d-flex flex-wrap align-items-center gap-2">
             <button type="button" class="btn btn-dn-coral btn-sm" @onclick="BeginCreate"><i class="ph ph-plus" aria-hidden="true"></i> Thêm sản phẩm</button>
+            <button type="button" class="btn btn-dn-outline btn-sm text-danger" @onclick="AskHideAll" disabled="@(busy || ScopeCount(true) == 0)"><i class="ph ph-eye-slash" aria-hidden="true"></i> @(busy ? "Đang xử lý..." : HasFilters ? $"Ẩn kết quả đang lọc ({ScopeCount(true)})" : "Ẩn toàn bộ sản phẩm")</button>
+            <button type="button" class="btn btn-dn-outline btn-sm" @onclick="AskShowAll" disabled="@(busy || ScopeCount(false) == 0)"><i class="ph ph-eye" aria-hidden="true"></i> @(HasFilters ? $"Hiện kết quả đang lọc ({ScopeCount(false)})" : "Hiện toàn bộ sản phẩm")</button>
             <label class="btn btn-dn-outline btn-sm mb-0 @(importing ? "disabled" : "")">
                 <i class="ph ph-upload-simple" aria-hidden="true"></i> @(importing ? "Đang import..." : "Import Excel")
                 <InputFile OnChange="OnImportFileSelected" accept=".xlsx" class="d-none" disabled="@importing" />
@@ -48,6 +50,29 @@
                 <option value="@t.Code">@t.Label</option>
             }
         </select>
+        <select class="form-select form-select-sm" style="width:150px" @bind="statusFilter" aria-label="Lọc theo trạng thái">
+            <option value="">Mọi trạng thái</option>
+            <option value="active">Đang hiển thị</option>
+            <option value="hidden">Đã ẩn</option>
+        </select>
+        <select class="form-select form-select-sm" style="width:190px" @bind="sort" aria-label="Sắp xếp">
+            <option value="">Sắp xếp mặc định</option>
+            <option value="created-desc">Mới nhất trước</option>
+            <option value="created-asc">Cũ nhất trước</option>
+            <option value="name-asc">Tên A → Z</option>
+            <option value="name-desc">Tên Z → A</option>
+            <option value="price-asc">Giá tăng dần</option>
+            <option value="price-desc">Giá giảm dần</option>
+        </select>
+        <div class="d-flex align-items-center gap-1">
+            <input type="date" class="form-control form-control-sm" @bind="dateFrom" aria-label="Từ ngày" title="Tạo từ ngày" />
+            <span class="small text-secondary">→</span>
+            <input type="date" class="form-control form-control-sm" @bind="dateTo" aria-label="Đến ngày" title="Tạo đến ngày" />
+        </div>
+        @if (HasFilters)
+        {
+            <button type="button" class="btn btn-dn-outline btn-sm" @onclick="ClearFilters"><i class="ph ph-x" aria-hidden="true"></i> Xoá bộ lọc</button>
+        }
         <select class="form-select form-select-sm dn-admin-pagesize" style="width:130px" @bind="pageSize" aria-label="Số dòng mỗi trang">
             @foreach (var size in PageSizes)
             {
@@ -156,23 +181,53 @@
         </div>;
     }
 
+    @if (selected.Count > 0)
+    {
+        <div class="alert alert-info py-2 small d-flex flex-wrap align-items-center gap-2" role="status">
+            <b>@selected.Count</b> sản phẩm đã chọn
+            <button type="button" class="btn btn-sm btn-dn-outline" @onclick="SelectAllFiltered">Chọn tất cả @filtered.Count kết quả</button>
+            <button type="button" class="btn btn-sm btn-dn-outline" disabled="@busy" @onclick="() => SetActiveAsync(SelectedItems, false)"><i class="ph ph-eye-slash" aria-hidden="true"></i> Ẩn</button>
+            <button type="button" class="btn btn-sm btn-dn-outline" disabled="@busy" @onclick="() => SetActiveAsync(SelectedItems, true)"><i class="ph ph-eye" aria-hidden="true"></i> Hiện</button>
+            <button type="button" class="btn btn-sm btn-dn-outline text-danger" disabled="@busy" @onclick="AskDeleteSelected"><i class="ph ph-trash" aria-hidden="true"></i> Xoá</button>
+            <button type="button" class="btn btn-sm btn-link" @onclick="() => selected.Clear()">Bỏ chọn</button>
+        </div>
+    }
+
+    @if (undo is not null)
+    {
+        <div class="alert alert-secondary py-2 small d-flex align-items-center gap-2" role="status">
+            @undo.Label
+            <button type="button" class="btn btn-sm btn-dn-outline" disabled="@busy" @onclick="UndoAsync"><i class="ph ph-arrow-counter-clockwise" aria-hidden="true"></i> Hoàn tác</button>
+        </div>
+    }
+
     <div class="dn-table-wrap dn-scroll-anchor" id="admin-products-top">
         <table class="dn-table">
             <thead>
-                <tr><th>Sản phẩm</th><th>Danh mục</th><th>Skin Type</th><th>Step</th><th>Giá</th><th>Hiển thị</th><th></th></tr>
+                <tr>
+                    <th style="width:32px"><input type="checkbox" aria-label="Chọn tất cả trang này" checked="@(pageRows.Count > 0 && pageRows.All(r => selected.Contains(r.Id)))" @onchange="e => TogglePage(pageRows, (bool)(e.Value ?? false))" /></th>
+                    <th><button type="button" class="btn btn-link p-0 text-decoration-none fw-bold" @onclick='() => ToggleSort("name")'>Sản phẩm@(SortIcon("name"))</button></th>
+                    <th><button type="button" class="btn btn-link p-0 text-decoration-none fw-bold" @onclick='() => ToggleSort("category")'>Danh mục@(SortIcon("category"))</button></th>
+                    <th>Skin Type</th>
+                    <th><button type="button" class="btn btn-link p-0 text-decoration-none fw-bold" @onclick='() => ToggleSort("step")'>Step@(SortIcon("step"))</button></th>
+                    <th><button type="button" class="btn btn-link p-0 text-decoration-none fw-bold" @onclick='() => ToggleSort("price")'>Giá@(SortIcon("price"))</button></th>
+                    <th><button type="button" class="btn btn-link p-0 text-decoration-none fw-bold" @onclick='() => ToggleSort("created")'>Ngày tạo@(SortIcon("created"))</button></th>
+                    <th>Hiển thị</th>
+                    <th></th>
+                </tr>
             </thead>
             <tbody>
                 @if (formOpen && editingId is null)
                 {
-                    <tr class="dn-edit-row"><td colspan="7">@formPanel</td></tr>
+                    <tr class="dn-edit-row"><td colspan="9">@formPanel</td></tr>
                 }
                 @if (loading)
                 {
-                    <tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></td></tr>
+                    <tr><td colspan="9" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></td></tr>
                 }
                 else if (filtered.Count == 0)
                 {
-                    <tr><td colspan="7" class="text-center text-secondary py-4">Không có sản phẩm phù hợp.</td></tr>
+                    <tr><td colspan="9" class="text-center text-secondary py-4">Không có sản phẩm phù hợp.</td></tr>
                 }
                 else
                 {
@@ -181,14 +236,15 @@
                         if (formOpen && editingId == p.Id)
                         {
                             <tr class="dn-edit-row" @key="p.Id">
-                                <td colspan="7">
+                                <td colspan="9">
                                     @formPanel
                                 </td>
                             </tr>
                             continue;
                         }
 
-                        <tr @key="p.Id">
+                        <tr @key="p.Id" class="@(selected.Contains(p.Id) ? "table-active" : "")">
+                            <td><input type="checkbox" aria-label="Chọn @p.Name" checked="@selected.Contains(p.Id)" @onchange="e => ToggleSelect(p.Id, (bool)(e.Value ?? false))" /></td>
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     @if (!string.IsNullOrWhiteSpace(p.ImageUrl))
@@ -216,6 +272,7 @@
                                 }
                             </td>
                             <td>@FormatPrice(p.Price)</td>
+                            <td class="text-nowrap">@p.CreatedAt.ToString("dd/MM/yyyy")</td>
                             <td><span class="dn-pill @(p.IsActive ? "ok" : "off")">@(p.IsActive ? "Đang hiển thị" : "Đã ẩn")</span></td>
                             <td class="text-end text-nowrap">
                                 <button class="btn btn-sm btn-dn-outline" @onclick="() => BeginEdit(p)">Sửa</button>
@@ -234,6 +291,33 @@
         <Pagination Page="current" TotalPages="totalPages" TotalItems="filtered.Count" PageSize="pageSize" PageChanged="GoToPageAsync" />
     }
 </div>
+
+@if (confirm is not null)
+{
+    <div class="modal-backdrop fade show"></div>
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="confirm-title" @onclick="CancelConfirm">
+        <div class="modal-dialog modal-dialog-centered" @onclick:stopPropagation>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirm-title">@confirm.Title</h5>
+                    <button type="button" class="btn-close" aria-label="Đóng" @onclick="CancelConfirm"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2">@confirm.Message</p>
+                    @if (confirm.RequireText is not null)
+                    {
+                        <label class="form-label small" for="confirm-input">Gõ <b>@confirm.RequireText</b> để xác nhận:</label>
+                        <input id="confirm-input" class="form-control" @bind="confirmInput" @bind:event="oninput" autocomplete="off" />
+                    }
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-dn-outline" @onclick="CancelConfirm">Huỷ</button>
+                    <button type="button" class="btn @(confirm.Danger ? "btn-danger" : "btn-dn-coral")" disabled="@(!ConfirmReady)" @onclick="RunConfirmAsync">@confirm.ConfirmLabel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private const long MaxImportBytes = 5 * 1024 * 1024;
@@ -277,6 +361,39 @@
     private string queryValue = "";
     private int stepFilterValue;
     private string skinFilterValue = "";
+    private string statusFilterValue = "";
+    private string sortValue = "";
+    private DateTime? dateFromValue;
+    private DateTime? dateToValue;
+    private bool busy;
+    private bool prefsLoaded;
+    private const string PrefsKey = "dn-admin-products-prefs";
+
+    private string statusFilter { get => statusFilterValue; set { statusFilterValue = value; ResetPaging(); } }
+    private string sort { get => sortValue; set { sortValue = value; ResetPaging(); } }
+    private DateTime? dateFrom { get => dateFromValue; set { dateFromValue = value; ResetPaging(); } }
+    private DateTime? dateTo { get => dateToValue; set { dateToValue = value; ResetPaging(); } }
+
+    private readonly HashSet<Guid> selected = [];
+    private sealed record UndoInfo(List<Guid> Ids, bool Restore, string Label);
+    private UndoInfo? undo;
+    private int undoVersion;
+
+    private sealed class ConfirmState
+    {
+        public string Title { get; init; } = "";
+        public string Message { get; init; } = "";
+        public string ConfirmLabel { get; init; } = "Xác nhận";
+        public bool Danger { get; init; }
+        public string? RequireText { get; init; }
+        public Func<Task> Action { get; init; } = () => Task.CompletedTask;
+    }
+    private ConfirmState? confirm;
+    private string confirmInput = "";
+    private bool ConfirmReady => confirm is not null
+        && (confirm.RequireText is null || string.Equals(confirmInput.Trim(), confirm.RequireText, StringComparison.CurrentCultureIgnoreCase));
+
+    private sealed record Prefs(string Query, int Step, string Skin, string Status, string Sort, DateTime? From, DateTime? To, int PageSize);
 
     // Changing a filter or the page size returns to page 1 and closes the editor (its row may no longer be on screen)
     private string query { get => queryValue; set { queryValue = value; ResetPaging(); } }
@@ -288,6 +405,77 @@
     {
         page = 1;
         formOpen = false;
+        selected.Clear(); // a selection must never silently include rows the filter has hidden
+        _ = SavePrefsAsync();
+    }
+
+    private async Task SavePrefsAsync()
+    {
+        if (!prefsLoaded) return;
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(
+                new Prefs(queryValue, stepFilterValue, skinFilterValue, statusFilterValue, sortValue, dateFromValue, dateToValue, pageSizeValue));
+            await JS.InvokeVoidAsync("localStorage.setItem", PrefsKey, json);
+        }
+        catch { /* persistence is a nicety */ }
+    }
+
+    private async Task RestorePrefsAsync()
+    {
+        try
+        {
+            var json = await JS.InvokeAsync<string?>("localStorage.getItem", PrefsKey);
+            if (!string.IsNullOrWhiteSpace(json) && System.Text.Json.JsonSerializer.Deserialize<Prefs>(json) is { } p)
+            {
+                queryValue = p.Query ?? "";
+                stepFilterValue = p.Step;
+                skinFilterValue = p.Skin ?? "";
+                statusFilterValue = p.Status ?? "";
+                sortValue = p.Sort ?? "";
+                dateFromValue = p.From;
+                dateToValue = p.To;
+                if (PageSizes.Contains(p.PageSize)) pageSizeValue = p.PageSize;
+            }
+        }
+        catch { /* ignore corrupt or unavailable storage */ }
+        prefsLoaded = true;
+        StateHasChanged();
+    }
+
+    private bool HasFilters => !string.IsNullOrWhiteSpace(queryValue) || stepFilterValue != 0 || skinFilterValue != ""
+        || statusFilterValue != "" || dateFromValue is not null || dateToValue is not null;
+
+    private void ClearFilters()
+    {
+        queryValue = ""; stepFilterValue = 0; skinFilterValue = ""; statusFilterValue = "";
+        dateFromValue = null; dateToValue = null;
+        ResetPaging();
+    }
+
+    private string SortIcon(string col)
+        => sortValue == col + "-asc" ? " ▲" : sortValue == col + "-desc" ? " ▼" : "";
+
+    private void ToggleSort(string col)
+    {
+        var defaultDir = col == "created" ? "desc" : "asc";
+        sort = sortValue == col + "-" + defaultDir ? col + (defaultDir == "asc" ? "-desc" : "-asc") : col + "-" + defaultDir;
+    }
+
+    // ── selection ───────────────────────────────────────────
+
+    private List<AdminProductDto> SelectedItems => items.Where(p => selected.Contains(p.Id)).ToList();
+
+    private void ToggleSelect(Guid id, bool on) { if (on) selected.Add(id); else selected.Remove(id); }
+
+    private void TogglePage(List<AdminProductDto> rows, bool on)
+    {
+        foreach (var r in rows) ToggleSelect(r.Id, on);
+    }
+
+    private void SelectAllFiltered()
+    {
+        foreach (var r in Filtered) selected.Add(r.Id);
     }
 
     private bool formOpen;
@@ -301,18 +489,198 @@
     private bool importFailed;
     private string? importMessage;
 
-    private List<AdminProductDto> Filtered => items.Where(p =>
-            (string.IsNullOrWhiteSpace(query)
-                || p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
-                || p.Brand.Contains(query, StringComparison.OrdinalIgnoreCase))
-            && (stepFilter == 0 || p.Step == stepFilter)
-            && (string.IsNullOrEmpty(skinFilter) || SkincareCatalog.SuitsSkinType(p.SkinType, skinFilter)))
-        .ToList();
+    private List<AdminProductDto> Filtered
+    {
+        get
+        {
+            var q = items.Where(p =>
+                (string.IsNullOrWhiteSpace(query)
+                    || p.Name.Contains(query, StringComparison.OrdinalIgnoreCase)
+                    || p.Brand.Contains(query, StringComparison.OrdinalIgnoreCase))
+                && (stepFilter == 0 || p.Step == stepFilter)
+                && (string.IsNullOrEmpty(skinFilter) || SkincareCatalog.SuitsSkinType(p.SkinType, skinFilter))
+                && (statusFilter == "" || (statusFilter == "active") == p.IsActive)
+                && (dateFrom is null || p.CreatedAt.Date >= dateFrom.Value.Date)
+                && (dateTo is null || p.CreatedAt.Date <= dateTo.Value.Date));
+
+            q = sort switch
+            {
+                "created-desc" => q.OrderByDescending(p => p.CreatedAt),
+                "created-asc" => q.OrderBy(p => p.CreatedAt),
+                "name-asc" => q.OrderBy(p => p.Name, StringComparer.CurrentCultureIgnoreCase),
+                "name-desc" => q.OrderByDescending(p => p.Name, StringComparer.CurrentCultureIgnoreCase),
+                "category-asc" => q.OrderBy(p => p.Category),
+                "category-desc" => q.OrderByDescending(p => p.Category),
+                "step-asc" => q.OrderBy(p => p.Step),
+                "step-desc" => q.OrderByDescending(p => p.Step),
+                "price-asc" => q.OrderBy(p => p.Price),
+                "price-desc" => q.OrderByDescending(p => p.Price),
+                _ => q
+            };
+            return q.ToList();
+        }
+    }
+
+    // ── bulk visibility ─────────────────────────────────────
+
+    /// <summary>With no filter the header buttons act on everything; with a filter they act only on the filtered rows.</summary>
+    private List<AdminProductDto> Scope => HasFilters ? Filtered : items;
+
+    private int ScopeCount(bool currentlyActive) => Scope.Count(p => p.IsActive == currentlyActive);
+
+    private void AskHideAll()
+    {
+        var n = ScopeCount(true);
+        confirm = new ConfirmState
+        {
+            Title = "Ẩn sản phẩm",
+            Message = $"Ẩn {(HasFilters ? "kết quả đang lọc" : "toàn bộ")} ({n} sản phẩm đang hiển thị) khỏi website? Bạn có thể hoàn tác ngay sau đó.",
+            ConfirmLabel = "Ẩn sản phẩm",
+            Danger = true,
+            RequireText = "ẨN",
+            Action = () => SetActiveAsync(Scope, false)
+        };
+        confirmInput = "";
+    }
+
+    private void AskShowAll()
+    {
+        var n = ScopeCount(false);
+        confirm = new ConfirmState
+        {
+            Title = "Hiện sản phẩm",
+            Message = $"Hiện {(HasFilters ? "kết quả đang lọc" : "toàn bộ")} ({n} sản phẩm đang ẩn) trên website?",
+            ConfirmLabel = "Hiện sản phẩm",
+            Action = () => SetActiveAsync(Scope, true)
+        };
+        confirmInput = "";
+    }
+
+    private void AskDeleteSelected()
+    {
+        var targets = SelectedItems;
+        confirm = new ConfirmState
+        {
+            Title = "Xoá sản phẩm",
+            Message = $"Xoá vĩnh viễn {targets.Count} sản phẩm đã chọn? Không thể hoàn tác.",
+            ConfirmLabel = "Xoá",
+            Danger = true,
+            RequireText = "XOÁ",
+            Action = () => DeleteManyAsync(targets)
+        };
+        confirmInput = "";
+    }
+
+    private void CancelConfirm() => confirm = null;
+
+    private async Task RunConfirmAsync()
+    {
+        var c = confirm;
+        if (c is null || !ConfirmReady) return;
+        confirm = null;
+        await c.Action();
+    }
+
+    /// <summary>Sets visibility for many products (concurrent batches) and offers an undo for 10 seconds.</summary>
+    private async Task SetActiveAsync(List<AdminProductDto> targets, bool active, bool recordUndo = true)
+    {
+        var todo = targets.Where(p => p.IsActive != active).ToList();
+        if (todo.Count == 0) { Toasts.ShowSuccess("Không có sản phẩm nào cần thay đổi."); return; }
+
+        busy = true;
+        var changed = new List<Guid>();
+        var failed = 0;
+        try
+        {
+            foreach (var batch in todo.Chunk(8))
+            {
+                var results = await Task.WhenAll(batch.Select(async Task<AdminProductDto?> (p) =>
+                {
+                    try
+                    {
+                        return await Admin.UpdateProductAsync(p.Id,
+                            new SaveAdminProductRequest(null, null, null, null, null, null, null, null, null, null, null, active));
+                    }
+                    catch { return null; }
+                }));
+
+                foreach (var saved in results)
+                {
+                    if (saved is null) { failed++; continue; }
+                    changed.Add(saved.Id);
+                    var index = items.FindIndex(x => x.Id == saved.Id);
+                    if (index >= 0) items[index] = saved;
+                }
+                StateHasChanged();
+            }
+        }
+        finally { busy = false; }
+
+        var verb = active ? "hiện" : "ẩn";
+        if (failed == 0) Toasts.ShowSuccess($"Đã {verb} {changed.Count} sản phẩm.");
+        else Toasts.ShowError($"{verb} thành công {changed.Count}, thất bại {failed} sản phẩm.");
+
+        selected.Clear();
+        if (recordUndo && changed.Count > 0)
+        {
+            undo = new UndoInfo(changed, !active, $"Đã {verb} {changed.Count} sản phẩm.");
+            _ = ExpireUndoAsync();
+        }
+        else if (!recordUndo) undo = null;
+    }
+
+    private async Task ExpireUndoAsync()
+    {
+        var v = ++undoVersion;
+        await Task.Delay(TimeSpan.FromSeconds(10));
+        if (v != undoVersion) return;
+        undo = null;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task UndoAsync()
+    {
+        if (undo is not { } u) return;
+        undoVersion++;
+        var ids = u.Ids.ToHashSet();
+        await SetActiveAsync(items.Where(p => ids.Contains(p.Id)).ToList(), u.Restore, recordUndo: false);
+    }
+
+    private async Task DeleteManyAsync(List<AdminProductDto> targets)
+    {
+        busy = true;
+        var failed = 0;
+        try
+        {
+            foreach (var batch in targets.Chunk(8))
+            {
+                var results = await Task.WhenAll(batch.Select(async p =>
+                {
+                    try { await Admin.DeleteProductAsync(p.Id); return (Guid?)p.Id; }
+                    catch { return null; }
+                }));
+
+                foreach (var id in results)
+                {
+                    if (id is null) { failed++; continue; }
+                    items.RemoveAll(x => x.Id == id);
+                }
+                StateHasChanged();
+            }
+        }
+        finally { busy = false; }
+
+        selected.Clear();
+        if (failed == 0) Toasts.ShowSuccess($"Đã xoá {targets.Count} sản phẩm.");
+        else Toasts.ShowError($"Xoá thành công {targets.Count - failed}, thất bại {failed} sản phẩm.");
+    }
 
     protected override async Task OnInitializedAsync() => await LoadAsync();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender) await RestorePrefsAsync();
+
         // Bring the freshly opened editor fully into view (it is taller than the row it replaced).
         if (!scrollToForm || !formOpen) return;
         scrollToForm = false;
@@ -436,17 +804,27 @@
         catch (Exception ex) { Toasts.ShowError($"Không thể cập nhật: {ex.Message}"); }
     }
 
-    private async Task DeleteAsync(AdminProductDto p)
+    private void DeleteAsync(AdminProductDto p)
     {
-        if (!await JS.InvokeAsync<bool>("confirm", $"Xoá sản phẩm “{p.Name}”? Sản phẩm sẽ biến mất khỏi website.")) return;
-
-        try
+        confirm = new ConfirmState
         {
-            await Admin.DeleteProductAsync(p.Id);
-            items.RemoveAll(x => x.Id == p.Id);
-            Toasts.ShowSuccess("Đã xoá sản phẩm.");
-        }
-        catch (Exception ex) { Toasts.ShowError($"Không thể xoá: {ex.Message}"); }
+            Title = "Xoá sản phẩm",
+            Message = $"Xoá sản phẩm “{p.Name}”? Sản phẩm sẽ biến mất khỏi website.",
+            ConfirmLabel = "Xoá",
+            Danger = true,
+            Action = async () =>
+            {
+                try
+                {
+                    await Admin.DeleteProductAsync(p.Id);
+                    items.RemoveAll(x => x.Id == p.Id);
+                    selected.Remove(p.Id);
+                    Toasts.ShowSuccess("Đã xoá sản phẩm.");
+                }
+                catch (Exception ex) { Toasts.ShowError($"Không thể xoá: {ex.Message}"); }
+            }
+        };
+        confirmInput = "";
     }
 
     // ── import / export ─────────────────────────────────────
@@ -496,7 +874,9 @@
 
     private async Task ExportAsync(bool affiliateOnly)
     {
-        var rows = affiliateOnly ? items.Where(p => !string.IsNullOrWhiteSpace(p.AffiliateUrl)).ToList() : items;
+        // Export follows the current filters (and sort), so "export what I see" works.
+        var source = Filtered;
+        var rows = affiliateOnly ? source.Where(p => !string.IsNullOrWhiteSpace(p.AffiliateUrl)).ToList() : source;
 
         var csv = new StringBuilder("STT,Tên sản phẩm,Thương hiệu,Danh mục,Loại da,Bước routine,Giá,Link affiliate,Trạng thái,Ngày tạo\n");
         var n = 1;
