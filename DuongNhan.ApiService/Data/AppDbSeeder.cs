@@ -40,8 +40,8 @@ internal static class AppDbSeeder
                     Description = "Trải nghiệm phân tích da AI cơ bản với đầy đủ tính năng chuẩn đoán.",
                     Price = 0,
                     BillingCycle = "monthly",
-                    MaxScansPerMonth = 5,
-                    FeaturesJson = "[\"5 lượt quét AI / tháng\", \"Chuẩn đoán 10 tình trạng da\", \"Gợi ý sản phẩm cơ bản\"]",
+                    MaxScansPerMonth = 15,
+                    FeaturesJson = "[\"15 lượt quét AI / tháng\", \"Chuẩn đoán 10 tình trạng da\", \"Gợi ý sản phẩm cơ bản\"]",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -52,8 +52,8 @@ internal static class AppDbSeeder
                     Description = "Dành cho người chăm sóc da thường xuyên, theo dõi tiến trình hồi phục theo tuần.",
                     Price = 99000,
                     BillingCycle = "monthly",
-                    MaxScansPerMonth = 30,
-                    FeaturesJson = "[\"30 lượt quét AI / tháng\", \"Theo dõi biểu đồ phục hồi da\", \"Gợi ý phác đồ chu trình chuyên sâu\", \"Lưu lịch sử không giới hạn\"]",
+                    MaxScansPerMonth = 60,
+                    FeaturesJson = "[\"60 lượt quét AI / tháng\", \"Theo dõi biểu đồ phục hồi da\", \"Gợi ý phác đồ chu trình chuyên sâu\", \"Lưu lịch sử không giới hạn\"]",
                     IsActive = true,
                     CreatedAt = now
                 },
@@ -70,6 +70,26 @@ internal static class AppDbSeeder
                     CreatedAt = now
                 }
             ]);
+        }
+
+        // Keep the free plan quota at 15 scans/month on databases that were seeded earlier.
+        var freePlan = await db.Plans.IgnoreQueryFilters([AppQueryFilters.SoftDelete])
+            .FirstOrDefaultAsync(p => p.Code == "plan_free", ct);
+        if (freePlan is not null && freePlan.MaxScansPerMonth != 15)
+        {
+            freePlan.MaxScansPerMonth = 15;
+            freePlan.FeaturesJson = "[\"15 lượt quét AI / tháng\", \"Chuẩn đoán 10 tình trạng da\", \"Gợi ý sản phẩm cơ bản\"]";
+            freePlan.UpdatedAt = now;
+        }
+
+        // Keep the Pro plan quota at 60 scans/month on databases that were seeded earlier.
+        var proPlan = await db.Plans.IgnoreQueryFilters([AppQueryFilters.SoftDelete])
+            .FirstOrDefaultAsync(p => p.Code == "plan_pro", ct);
+        if (proPlan is not null && proPlan.MaxScansPerMonth != 60)
+        {
+            proPlan.MaxScansPerMonth = 60;
+            proPlan.FeaturesJson = "[\"60 lượt quét AI / tháng\", \"Theo dõi biểu đồ phục hồi da\", \"Gợi ý phác đồ chu trình chuyên sâu\", \"Lưu lịch sử không giới hạn\"]";
+            proPlan.UpdatedAt = now;
         }
 
         // 3. Seed Products

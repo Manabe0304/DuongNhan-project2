@@ -47,7 +47,8 @@
                     </div>
 
                     <ul class="dn-plan-features">
-                        <li><i class="ph-fill ph-check-circle text-success" aria-hidden="true"></i>
+                        <li>
+                            <i class="ph-fill ph-check-circle text-success" aria-hidden="true"></i>
                             <span><strong>@plan.MaxScansPerMonth</strong> lượt AI Skin Scan / tháng</span>
                         </li>
                         @foreach (var feat in plan.Features ?? [])
@@ -92,8 +93,8 @@
 
 @code {
     private static readonly List<PlanDto> DefaultPlans = [
-        new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Cơ bản (Free)", "free", "Dành cho người mới bắt đầu chăm sóc da", 0m, "monthly", 3, ["3 lượt AI Skin Scan / tháng", "Gợi ý sản phẩm cơ bản", "Lưu 3 kết quả phân tích gần nhất"]),
-        new(Guid.Parse("22222222-2222-2222-2222-222222222222"), "Nâng cao (Pro)", "pro_monthly", "Theo dõi làn da chuyên sâu theo tuần", 99000m, "monthly", 30, ["30 lượt AI Skin Scan / tháng", "Theo dõi biểu đồ tiến trình phục hồi da", "Cảnh báo tương tác thành phần mỹ phẩm", "Ưu tiên phản hồi từ AI"]),
+        new(Guid.Parse("11111111-1111-1111-1111-111111111111"), "Cơ bản (Free)", "free", "Dành cho người mới bắt đầu chăm sóc da", 0m, "monthly", 15, ["15 lượt AI Skin Scan / tháng", "Gợi ý sản phẩm cơ bản", "Lưu 3 kết quả phân tích gần nhất"]),
+        new(Guid.Parse("22222222-2222-2222-2222-222222222222"), "Nâng cao (Pro)", "pro_monthly", "Theo dõi làn da chuyên sâu theo tuần", 99000m, "monthly", 60, ["60 lượt AI Skin Scan / tháng", "Theo dõi biểu đồ tiến trình phục hồi da", "Cảnh báo tương tác thành phần mỹ phẩm", "Ưu tiên phản hồi từ AI"]),
         new(Guid.Parse("33333333-3333-3333-3333-333333333333"), "Chuyên gia (VIP)", "vip_monthly", "Giải pháp toàn diện kết nối Bác sĩ Da liễu", 249000m, "monthly", 100, ["Không giới hạn AI Skin Scan", "Tư vấn 1-1 với Bác sĩ Da liễu hàng tháng", "Lộ trình chăm sóc da cá nhân hoá", "Hỗ trợ ưu tiên 24/7"])
     ];
 

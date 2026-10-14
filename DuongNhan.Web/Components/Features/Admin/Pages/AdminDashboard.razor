@@ -23,7 +23,7 @@ else if (stats is { } s)
             <div class="dn-kpi">
                 <div class="ico"><i class="ph ph-users-three" aria-hidden="true"></i></div>
                 <small>Tổng tài khoản</small><strong>@s.TotalUsers</strong>
-                @* Tạm ẩn: <span>+@s.NewUsersLast7Days trong 7 ngày</span> *@
+                <span>+@s.NewUsersLast7Days trong 7 ngày</span>
             </div>
         </div>
         <div class="col-6 col-xl-3" data-reveal style="--dn-delay:80ms">
@@ -50,6 +50,7 @@ else if (stats is { } s)
     </div>
 
     <div class="row g-3 mb-4">
+        @* Ẩn biểu đồ lượt scan 14 ngày gần nhất
         <div class="col-lg-8" data-reveal>
             <div class="dn-panel">
                 <h5>Lượt scan 14 ngày gần nhất</h5>
@@ -69,7 +70,8 @@ else if (stats is { } s)
                 </div>
             </div>
         </div>
-        <div class="col-lg-4" data-reveal style="--dn-delay:100ms">
+        *@
+        <div class="col-12" data-reveal style="--dn-delay:100ms">
             <div class="dn-panel">
                 <h5>Tình trạng da phổ biến</h5>
                 <div class="sub">Chẩn đoán chính</div>
