@@ -2,8 +2,14 @@ namespace DuongNhan.Web.Services;
 
 public sealed class ToastService
 {
+    private readonly object _lock = new();
     private readonly List<ToastMessage> _toasts = [];
-    public IReadOnlyList<ToastMessage> Toasts => _toasts;
+
+    public IReadOnlyList<ToastMessage> Toasts
+    {
+        get { lock (_lock) return _toasts.ToList(); }
+    }
+
     public event Action? OnChange;
 
     public void ShowSuccess(string message) => Add(message, "text-bg-success");
@@ -12,14 +18,14 @@ public sealed class ToastService
 
     public void Remove(Guid id)
     {
-        _toasts.RemoveAll(t => t.Id == id);
+        lock (_lock) _toasts.RemoveAll(t => t.Id == id);
         OnChange?.Invoke();
     }
 
     private void Add(string message, string cssClass)
     {
         var toast = new ToastMessage(Guid.NewGuid(), message, cssClass);
-        _toasts.Add(toast);
+        lock (_lock) _toasts.Add(toast);
         OnChange?.Invoke();
 
         _ = Task.Delay(TimeSpan.FromSeconds(4)).ContinueWith(_ =>

@@ -16,7 +16,7 @@ internal sealed class GetUsageEndpoint(AppDbContext db, TimeProvider clock) : En
 {
     private const string FallbackName = "Free";
     private const string FallbackCode = "plan_free";
-    private const int FallbackLimit = 5;
+    private const int FallbackLimit = 15;
 
     public override void Configure()
     {

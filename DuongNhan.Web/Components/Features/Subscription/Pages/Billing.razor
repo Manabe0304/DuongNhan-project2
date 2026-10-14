@@ -92,7 +92,7 @@
 
 @code {
     private string tier = "Free";
-    private int used, limit = 3;
+    private int used, limit = 15;
     private int Percent => limit <= 0 ? 0 : Math.Min(100, used * 100 / limit);
     private bool loadingUsage = true;
 
