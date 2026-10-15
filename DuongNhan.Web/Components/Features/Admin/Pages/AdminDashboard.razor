@@ -152,7 +152,7 @@ else if (stats is { } s)
                                 <tr>
                                     <td>@u.Email</td>
                                     <td><span class="dn-pill @(u.Status == "active" ? "ok" : "warn")">@StatusLabel(u.Status)</span></td>
-                                    <td>@u.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                                    @* <td>@u.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td> *@
                                 </tr>
                             }
                         </tbody>
