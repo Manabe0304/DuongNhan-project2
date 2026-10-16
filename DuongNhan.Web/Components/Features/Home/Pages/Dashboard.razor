@@ -70,7 +70,7 @@
                             </div>
                             <div class="dn-history-body">
                                 <b>@Text(item, "primaryCondition", "Skin analysis")</b>
-                                <small>@Text(item, "diagnosedAt", "")</small>
+                                <small>@When(item)</small>
                             </div>
                             <span class="badge bg-success-subtle text-success">@Text(item, "severity", "—")</span>
                         </div>
@@ -125,6 +125,12 @@
             // Dashboard is a summary view; individual failures fall back to defaults.
         }
     }
+
+    private static string When(System.Text.Json.JsonElement item)
+        => DateTimeOffset.TryParse(Text(item, "diagnosedAt", ""), System.Globalization.CultureInfo.InvariantCulture,
+               System.Globalization.DateTimeStyles.None, out var at)
+            ? at.ToVn().ToString("dd/MM/yyyy HH:mm")
+            : string.Empty;
 
     private static string Text(System.Text.Json.JsonElement item, string name, string fallback)
     {

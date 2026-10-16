@@ -13,6 +13,7 @@ internal sealed class UploadSkinEndpoint(
     AppDbContext db,
     IFileStorageService fileStorage,
     IConfiguration configuration,
+    TimeProvider clock,
     ILogger<UploadSkinEndpoint> logger) : EndpointWithoutRequest<UploadSkinResponse>
 {
     private static readonly HashSet<string> AllowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
@@ -99,6 +100,14 @@ internal sealed class UploadSkinEndpoint(
                 });
                 await db.SaveChangesAsync(ct);
             }
+        }
+
+        // Signed-in accounts are limited to their plan's monthly scans (admins excluded). Guests are not metered.
+        if (userId != AppDbSeeder.GuestUserId && await ScanQuota.IsExhaustedAsync(db, clock, User, userId, ct))
+        {
+            AddError("quota", "Bạn đã hết lượt quét trong tháng này.");
+            await Send.ErrorsAsync(StatusCodes.Status403Forbidden, cancellation: ct);
+            return;
         }
 
         using var memoryStream = new MemoryStream();

@@ -26,8 +26,8 @@
                 {
                     <span class="dn-plan-badge"><i class="ph ph-crown-simple" aria-hidden="true"></i> Gói @u.PlanName</span>
 
-                    <div class="dn-usage-meter" role="img" aria-label="Đã dùng @u.ScansUsed trên @u.ScansLimit lượt quét">
-                        <div class="dn-usage-meter-top"><span>Lượt quét tháng này</span><b>@u.ScansUsed/@u.ScansLimit</b></div>
+                    <div class="dn-usage-meter" role="img" aria-label="@(u.IsUnlimited ? "Không giới hạn lượt quét" : $"Đã dùng {u.ScansUsed} trên {u.ScansLimit} lượt quét")">
+                        <div class="dn-usage-meter-top"><span>Lượt quét tháng này</span><b>@u.UsageLabel</b></div>
                         <div class="dn-usage-meter-bar"><span style="width:@UsagePercent(u)%"></span></div>
                     </div>
                 }

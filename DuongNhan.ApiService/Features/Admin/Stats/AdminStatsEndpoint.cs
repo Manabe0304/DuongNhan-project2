@@ -29,7 +29,10 @@ internal sealed class AdminStatsEndpoint(AppDbContext db, TimeProvider clock) : 
     {
         var now = clock.GetUtcNow();
         var weekAgo = now.AddDays(-7);
-        var chartStart = new DateTimeOffset(now.UtcDateTime.Date.AddDays(-(ChartDays - 1)), TimeSpan.Zero);
+        // Chart days are Vietnam days (GMT+7). Npgsql only accepts UTC offsets in queries, hence chartStartUtc.
+        var vnOffset = TimeSpan.FromHours(7);
+        var chartStart = new DateTimeOffset(now.ToOffset(vnOffset).Date.AddDays(-(ChartDays - 1)), vnOffset);
+        var chartStartUtc = chartStart.ToUniversalTime();
 
         // A DbContext is not thread-safe, so these run one after another.
         var totalUsers = await db.Users.CountAsync(ct);
@@ -61,19 +64,19 @@ internal sealed class AdminStatsEndpoint(AppDbContext db, TimeProvider clock) : 
                 p.Id, p.Name, p.Brand, p.Category, p.AffiliateUrl != null && p.AffiliateUrl != ""))
             .ToListAsync(ct);
 
-        // Scans per day (UTC), zero-filled so the chart has a bar for every day.
+        // Scans per day (Vietnam time), zero-filled so the chart has a bar for every day.
         var scanTimes = await db.SkinImages
             .AsNoTracking()
-            .Where(s => s.CreatedAt >= chartStart)
+            .Where(s => s.CreatedAt >= chartStartUtc)
             .Select(s => s.CreatedAt)
             .ToListAsync(ct);
 
         var byDay = scanTimes
-            .GroupBy(t => DateOnly.FromDateTime(t.UtcDateTime))
+            .GroupBy(t => DateOnly.FromDateTime(t.ToOffset(vnOffset).DateTime))
             .ToDictionary(g => g.Key, g => g.Count());
 
         var scansPerDay = Enumerable.Range(0, ChartDays)
-            .Select(i => DateOnly.FromDateTime(chartStart.UtcDateTime.AddDays(i)))
+            .Select(i => DateOnly.FromDateTime(chartStart.DateTime.AddDays(i)))
             .Select(d => new AdminDailyCountDto(d, byDay.GetValueOrDefault(d)))
             .ToList();
 

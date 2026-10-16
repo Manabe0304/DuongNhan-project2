@@ -55,7 +55,7 @@
             </div>
             <div class="dn-rec-info">
                 <div class="dn-rec-meta">
-                    <span><i class="ph ph-calendar-blank" aria-hidden="true"></i> @selected.DiagnosedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</span>
+                    <span><i class="ph ph-calendar-blank" aria-hidden="true"></i> @selected.DiagnosedAt.ToVn().ToString("dd/MM/yyyy HH:mm")</span>
                     @if (!string.IsNullOrWhiteSpace(selected.SkinType))
                     {
                         <span><i class="ph ph-stack" aria-hidden="true"></i> @selected.SkinType</span>
@@ -72,13 +72,13 @@
                 {
                     <div class="dn-score @ScoreClass(score)"><small>Điểm da</small><b>@score</b><span>/100</span></div>
                 }
-                <a href="/diagnosis/@selected.Id" class="small fw-semibold">Xem kết quả chi tiết <i class="ph ph-arrow-right" aria-hidden="true"></i></a>
+                <a href="/diagnosis/@selected.SkinImageId" class="small fw-semibold">Xem kết quả chi tiết <i class="ph ph-arrow-right" aria-hidden="true"></i></a>
                 @if (scans.Count > 1)
                 {
                     <select class="form-select form-select-sm" value="@selected.Id" @onchange="OnScanChanged" aria-label="Chọn lần scan">
                         @foreach (var s in scans.Take(10))
                         {
-                            <option value="@s.Id">@s.DiagnosedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm") — @s.PrimaryCondition</option>
+                            <option value="@s.Id">@s.DiagnosedAt.ToVn().ToString("dd/MM/yyyy HH:mm") — @s.PrimaryCondition</option>
                         }
                     </select>
                 }

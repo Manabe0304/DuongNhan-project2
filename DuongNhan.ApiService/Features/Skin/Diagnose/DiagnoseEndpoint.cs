@@ -13,6 +13,7 @@ internal sealed class DiagnoseEndpoint(
     AppDbContext db,
     IDiagnosisService diagnosisService,
     IConfiguration configuration,
+    TimeProvider clock,
     ILogger<DiagnoseEndpoint> logger) : Endpoint<DiagnoseRequest, DiagnosisDto>
 {
     public override void Configure()
@@ -63,6 +64,15 @@ internal sealed class DiagnoseEndpoint(
 
         if (diagnosis is null)
         {
+            // A new diagnosis is what consumes a scan, so the allowance is enforced here too (admins excluded).
+            if (skinImage.UserId != AppDbSeeder.GuestUserId
+                && await ScanQuota.IsExhaustedAsync(db, clock, User, skinImage.UserId, ct))
+            {
+                AddError("quota", "Bạn đã hết lượt quét trong tháng này.");
+                await Send.ErrorsAsync(StatusCodes.Status403Forbidden, cancellation: ct);
+                return;
+            }
+
             diagnosis = await diagnosisService.DiagnoseAsync(skinImage, ct);
             db.Diagnoses.Add(diagnosis);
             skinImage.Status = "diagnosed";

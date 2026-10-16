@@ -1,5 +1,5 @@
 @* One past scan: thumbnail, date, skin type, main finding and score. Links through to the full diagnosis. *@
-<a class="dn-hist-item" href="/diagnosis/@Item.Id">
+<a class="dn-hist-item" href="/diagnosis/@Item.SkinImageId">
     <div class="dn-hist-thumb">
         <img src="/skin-image/@Item.SkinImageId" alt="" loading="lazy" onerror="this.style.display='none'" />
         <i class="ph ph-user-focus" aria-hidden="true"></i>
@@ -7,9 +7,9 @@
 
     <div class="dn-hist-main">
         <div class="dn-hist-meta">
-            <span><i class="ph ph-calendar-blank" aria-hidden="true"></i> @Item.DiagnosedAt.ToLocalTime().ToString("dd/MM/yyyy")</span>
+            <span><i class="ph ph-calendar-blank" aria-hidden="true"></i> @Item.DiagnosedAt.ToVn().ToString("dd/MM/yyyy")</span>
             <span class="dn-dot-sep" aria-hidden="true">•</span>
-            <span><i class="ph ph-clock" aria-hidden="true"></i> @Item.DiagnosedAt.ToLocalTime().ToString("HH:mm")</span>
+            <span><i class="ph ph-clock" aria-hidden="true"></i> @Item.DiagnosedAt.ToVn().ToString("HH:mm")</span>
             @if (!string.IsNullOrWhiteSpace(Item.SkinType))
             {
                 <span class="dn-dot-sep" aria-hidden="true">•</span>

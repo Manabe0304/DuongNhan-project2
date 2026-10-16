@@ -86,19 +86,19 @@
         <div class="alert alert-warning">@error</div>
     }
 
-    @{ 
+    @{
         var filtered = Filtered;
         var totalPages = Math.Max(1, (int)Math.Ceiling(filtered.Count / (double)pageSize));
         var current = Math.Clamp(page, 1, totalPages); // e.g. after deleting the last row of the last page
         var pageRows = filtered.Skip((current - 1) * pageSize).Take(pageSize).ToList();
-    
+
         // The editor is drawn inside the table, in place of the row being edited (or at the top for "Thêm sản phẩm"),
         // so it opens where the admin is already looking instead of in a fixed overlay.
         RenderFragment formPanel = @<div class="dn-inline-edit dn-scroll-anchor" id="admin-edit-form">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="mb-0 fw-bold">@(editingId is null ? "Thêm sản phẩm" : "Sửa sản phẩm")</h6>
                 <button type="button" class="btn-close" aria-label="Đóng" @onclick="CloseForm" disabled="@saving"></button>
-        
+
             </div>
             <div class="dn-admin-form">
                 @if (formError is not null)
@@ -146,7 +146,7 @@
                                 var code = t.Code;
                                 <label class="small">
                                     <input type="checkbox" disabled="@form.AllSkin" checked="@form.SkinTypes.Contains(code)"
-                                            @onchange="e => form.ToggleSkin(code, (bool)(e.Value ?? false))" /> @t.Label
+                                           @onchange="e => form.ToggleSkin(code, (bool)(e.Value ?? false))" /> @t.Label
                                 </label>
                             }
                         </div>
@@ -272,7 +272,7 @@
                                 }
                             </td>
                             <td>@FormatPrice(p.Price)</td>
-                            <td class="text-nowrap">@p.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="text-nowrap">@p.CreatedAt.ToVn().ToString("dd/MM/yyyy")</td>
                             <td><span class="dn-pill @(p.IsActive ? "ok" : "off")">@(p.IsActive ? "Đang hiển thị" : "Đã ẩn")</span></td>
                             <td class="text-end text-nowrap">
                                 <button class="btn btn-sm btn-dn-outline" @onclick="() => BeginEdit(p)">Sửa</button>
@@ -500,8 +500,8 @@
                 && (stepFilter == 0 || p.Step == stepFilter)
                 && (string.IsNullOrEmpty(skinFilter) || SkincareCatalog.SuitsSkinType(p.SkinType, skinFilter))
                 && (statusFilter == "" || (statusFilter == "active") == p.IsActive)
-                && (dateFrom is null || p.CreatedAt.Date >= dateFrom.Value.Date)
-                && (dateTo is null || p.CreatedAt.Date <= dateTo.Value.Date));
+                && (dateFrom is null || p.CreatedAt.ToVn().Date >= dateFrom.Value.Date)
+                && (dateTo is null || p.CreatedAt.ToVn().Date <= dateTo.Value.Date));
 
             q = sort switch
             {
@@ -695,9 +695,9 @@
         try { await JS.InvokeVoidAsync("dnScrollToId", "admin-products-top"); }
         catch { /* scrolling is a nicety */ }
     }
-   
+
     private static string FormatPrice(decimal price)
-        => price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', '.') + " ₫";
+            => price.ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', '.') + " ₫";
 
     private async Task LoadAsync()
     {
@@ -893,7 +893,7 @@
                .Append(p.Price.ToString("0", System.Globalization.CultureInfo.InvariantCulture)).Append(',')
                .Append(Cell(p.AffiliateUrl ?? "")).Append(',')
                .Append(Cell(p.IsActive ? "Hoạt động" : "Ẩn")).Append(',')
-               .Append(p.CreatedAt.ToString("yyyy-MM-dd")).Append('\n');
+               .Append(p.CreatedAt.ToVn().ToString("yyyy-MM-dd")).Append('\n');
         }
 
         // UTF-8 BOM so Excel shows Vietnamese text correctly.

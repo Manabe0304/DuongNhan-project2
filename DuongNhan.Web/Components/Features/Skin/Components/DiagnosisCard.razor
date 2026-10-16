@@ -25,7 +25,7 @@
             <div class="mini-stat"><small>Số tình trạng</small><strong>@(Diagnosis.Conditions?.Count ?? 0)</strong></div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="mini-stat"><small>Thời điểm</small><strong>@Diagnosis.DiagnosedAt.ToLocalTime().ToString("dd/MM/yyyy")</strong></div>
+            <div class="mini-stat"><small>Thời điểm</small><strong>@Diagnosis.DiagnosedAt.ToVn().ToString("dd/MM/yyyy")</strong></div>
         </div>
     </div>
 

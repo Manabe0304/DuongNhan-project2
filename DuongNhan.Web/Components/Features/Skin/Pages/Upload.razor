@@ -14,6 +14,18 @@
         <p>Chụp hoặc tải ảnh khuôn mặt rõ nét. Ảnh sẽ được kiểm tra chất lượng trước khi gửi đi phân tích.</p>
     </div>
 
+    @if (OutOfScans)
+    {
+        <div class="alert alert-danger d-flex flex-wrap align-items-center justify-content-between gap-2" role="alert">
+            <span><i class="ph ph-warning-circle" aria-hidden="true"></i> Bạn đã dùng hết @Usage.Current!.ScansLimit lượt quét của gói @Usage.Current.PlanName trong tháng này. Lượt quét sẽ được làm mới vào đầu tháng sau.</span>
+            <a href="/pricing" class="btn btn-dn-outline btn-sm dn-btn">Xem bảng giá gói</a>
+        </div>
+    }
+    else if (LowOnScans)
+    {
+        <div class="alert alert-warning small" role="alert">Bạn chỉ còn @Usage.Current!.ScansRemaining lượt quét trong tháng này.</div>
+    }
+
     <div class="row g-4">
         <div class="col-lg-7">
             <div class="dn-card p-4 p-lg-5">
@@ -66,7 +78,7 @@
                     <div class="d-flex flex-wrap gap-2 mt-4">
                         <button class="btn btn-dn-coral btn-lg flex-grow-1 dn-btn"
                                 @onclick="AnalyzeAsync"
-                                disabled="@loading">
+                                disabled="@(loading || OutOfScans)">
                             <i class="ph ph-scan" aria-hidden="true"></i>@(loading ? "Đang phân tích..." : "Phân tích bằng AI")
                         </button>
                         <button class="btn btn-dn-outline dn-btn" @onclick="() => cropping = true" disabled="@loading">
@@ -120,6 +132,12 @@
     private bool loading;
     private bool success;
     private string? message;
+
+    private const string QuotaMessage = "Bạn đã hết lượt quét trong tháng này.";
+
+    // Admin accounts report an unlimited allowance, so they never hit either state.
+    private bool OutOfScans => Usage.Current is { IsUnlimited: false, ScansLimit: > 0, ScansRemaining: <= 0 };
+    private bool LowOnScans => Usage.Current is { IsUnlimited: false, ScansLimit: > 0, ScansRemaining: > 0 and <= 3 };
 
     private Task OnModeChanged(CaptureMode value)
     {
@@ -188,6 +206,13 @@
     {
         if (image is null) return;
 
+        if (OutOfScans)
+        {
+            success = false;
+            message = QuotaMessage;
+            return;
+        }
+
         loading = true;
         success = false;
         message = null;
@@ -206,6 +231,12 @@
             await Analytics.EventAsync("skin_scan_complete", new { source = mode.ToString().ToLowerInvariant() });
             await Usage.RefreshAsync(); // top-bar scan counter
             Navigation.NavigateTo($"/diagnosis/{uploaded.SkinImageId}");
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+        {
+            // The API refused the scan because the monthly allowance is used up.
+            message = QuotaMessage;
+            await Usage.RefreshAsync();
         }
         catch (Exception ex)
         {

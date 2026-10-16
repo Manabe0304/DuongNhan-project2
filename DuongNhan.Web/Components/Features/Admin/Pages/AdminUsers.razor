@@ -35,42 +35,42 @@
                 <tr><th>Tài khoản</th><th>Vai trò</th><th>Trạng thái</th><th>Email xác minh</th><th>Scan</th>@* <th>Ngày tạo</th> *@<th></th></tr>
             </thead>
             <tbody>
-            @if (loading)
-            {
-                <tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></td></tr>
-            }
-            else if (items.Count == 0)
-            {
-                <tr><td colspan="6" class="text-center text-secondary py-4">Không có tài khoản phù hợp.</td></tr>
-            }
-            else
-            {
-                @foreach (var u in items)
+                @if (loading)
                 {
-                    <tr>
-                        <td><div class="fw-semibold">@(string.IsNullOrWhiteSpace(u.DisplayName) ? "—" : u.DisplayName)</div><small class="text-secondary">@u.Email</small></td>
-                        <td><span class="dn-pill @(IsAdmin(u) ? "" : "off")">@u.Role</span></td>
-                        <td><span class="dn-pill @(u.Status == "active" ? "ok" : "warn")">@(u.Status == "active" ? "Hoạt động" : u.Status == "suspended" ? "Bị khoá" : u.Status)</span></td>
-                        <td>@(u.EmailVerified ? "Đã xác minh" : "Chưa")</td>
-                        <td>@u.ScanCount</td>
-                        @* <td>@u.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy")</td> *@
-                        <td class="text-end">
-                            @if (IsAdmin(u))
-                            {
-                                <small class="text-secondary">—</small>
-                            }
-                            else if (u.Status == "active")
-                            {
-                                <button class="btn btn-sm btn-dn-outline" disabled="@(busyId == u.Id)" @onclick='() => ToggleAsync(u, "suspended")'>Khoá</button>
-                            }
-                            else
-                            {
-                                <button class="btn btn-sm btn-dn-coral" disabled="@(busyId == u.Id)" @onclick='() => ToggleAsync(u, "active")'>Mở khoá</button>
-                            }
-                        </td>
-                    </tr>
+                    <tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm text-success"></div></td></tr>
                 }
-            }
+                else if (items.Count == 0)
+                {
+                    <tr><td colspan="6" class="text-center text-secondary py-4">Không có tài khoản phù hợp.</td></tr>
+                }
+                else
+                {
+                    @foreach (var u in items)
+                    {
+                        <tr>
+                            <td><div class="fw-semibold">@(string.IsNullOrWhiteSpace(u.DisplayName) ? "—" : u.DisplayName)</div><small class="text-secondary">@u.Email</small></td>
+                            <td><span class="dn-pill @(IsAdmin(u) ? "" : "off")">@u.Role</span></td>
+                            <td><span class="dn-pill @(u.Status == "active" ? "ok" : "warn")">@(u.Status == "active" ? "Hoạt động" : u.Status == "suspended" ? "Bị khoá" : u.Status)</span></td>
+                            <td>@(u.EmailVerified ? "Đã xác minh" : "Chưa")</td>
+                            <td>@u.ScanCount</td>
+                            @* <td>@u.CreatedAt.ToVn().ToString("dd/MM/yyyy")</td> *@
+                            <td class="text-end">
+                                @if (IsAdmin(u))
+                                {
+                                    <small class="text-secondary">—</small>
+                                }
+                                else if (u.Status == "active")
+                                {
+                                    <button class="btn btn-sm btn-dn-outline" disabled="@(busyId == u.Id)" @onclick='() => ToggleAsync(u, "suspended")'>Khoá</button>
+                                }
+                                else
+                                {
+                                    <button class="btn btn-sm btn-dn-coral" disabled="@(busyId == u.Id)" @onclick='() => ToggleAsync(u, "active")'>Mở khoá</button>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
             </tbody>
         </table>
     </div>
