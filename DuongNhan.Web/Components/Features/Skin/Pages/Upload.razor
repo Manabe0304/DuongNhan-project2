@@ -6,6 +6,7 @@
 @inject IJSRuntime JS
 @inject AnalyticsService Analytics
 @inject UsageState Usage
+@inject UiSessionService Session
 
 <div class="container dn-container dn-page">
     <div class="dn-page-heading">
@@ -204,7 +205,8 @@
 
     private async Task AnalyzeAsync()
     {
-        if (image is null) return;
+        // `loading` is checked and set before the first await, so a double click cannot start two scans.
+        if (image is null || loading) return;
 
         if (OutOfScans)
         {
@@ -213,12 +215,22 @@
             return;
         }
 
+        // The token lives in localStorage, which every tab of this browser shares. If another tab signed in as a
+        // different account, this tab would still show the old name but send the new account's token.
         loading = true;
         success = false;
         message = null;
 
         try
         {
+            var tokenEmail = await Api.GetTokenEmailAsync();
+            if (!string.IsNullOrWhiteSpace(Session.Email) && !string.IsNullOrWhiteSpace(tokenEmail)
+                && !string.Equals(Session.Email, tokenEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                message = $"Trình duyệt đang đăng nhập bằng tài khoản khác ({tokenEmail}) ở tab khác. Hãy tải lại trang hoặc đăng nhập lại.";
+                return;
+            }
+
             await Analytics.EventAsync("skin_scan_start", new { source = mode.ToString().ToLowerInvariant() });
 
             var upload = await DownscaleAsync(image);
@@ -231,6 +243,10 @@
             await Analytics.EventAsync("skin_scan_complete", new { source = mode.ToString().ToLowerInvariant() });
             await Usage.RefreshAsync(); // top-bar scan counter
             Navigation.NavigateTo($"/diagnosis/{uploaded.SkinImageId}");
+        }
+        catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            message = "Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại rồi quét lại.";
         }
         catch (Refit.ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
         {
@@ -250,12 +266,18 @@
     }
 
     // Keeps uploads small: a 2048px long edge is more than enough for the model.
+    private const int DownscaleThresholdBytes = 1_500_000;
+
     private async Task<SkinImageInput> DownscaleAsync(SkinImageInput source)
     {
+        // Small images gain nothing from a browser round trip (server -> browser -> server over SignalR).
+        if (source.Bytes.Length <= DownscaleThresholdBytes) return source;
+
         try
         {
-            var module = await JS.InvokeAsync<IJSObjectReference>("import", "./js/camera.js");
-            var downscaled = await module.InvokeAsync<string>("downscale", source.ToDataUrl(), 2048);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            var module = await JS.InvokeAsync<IJSObjectReference>("import", cts.Token, "./js/camera.js");
+            var downscaled = await module.InvokeAsync<string>("downscale", cts.Token, source.ToDataUrl(), 2048);
             await module.DisposeAsync();
 
             return SkinImageInput.FromDataUrl(downscaled) ?? source;

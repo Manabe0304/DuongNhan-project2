@@ -30,10 +30,13 @@
                         @if (Usage.Current is { } usage)
                         {
                             <a href="/pricing" class="dn-usage-pill @UsageClass(usage)"
-                               title="Gói @usage.PlanName: còn @usage.ScansRemaining lượt quét trong tháng">
+                               title="@(usage.IsUnlimited ? "Không giới hạn lượt quét" : $"Gói {usage.PlanName}: còn {usage.ScansRemaining} lượt quét trong tháng")">
                                 <i class="ph ph-scan" aria-hidden="true"></i>
-                                <span class="dn-usage-plan d-none d-md-inline">@usage.PlanName</span>
-                                <span class="dn-usage-count"><strong>@usage.ScansUsed/@usage.ScansLimit</strong><span class="d-none d-sm-inline"> lượt quét</span></span>
+                                @if (!usage.IsUnlimited)
+                                {
+                                    <span class="dn-usage-plan d-none d-md-inline">@usage.PlanName</span>
+                                }
+                                <span class="dn-usage-count"><strong>@usage.UsageLabel</strong><span class="d-none d-sm-inline"> lượt quét</span></span>
                             </a>
                         }
 

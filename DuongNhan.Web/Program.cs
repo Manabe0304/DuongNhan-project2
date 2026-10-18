@@ -2,10 +2,23 @@ using DuongNhan.Web.Components;
 using DuongNhan.Web.Extensions;
 using DuongNhan.Web.Services;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+
+// Aspire's default resilience handler times each call out after 10 s and retries it, POSTs included. A slow
+// upload was therefore sent again while the first copy was still running, creating duplicate scans (and
+// counting twice). Never retry unsafe methods, and allow a scan enough time to finish.
+builder.Services.ConfigureAll<Microsoft.Extensions.Http.Resilience.HttpStandardResilienceOptions>(options =>
+{
+    options.Retry.ShouldHandle = _ => ValueTask.FromResult(false);
+    options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(60);
+    options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
+    options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(180);
+    });
+
 
 builder.Services.AddWebBlazor();
 

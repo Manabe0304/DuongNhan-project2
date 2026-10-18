@@ -41,6 +41,12 @@ internal sealed class UploadSkinEndpoint(
 
     public override async Task HandleAsync(CancellationToken ct)
     {
+        if (RejectedCredentials.Check(HttpContext))
+        {
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+
         IFormFile? file = null;
         for (var i = 0; i < Files.Count; i++)
         {

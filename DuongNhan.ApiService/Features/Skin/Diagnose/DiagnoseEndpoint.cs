@@ -36,6 +36,12 @@ internal sealed class DiagnoseEndpoint(
 
     public override async Task HandleAsync(DiagnoseRequest req, CancellationToken ct)
     {
+        if (RejectedCredentials.Check(HttpContext))
+        {
+            await Send.UnauthorizedAsync(ct);
+            return;
+        }
+
         var skinImage = await db.SkinImages
             .FirstOrDefaultAsync(si => si.Id == req.Id, ct);
 

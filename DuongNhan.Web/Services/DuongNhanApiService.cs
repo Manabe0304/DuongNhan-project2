@@ -17,9 +17,14 @@ public sealed class DuongNhanApiService(
     ISkinApi skin,
     IProductApi products,
     ISubscriptionApi subscriptions,
-    TokenStorage tokens)
+    TokenStorage tokens) : IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    // One refresh at a time per circuit: refresh tokens rotate, so two parallel refreshes would revoke each other.
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
+
+    public void Dispose() => _refreshLock.Dispose();
 
     public async Task<ApiResult> LoginAsync(string email, string password, CancellationToken ct = default)
     {
@@ -146,7 +151,7 @@ public sealed class DuongNhanApiService(
     /// <summary>Reads the access token from browser storage (inside the circuit) for an explicit Authorization header.</summary>
     private async Task<string> BearerAsync()
     {
-        var token = await tokens.GetAccessTokenAsync();
+        var token = await GetFreshAccessTokenAsync();
         if (string.IsNullOrWhiteSpace(token))
             throw new InvalidOperationException("Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.");
 
@@ -158,7 +163,7 @@ public sealed class DuongNhanApiService(
     {
         try
         {
-            var token = await tokens.GetAccessTokenAsync();
+            var token = await GetFreshAccessTokenAsync();
             return string.IsNullOrWhiteSpace(token) ? null : $"Bearer {token}";
         }
         catch (InvalidOperationException)
@@ -167,6 +172,55 @@ public sealed class DuongNhanApiService(
             return null;
         }
     }
+
+    /// <summary>E-mail of the account the stored access token belongs to (null when signed out).</summary>
+    public async Task<string?> GetTokenEmailAsync()
+        => JwtPayload.Claim(await tokens.GetAccessTokenAsync(), DuongNhan.Shared.Contracts.AppClaimTypes.Email);
+
+    /// <summary>
+    /// Access tokens live 15 minutes and nothing else renews them. An expired token makes the API treat the
+    /// caller as an anonymous guest, so scans were saved to the guest account and never counted for the user.
+    /// This renews the token with the refresh token shortly before it expires.
+    /// </summary>
+    private async Task<string?> GetFreshAccessTokenAsync()
+    {
+        var token = await tokens.GetAccessTokenAsync();
+        if (string.IsNullOrWhiteSpace(token) || !IsExpiring(token)) return token;
+
+        await _refreshLock.WaitAsync();
+        try
+        {
+            // Another call (or another tab) may already have renewed it.
+            token = await tokens.GetAccessTokenAsync();
+            if (string.IsNullOrWhiteSpace(token) || !IsExpiring(token)) return token;
+
+            var refresh = await tokens.GetRefreshTokenAsync();
+            if (string.IsNullOrWhiteSpace(refresh)) return token;
+
+            try
+            {
+                var result = await RefreshAsync(refresh);
+                if (!string.IsNullOrWhiteSpace(result.AccessToken))
+                {
+                    await tokens.StoreAsync(result.AccessToken, result.RefreshToken ?? refresh);
+                    return result.AccessToken;
+                }
+            }
+            catch (ApiException)
+            {
+                // Refresh token revoked or expired: fall through, the API will answer 401 and the UI asks to sign in again.
+            }
+
+            return token;
+        }
+        finally
+        {
+            _refreshLock.Release();
+        }
+    }
+
+    private static bool IsExpiring(string jwt)
+        => JwtPayload.ExpiresAt(jwt) is { } exp && exp <= DateTimeOffset.UtcNow.AddSeconds(60);
 
     private static T NewRequest<T>(params (string Name, object? Value)[] values) where T : class
     {
