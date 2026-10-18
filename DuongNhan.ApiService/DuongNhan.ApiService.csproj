@@ -27,8 +27,8 @@
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" />
     <PackageReference Include="Riok.Mapperly" />
     <PackageReference Include="Scalar.AspNetCore" />
-    <PackageReference Include="System.Security.Cryptography.Pkcs" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
+
+
   </ItemGroup>
 
   <ItemGroup>
