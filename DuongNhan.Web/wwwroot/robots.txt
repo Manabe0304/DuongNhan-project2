@@ -1,9 +1,42 @@
 User-agent: *
 Allow: /
+
+# Trang cần đăng nhập / giao dịch
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /scan
 Disallow: /upload
 Disallow: /diagnosis
 Disallow: /history
+Disallow: /recommendations
 Disallow: /profile
+Disallow: /change-password
+Disallow: /delete-account
 Disallow: /subscription
+Disallow: /billing
+Disallow: /plans
+Disallow: /checkout
 
-Sitemap: https://duongnhan.com/sitemap.xml
+# Đăng nhập, đăng ký, onboarding
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /confirm-email
+Disallow: /auth
+Disallow: /welcome
+Disallow: /first-upload
+Disallow: /onboarding
+
+# Đường dẫn phụ (alias) trùng nội dung với trang chính
+Disallow: /privacy-policy
+Disallow: /terms-of-service
+Disallow: /cookie-policy
+Disallow: /delete-data
+
+# Trang hệ thống
+Disallow: /404
+Disallow: /error
+
+Sitemap: https://duongnhan-ai.up.railway.app/sitemap.xml
