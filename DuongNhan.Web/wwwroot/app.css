@@ -1108,6 +1108,10 @@ h6 {
     transform: scaleX(-1);
 }
 
+.dn-camera-tips {
+    margin: 1rem 0 0;
+}
+
 .dn-camera-picker {
     flex: 1 1 100%;
     margin-top: .25rem;
