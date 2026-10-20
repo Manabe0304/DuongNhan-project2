@@ -17,7 +17,7 @@ builder.Services.ConfigureAll<Microsoft.Extensions.Http.Resilience.HttpStandardR
     options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(60);
     options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(90);
     options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(180);
-    });
+});
 
 
 builder.Services.AddWebBlazor();
@@ -57,6 +57,14 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     app.UseHsts();
 }
+
+// Explicitly allow this origin to use the camera (live skin scan). Without this some hosts/proxies
+// default to a restrictive policy and getUserMedia is silently blocked.
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["Permissions-Policy"] = "camera=(self)";
+    await next();
+});
 
 app.UseStatusCodePagesWithReExecute("/404");
 app.UseHttpsRedirection();

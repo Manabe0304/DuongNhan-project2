@@ -1,11 +1,24 @@
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
-@* Live camera preview with capture. Emits a JPEG data URL for the page to grade. *@
+@* Live camera preview with capture. Emits a JPEG data URL for the page to grade.
+   The camera starts automatically; if the browser refuses (permission, HTTP, no webcam...),
+   the exact reason is shown and the phone's native camera app is offered as a fallback. *@
 <div class="dn-camera">
-    <video @ref="video" class="dn-camera-video" autoplay playsinline muted></video>
-    <div class="dn-camera-frame"></div>
-    <CaptureGuideOverlay />
+    <video @ref="video" class="dn-camera-video dn-camera-mirrored" autoplay playsinline muted></video>
+
+    @if (!running)
+    {
+        <div class="dn-camera-idle">
+            <i class="ph ph-camera" aria-hidden="true"></i>
+            <span>@(busy ? "Đang bật camera..." : "Camera đang tắt. Bấm \"Bật camera\" để bắt đầu.")</span>
+        </div>
+    }
+    else
+    {
+        <div class="dn-camera-frame"></div>
+        <CaptureGuideOverlay />
+    }
 
     @if (!string.IsNullOrWhiteSpace(error))
     {
@@ -25,10 +38,32 @@
     }
     else
     {
-        <button type="button" class="btn btn-dn-dark btn-lg dn-btn" @onclick="StartAsync" disabled="@busy">
-            <i class="ph ph-camera" aria-hidden="true"></i>Bật camera
+        <button type="button" class="btn btn-dn-dark btn-lg dn-btn" @onclick="StartAsync" disabled="@(busy || module is null)">
+            <i class="ph ph-camera" aria-hidden="true"></i>@(busy ? "Đang bật..." : "Bật camera")
         </button>
     }
+
+    @if (cameras.Count > 1)
+    {
+        <div class="dn-camera-picker">
+            <label for="dn-camera-select" class="small text-secondary mb-1">Chọn camera</label>
+            <select id="dn-camera-select" class="form-select" value="@currentDeviceId" @onchange="OnCameraChangedAsync" disabled="@busy">
+                @foreach (var camera in cameras)
+                {
+                    <option value="@camera.DeviceId" selected="@(camera.DeviceId == currentDeviceId)">@camera.Label</option>
+                }
+            </select>
+        </div>
+    }
+
+    @* Fallback: opens the device's own camera app (works on phones even when live preview is blocked). *@
+    <label class="btn btn-dn-outline dn-btn mb-0">
+        <i class="ph ph-device-mobile-camera" aria-hidden="true"></i>Dùng camera của máy
+        <InputFile OnChange="OnNativePhotoAsync"
+                   accept="image/jpeg,image/png,image/webp"
+                   capture="user"
+                   class="d-none" />
+    </label>
 </div>
 
 @code {
@@ -39,6 +74,12 @@
     private bool running;
     private bool busy;
     private string? error;
+
+    private sealed record CameraInfo(string DeviceId, string Label);
+    private sealed record CameraStartResult(bool Ok, int Width, int Height, string? Code, string? Message, string? DeviceId, List<CameraInfo>? Cameras);
+
+    private List<CameraInfo> cameras = [];
+    private string? currentDeviceId;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -51,29 +92,50 @@
         catch (Exception ex)
         {
             error = $"Không tải được module camera: {ex.Message}";
+            StateHasChanged();
+            return;
         }
+
+        // Start right away so the user never sits in front of an empty black box.
+        await StartAsync();
     }
 
-    private async Task StartAsync()
+    private Task StartAsync() => StartWithDeviceAsync(null);
+
+    private async Task StartWithDeviceAsync(string? deviceId)
     {
-        if (module is null) return;
+        if (module is null || busy) return;
 
         busy = true;
         error = null;
+        StateHasChanged();
 
         try
         {
-            await module.InvokeVoidAsync("startCamera", video);
-            running = true;
+            var result = await module.InvokeAsync<CameraStartResult>("startCamera", video, deviceId);
+            running = result.Ok;
+            if (result.Cameras is { Count: > 0 }) cameras = result.Cameras;
+            currentDeviceId = result.DeviceId;
+            if (!result.Ok)
+                error = result.Message ?? "Không truy cập được camera. Hãy cấp quyền camera hoặc chuyển sang chế độ tải ảnh lên.";
         }
-        catch (Exception)
+        catch (Exception ex) when (ex is JSException or InvalidOperationException or TaskCanceledException)
         {
+            running = false;
             error = "Không truy cập được camera. Hãy cấp quyền camera hoặc chuyển sang chế độ tải ảnh lên.";
         }
         finally
         {
             busy = false;
+            StateHasChanged();
         }
+    }
+
+    private async Task OnCameraChangedAsync(ChangeEventArgs args)
+    {
+        var deviceId = args.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(deviceId))
+            await StartWithDeviceAsync(deviceId);
     }
 
     private async Task StopAsync()
@@ -98,11 +160,17 @@
         if (module is null) return;
 
         busy = true;
+        error = null;
         try
         {
-            var dataUrl = await module.InvokeAsync<string>("captureFrame", video);
-            if (!string.IsNullOrWhiteSpace(dataUrl))
-                await OnCaptured.InvokeAsync(dataUrl);
+            var dataUrl = await module.InvokeAsync<string?>("captureFrame", video);
+            if (string.IsNullOrWhiteSpace(dataUrl))
+            {
+                error = "Camera chưa sẵn sàng, hãy đợi một giây rồi chụp lại.";
+                return;
+            }
+
+            await OnCaptured.InvokeAsync(dataUrl);
         }
         catch (Exception ex)
         {
@@ -111,6 +179,27 @@
         finally
         {
             busy = false;
+        }
+    }
+
+    private async Task OnNativePhotoAsync(InputFileChangeEventArgs args)
+    {
+        try
+        {
+            await StopAsync();
+
+            var file = args.File;
+            await using var stream = file.OpenReadStream(AppConstants.MaxUploadBytes);
+            using var buffer = new MemoryStream();
+            await stream.CopyToAsync(buffer);
+
+            var contentType = string.IsNullOrWhiteSpace(file.ContentType) ? "image/jpeg" : file.ContentType;
+            var dataUrl = new SkinImageInput(buffer.ToArray(), file.Name, contentType).ToDataUrl();
+            await OnCaptured.InvokeAsync(dataUrl);
+        }
+        catch (Exception ex)
+        {
+            error = $"Không đọc được ảnh từ camera của máy: {ex.Message}";
         }
     }
 
@@ -126,6 +215,10 @@
         catch (JSDisconnectedException)
         {
             // Circuit already closed.
+        }
+        catch (JSException)
+        {
+            // The <video> element is already gone from the DOM.
         }
         catch (ObjectDisposedException)
         {
