@@ -16,3 +16,5 @@ window.dnScrollToId = function (id) {
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     el.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
 };
+
+window.dnSetTitle = function (title) { document.title = title; };
