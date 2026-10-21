@@ -76,16 +76,18 @@
             <button type="button" class="dn-btn-copy" title="Sao chép link Shopee" aria-label="Sao chép link Shopee" @onclick="CopyAsync">
                 <i class="ph @(copied ? "ph-check" : "ph-copy")" aria-hidden="true"></i>
             </button>
+
+            @* Small pill just above the buttons; positioned from the footer so it is never clipped by the card. *@
+            @if (copied)
+            {
+                <div class="dn-pcard-copied" role="status">Đã sao chép link Shopee!</div>
+            }
         }
         else
         {
             <span class="dn-pcard-nolink">Chưa có link mua hàng</span>
         }
     </div>
-    @if (copied)
-    {
-        <div class="dn-pcard-copied" role="status">Đã sao chép link Shopee!</div>
-    }
 </article>
 
 @code {

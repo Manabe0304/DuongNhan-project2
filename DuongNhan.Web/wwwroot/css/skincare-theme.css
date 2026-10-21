@@ -1074,20 +1074,20 @@ h1, h2, .dn-display, .dn-display-sm {
         color: var(--dn-muted);
         white-space: nowrap;
     }
+
 @media (max-width: 575.98px) {
     .dn-bars {
-        gap: 3px; 
+        gap: 3px;
     }
 
-        .dn-bars > div
-        {
+        .dn-bars > div {
             gap: 4px;
         }
 
-        .dn-bars small,
-        .dn-bars > div > span {
-            font-size: .6rem;
-        }
+            .dn-bars small,
+            .dn-bars > div > span {
+                font-size: .6rem;
+            }
 }
 
 @keyframes dnGrow {
@@ -1113,49 +1113,49 @@ h1, h2, .dn-display, .dn-display-sm {
     margin: 1.75rem 0 .5rem;
 }
 
-.dn-pager .pagination {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: .3rem;
-}
-
-    .dn-pager .pagination .page-item .page-link {
-        min-width: 2.4rem;
-        height: 2.4rem;
-        margin-left: 0;
-        padding: 0 .6rem;
-        display: inline-flex;
-        align-items: center;
+    .dn-pager .pagination {
+        flex-wrap: wrap;
         justify-content: center;
-        border: 1px solid var(--dn-line-strong);
-        border-radius: 999px;
-        background: var(--dn-surface);
-        color: var(--dn-primary);
-        font-weight: 600;
+        gap: .3rem;
     }
 
-        .dn-pager .pagination .page-item .page-link:hover {
-            background: var(--dn-rose-100);
-            color: var(--dn-primary-hover);
+        .dn-pager .pagination .page-item .page-link {
+            min-width: 2.4rem;
+            height: 2.4rem;
+            margin-left: 0;
+            padding: 0 .6rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--dn-line-strong);
+            border-radius: 999px;
+            background: var(--dn-surface);
+            color: var(--dn-primary);
+            font-weight: 600;
         }
 
-        .dn-pager .pagination .page-item .page-link:focus-visible {
-            outline: 2px solid var(--dn-primary);
-            outline-offset: 2px;
-            box-shadow: none;
+            .dn-pager .pagination .page-item .page-link:hover {
+                background: var(--dn-rose-100);
+                color: var(--dn-primary-hover);
+            }
+
+            .dn-pager .pagination .page-item .page-link:focus-visible {
+                outline: 2px solid var(--dn-primary);
+                outline-offset: 2px;
+                box-shadow: none;
+            }
+
+        .dn-pager .pagination .page-item.active .page-link {
+            background: var(--dn-primary);
+            border-color: var(--dn-primary);
+            color: #fff;
         }
 
-    .dn-pager .pagination .page-item.active .page-link {
-        background: var(--dn-primary);
-        border-color: var(--dn-primary);
-        color: #fff;
-    }
-
-    .dn-pager .pagination .page-item.disabled .page-link {
-        opacity: .45;
-        pointer-events: none;
-        background: transparent;
-    }
+        .dn-pager .pagination .page-item.disabled .page-link {
+            opacity: .45;
+            pointer-events: none;
+            background: transparent;
+        }
 
 @media (max-width: 575.98px) {
     .dn-pager .pagination {
@@ -1201,6 +1201,7 @@ h1, h2, .dn-display, .dn-display-sm {
         max-width: 100%;
     }
 }
+
 .dn-hbar {
     display: grid;
     grid-template-columns: minmax(120px, 38%) 1fr 28px;
@@ -1693,6 +1694,7 @@ h1:focus, h1:focus-visible {
 }
 
 .dn-pcard-foot {
+    position: relative;
     display: flex;
     gap: .5rem;
     padding: .75rem 1.1rem 1.1rem;
@@ -1747,19 +1749,38 @@ h1:focus, h1:focus-visible {
     color: var(--dn-muted);
 }
 
+/* Small green pill just above the footer buttons, as before, but fully visible. It is centred with
+   auto margins instead of translateX(-50%): dnPageIn ends with transform: none, which cancelled the
+   translate and pushed the pill to the right, where the card's overflow: hidden cut it off. */
 .dn-pcard-copied {
     position: absolute;
-    left: 50%;
-    bottom: 4.6rem;
-    transform: translateX(-50%);
+    left: 0;
+    right: 0;
+    bottom: calc(100% + .5rem);
+    z-index: 2;
+    width: max-content;
+    max-width: calc(100% - 1.5rem);
+    margin-inline: auto;
     background: #25643f;
     color: #fff;
-    font-size: .72rem;
+    font-size: .75rem;
     font-weight: 700;
-    padding: .25rem .7rem;
+    padding: .3rem .8rem;
     border-radius: 999px;
     white-space: nowrap;
-    animation: dnPageIn .25s var(--dn-ease) both;
+    box-shadow: 0 6px 16px -6px rgba(37, 100, 63, .6);
+    pointer-events: none;
+    animation: dnFadeIn .2s ease both;
+}
+
+@keyframes dnFadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 /* ── /recommendations ──────────────────────────────────── */
@@ -2481,6 +2502,13 @@ img, svg {
         width: 100%;
         align-items: stretch;
     }
+
+        /* In a column, flex-basis is the height: reset the 220px basis from the tablet rule. */
+        .dn-rec-side .form-select {
+            flex: 0 0 auto;
+            width: 100%;
+            max-width: none;
+        }
 
     .dn-step-head {
         flex-wrap: wrap;
