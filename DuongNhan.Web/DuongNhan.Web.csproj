@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="ClosedXML" />
+    <PackageReference Include="DotNetEnv" />
     <PackageReference Include="Refit" />
     <PackageReference Include="Refit.HttpClientFactory" />
   </ItemGroup>

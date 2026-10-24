@@ -229,7 +229,7 @@
     private bool? googleRenderedForRegister;
 
     private string GoogleStatusMessage => googleStatus == "not-configured"
-        ? "Đăng nhập Google chưa được cấu hình: hãy đặt Google:ClientId trong DuongNhan.Web/appsettings.json."
+        ? "Đăng nhập Google chưa được cấu hình: hãy đặt Google__ClientId trong file .env."
         : "Không tải được Google Sign-In. Hãy kiểm tra kết nối mạng hoặc tiện ích chặn quảng cáo.";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

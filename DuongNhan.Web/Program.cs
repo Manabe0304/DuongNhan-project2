@@ -4,6 +4,9 @@ using DuongNhan.Web.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.Extensions.Options;
 
+// Nạp .env (tìm ngược lên thư mục gốc). NoClobber: biến đã có (Aspire/Railway) không bị ghi đè.
+DotNetEnv.Env.NoClobber().TraversePath().Load();
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
