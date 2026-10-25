@@ -47,6 +47,16 @@ public static class ApiRoutes
         public const string Usage = Base + "/usage";
         public const string Plans = "/api/plans";
     }
+
+    public static class Payments
+    {
+        public const string Base = "/api/payments";
+        public const string Orders = Base + "/orders";
+        public const string Order = Base + "/orders/{id:guid}";
+        public const string CancelOrder = Base + "/orders/{id:guid}/cancel";
+        public const string SepayWebhook = Base + "/sepay-webhook";
+    }
+
     public static class Admin
     {
         public const string Base = "/api/admin";

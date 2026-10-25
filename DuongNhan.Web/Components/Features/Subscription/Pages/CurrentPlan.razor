@@ -10,26 +10,44 @@
     </div>
     <div class="dn-card p-4 p-lg-5">
         <h4>@tier</h4>
-        <p class="text-secondary">Gói đăng ký hiện tại của bạn.</p>
+        <p class="text-secondary">
+            @if (endsAt is { } end)
+            {
+                <text>Gói đang hoạt động, hết hạn lúc @end.ToVn().ToString("HH:mm dd/MM/yyyy").</text>
+            }
+            else
+            {
+                <text>Gói đăng ký hiện tại của bạn.</text>
+            }
+        </p>
         <a href="/pricing" class="btn btn-dn-coral">Nâng cấp gói</a>
     </div>
 </div>
 
-@code{
-    private string tier="Free";
-    protected override async Task OnInitializedAsync(){
-        try{
-            var x=await Api.GetCurrentSubscriptionAsync();
-            if(x is { } j)
-                foreach(var k in new[]{"tier","Tier","name","Name"})
-                    if(j.TryGetProperty(k,out var p)){
-                        tier=p.ToString();
+@code {
+    private string tier = "Free";
+    private DateTimeOffset? endsAt;
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var x = await Api.GetCurrentSubscriptionAsync();
+            if (x is { } j)
+                foreach (var k in new[] { "tier", "Tier", "name", "Name" })
+                    if (j.TryGetProperty(k, out var p))
+                    {
+                        tier = p.ToString();
                         break;
                     }
+            if (x is { } sub && sub.TryGetProperty("endsAt", out var ends)
+                && ends.ValueKind == System.Text.Json.JsonValueKind.String
+                && DateTimeOffset.TryParse(ends.GetString(), System.Globalization.CultureInfo.InvariantCulture,
+                       System.Globalization.DateTimeStyles.None, out var parsedEnd))
+                endsAt = parsedEnd;
         }
         catch
         {
-            
+
         }
     }
 }

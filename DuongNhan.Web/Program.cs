@@ -88,6 +88,29 @@ app.MapGet("/skin-image/{id:guid}", async (Guid id, IHttpClientFactory clients, 
     return Results.File(bytes, response.Content.Headers.ContentType?.MediaType ?? "image/jpeg");
 });
 
+// SePay calls this public URL (https://<web-domain>/webhooks/sepay) when money arrives. The API service is only
+// reachable on Railway's private network, so the call is forwarded server-side. The API checks the
+// "Authorization: Apikey ..." header, so it is passed through untouched.
+app.MapPost("/webhooks/sepay", async (HttpContext context, IHttpClientFactory clients) =>
+{
+    var ct = context.RequestAborted;
+
+    using var forward = new HttpRequestMessage(HttpMethod.Post, "/api/payments/sepay-webhook")
+    {
+        Content = new StreamContent(context.Request.Body)
+    };
+    forward.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+    if (context.Request.Headers.TryGetValue("Authorization", out var authorization))
+        forward.Headers.TryAddWithoutValidation("Authorization", authorization.ToString());
+
+    using var response = await clients.CreateClient("dn-api").SendAsync(forward, ct);
+
+    context.Response.StatusCode = (int)response.StatusCode;
+    context.Response.ContentType = "application/json";
+    await context.Response.WriteAsync(await response.Content.ReadAsStringAsync(ct), ct);
+}).DisableAntiforgery();
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

@@ -36,11 +36,8 @@ internal static class ScanQuota
     {
         if (IsAdmin(user)) return false;
 
-        var plan = await db.Plans
-            .AsNoTracking()
-            .Where(p => p.IsActive)
-            .OrderBy(p => p.Price)
-            .FirstOrDefaultAsync(ct);
+        // Paid plan while a subscription is running, otherwise the free (cheapest active) plan.
+        var plan = await PlanAccess.GetEffectivePlanAsync(db, clock, userId, ct);
         var limit = plan?.MaxScansPerMonth ?? FallbackLimit;
 
         var (start, end) = CurrentMonth(clock);

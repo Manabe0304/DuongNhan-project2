@@ -19,6 +19,8 @@ internal sealed class AppDbContext(
     public DbSet<ProductRecommendation> ProductRecommendations => Set<ProductRecommendation>();
     public DbSet<Role> Roles => Set<Role>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<Subscription> Subscriptions => Set<Subscription>();
+    public DbSet<PaymentOrder> PaymentOrders => Set<PaymentOrder>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

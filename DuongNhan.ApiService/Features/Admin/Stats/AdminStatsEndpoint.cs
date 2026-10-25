@@ -1,4 +1,5 @@
 using DuongNhan.ApiService.Data;
+using DuongNhan.ApiService.Models;
 using DuongNhan.Shared.Contracts;
 using DuongNhan.Shared.Dtos.Admin;
 using FastEndpoints;
@@ -19,7 +20,7 @@ internal sealed class AdminStatsEndpoint(AppDbContext db, TimeProvider clock) : 
         Summary(s =>
         {
             s.Summary = "Admin dashboard metrics";
-            s.Description = "Aggregated user, scan and catalogue metrics for the admin dashboard.";
+            s.Description = "Aggregated user, scan, revenue and catalogue metrics for the admin dashboard.";
             s.Responses[200] = "Dashboard metrics.";
             s.Responses[403] = "Caller is not an admin.";
         });
@@ -80,6 +81,38 @@ internal sealed class AdminStatsEndpoint(AppDbContext db, TimeProvider clock) : 
             .Select(d => new AdminDailyCountDto(d, byDay.GetValueOrDefault(d)))
             .ToList();
 
+        // Revenue = money actually received for paid orders (PaidAmount, else the order amount), per Vietnam day.
+        var paidOrders = db.PaymentOrders.AsNoTracking().Where(o => o.Status == PaymentOrder.Paid);
+        var totalRevenue = await paidOrders.SumAsync(o => (decimal?)(o.PaidAmount ?? o.Amount), ct) ?? 0m;
+        var revenueLast7 = await paidOrders
+            .Where(o => o.PaidAt >= weekAgo)
+            .SumAsync(o => (decimal?)(o.PaidAmount ?? o.Amount), ct) ?? 0m;
+        var paidOrderCount = await paidOrders.CountAsync(ct);
+        var activeSubscriptions = await db.Subscriptions
+            .CountAsync(sub => sub.Status == Subscription.Active && sub.EndsAt > now, ct);
+
+        var revenueRows = await paidOrders
+            .Where(o => o.PaidAt >= chartStartUtc)
+            .Select(o => new { PaidAt = o.PaidAt!.Value, Amount = o.PaidAmount ?? o.Amount })
+            .ToListAsync(ct);
+
+        var revenueByDay = revenueRows
+            .GroupBy(r => DateOnly.FromDateTime(r.PaidAt.ToOffset(vnOffset).DateTime))
+            .ToDictionary(g => g.Key, g => g.Sum(r => r.Amount));
+
+        var revenuePerDay = Enumerable.Range(0, ChartDays)
+            .Select(i => DateOnly.FromDateTime(chartStart.DateTime.AddDays(i)))
+            .Select(d => new AdminDailyRevenueDto(d, revenueByDay.GetValueOrDefault(d)))
+            .ToList();
+
+        var recentPayments = await (
+            from o in paidOrders
+            join u in db.Users.IgnoreQueryFilters([AppQueryFilters.SoftDelete]) on o.UserId equals u.Id
+            orderby o.PaidAt descending
+            select new AdminRecentPaymentDto(o.Id, u.Email, o.PlanName, o.PaidAmount ?? o.Amount, o.PaidAt!.Value))
+            .Take(6)
+            .ToListAsync(ct);
+
         var topConditions = await db.Diagnoses
             .AsNoTracking()
             .GroupBy(d => d.PrimaryCondition)
@@ -122,6 +155,12 @@ internal sealed class AdminStatsEndpoint(AppDbContext db, TimeProvider clock) : 
             ScansPerDay: scansPerDay,
             TopConditions: topConditions.Select(c => new AdminLabelCountDto(c.Label, c.Count)).ToList(),
             ProductsPerStep: perStep,
-            ProductsPerSkinType: perSkinType), ct);
+            ProductsPerSkinType: perSkinType,
+            TotalRevenue: totalRevenue,
+            RevenueLast7Days: revenueLast7,
+            PaidOrders: paidOrderCount,
+            ActiveSubscriptions: activeSubscriptions,
+            RevenuePerDay: revenuePerDay,
+            RecentPayments: recentPayments), ct);
     }
 }
