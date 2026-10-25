@@ -324,7 +324,7 @@ h1, h2, .dn-display, .dn-display-sm {
 }
 
 .dn-page {
-    animation: dnPageIn .55s var(--dn-ease) both;
+    animation: dnPageIn .55s var(--dn-ease) backwards;
 }
 
 .dn-hero {
@@ -944,7 +944,7 @@ h1, h2, .dn-display, .dn-display-sm {
 
 .dn-admin-content {
     padding: 1.5rem;
-    animation: dnPageIn .5s var(--dn-ease) both;
+    animation: dnPageIn .5s var(--dn-ease) backwards;
 }
 
 .dn-admin-backdrop {
