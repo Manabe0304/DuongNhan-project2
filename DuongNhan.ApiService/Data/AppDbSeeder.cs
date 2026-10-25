@@ -50,7 +50,7 @@ internal static class AppDbSeeder
                     Name = "Gói Tiêu Chuẩn (Pro)",
                     Code = "plan_pro",
                     Description = "Dành cho người chăm sóc da thường xuyên, theo dõi tiến trình hồi phục theo tuần.",
-                    Price = 99000,
+                    Price = 39000,
                     BillingCycle = "monthly",
                     MaxScansPerMonth = 60,
                     FeaturesJson = "[\"60 lượt quét AI / tháng\", \"Theo dõi biểu đồ phục hồi da\", \"Gợi ý phác đồ chu trình chuyên sâu\", \"Lưu lịch sử không giới hạn\"]",
@@ -62,7 +62,7 @@ internal static class AppDbSeeder
                     Name = "Gói VIP Chuyên Sâu",
                     Code = "plan_vip",
                     Description = "Phân tích không giới hạn, kết nối bác sĩ da liễu và cảnh báo rủi ro tương tác mỹ phẩm.",
-                    Price = 199000,
+                    Price = 79000,
                     BillingCycle = "monthly",
                     MaxScansPerMonth = 999,
                     FeaturesJson = "[\"Không giới hạn lượt quét\", \"Đánh giá tương tác thành phần mỹ phẩm\", \"Ưu tiên giải đáp từ chuyên gia da liễu\", \"Báo cáo chuyên sâu hàng tháng\"]",
@@ -90,6 +90,18 @@ internal static class AppDbSeeder
             proPlan.MaxScansPerMonth = 60;
             proPlan.FeaturesJson = "[\"60 lượt quét AI / tháng\", \"Theo dõi biểu đồ phục hồi da\", \"Gợi ý phác đồ chu trình chuyên sâu\", \"Lưu lịch sử không giới hạn\"]";
             proPlan.UpdatedAt = now;
+        }
+
+        // Pro costs 39.000đ and VIP 79.000đ per month: bring databases that were seeded with older prices in line.
+        foreach (var (code, price) in new[] { ("plan_pro", 39000m), ("plan_vip", 79000m) })
+        {
+            var plan = await db.Plans.IgnoreQueryFilters([AppQueryFilters.SoftDelete])
+                .FirstOrDefaultAsync(p => p.Code == code, ct);
+            if (plan is not null && plan.Price != price)
+            {
+                plan.Price = price;
+                plan.UpdatedAt = now;
+            }
         }
 
         // 3. Seed Products

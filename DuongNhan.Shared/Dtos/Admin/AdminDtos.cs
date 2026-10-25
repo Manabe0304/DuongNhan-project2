@@ -17,7 +17,13 @@ public sealed record AdminStatsDto(
     List<AdminDailyCountDto>? ScansPerDay = null,
     List<AdminLabelCountDto>? TopConditions = null,
     List<AdminLabelCountDto>? ProductsPerStep = null,
-    List<AdminLabelCountDto>? ProductsPerSkinType = null);
+    List<AdminLabelCountDto>? ProductsPerSkinType = null,
+    decimal TotalRevenue = 0,
+    decimal RevenueLast7Days = 0,
+    int PaidOrders = 0,
+    int ActiveSubscriptions = 0,
+    List<AdminDailyRevenueDto>? RevenuePerDay = null,
+    List<AdminRecentPaymentDto>? RecentPayments = null);
 
 public sealed record AdminRecentUserDto(Guid Id, string Email, string? DisplayName, string Status, DateTimeOffset CreatedAt);
 
@@ -26,6 +32,11 @@ public sealed record AdminTopProductDto(Guid Id, string Name, string Brand, stri
 public sealed record AdminDailyCountDto(DateOnly Day, int Count);
 
 public sealed record AdminLabelCountDto(string Label, int Count);
+
+/// <summary>Revenue (VND) collected on one Vietnam-time day.</summary>
+public sealed record AdminDailyRevenueDto(DateOnly Day, decimal Amount);
+
+public sealed record AdminRecentPaymentDto(Guid Id, string Email, string PlanName, decimal Amount, DateTimeOffset PaidAt);
 
 public sealed record AdminUserDto(
     Guid Id,

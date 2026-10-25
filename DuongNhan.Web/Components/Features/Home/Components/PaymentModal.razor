@@ -1,0 +1,317 @@
+@using System.Globalization
+@using DuongNhan.Shared.Dtos.Payments
+@implements IDisposable
+@inject DuongNhanApiService Api
+@inject UsageState Usage
+@inject IJSRuntime JS
+
+<div class="pay-backdrop">
+    <div class="pay-modal" role="dialog" aria-modal="true" aria-labelledby="pay-title">
+        <button type="button" class="pay-close" @onclick="CloseAsync" aria-label="Đóng">
+            <i class="ph ph-x" aria-hidden="true"></i>
+        </button>
+
+        @if (loading)
+        {
+            <div class="pay-center">
+                <div class="spinner-border text-secondary" role="status" aria-hidden="true"></div>
+                <p>Đang tạo đơn thanh toán…</p>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="pay-center">
+                <i class="ph ph-warning-circle pay-big-icon pay-bad" aria-hidden="true"></i>
+                <h2 id="pay-title">Chưa tạo được đơn thanh toán</h2>
+                <p>@error</p>
+                <div class="pay-actions">
+                    <button type="button" class="pay-btn pay-btn-primary" @onclick="CreateOrderAsync">Thử lại</button>
+                    <button type="button" class="pay-btn" @onclick="CloseAsync">Đóng</button>
+                </div>
+            </div>
+        }
+        else if (order is { Status: "paid" })
+        {
+            <div class="pay-center">
+                <i class="ph-fill ph-check-circle pay-big-icon pay-good" aria-hidden="true"></i>
+                <h2 id="pay-title">Thanh toán thành công</h2>
+                <p>Gói <strong>@order.PlanName</strong> đã được kích hoạt cho tài khoản của bạn.</p>
+                <div class="pay-actions">
+                    <a href="/scan" class="pay-btn pay-btn-primary">Bắt đầu quét da</a>
+                    <button type="button" class="pay-btn" @onclick="CloseAsync">Đóng</button>
+                </div>
+            </div>
+        }
+        else if (order is { } o)
+        {
+            var isExpired = o.Status == "expired" || (o.Status == "pending" && remaining <= TimeSpan.Zero);
+
+            <header class="pay-head">
+                @if (isExpired)
+                {
+                    <span class="pay-status pay-status-expired"><i class="pay-dot" aria-hidden="true"></i>ĐƠN ĐÃ HẾT HẠN</span>
+                }
+                else
+                {
+                    <span class="pay-status"><i class="pay-dot" aria-hidden="true"></i>ĐANG CHỜ THANH TOÁN</span>
+                }
+                <h2 id="pay-title">Quét Mã VietQR Chuyển Khoản</h2>
+                <p>Hệ thống tự động kích hoạt tài khoản ngay khi nhận được tiền (5–10 giây)</p>
+            </header>
+
+            <div class="pay-grid">
+                <section class="pay-left">
+                    <div class="pay-qr-card">
+                        @if (!string.IsNullOrWhiteSpace(o.QrUrl))
+                        {
+                            <img src="@o.QrUrl" alt="Mã VietQR chuyển khoản @FormatMoney(o.Amount)" />
+                        }
+                        else
+                        {
+                            <div class="pay-qr-placeholder">
+                                <i class="ph ph-qr-code" aria-hidden="true"></i>
+                                <span>Mã QR sẽ hiển thị tại đây</span>
+                                <small>@o.BankName · @o.AccountNumber</small>
+                                <small>@o.AccountName · @FormatMoney(o.Amount)</small>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="pay-timer @(isExpired ? "pay-timer-over" : "")">
+                        <i class="ph ph-timer" aria-hidden="true"></i>
+                        <span>Thời gian giữ đơn:</span>
+                        <strong>@Countdown()</strong>
+                    </div>
+                </section>
+
+                <section class="pay-right">
+                    <div class="pay-amount">
+                        <div>
+                            <small>Số tiền cần thanh toán:</small>
+                            <strong>@FormatMoney(o.Amount)</strong>
+                        </div>
+                        <button type="button" class="pay-copy" @onclick='() => CopyAsync("amount", Digits(o.Amount))'>
+                            <i class="ph ph-copy" aria-hidden="true"></i> @(copied == "amount" ? "Đã copy" : "Copy")
+                        </button>
+                    </div>
+
+                    <div class="pay-content">
+                        <div class="pay-content-head">
+                            <span><i class="ph ph-warning" aria-hidden="true"></i> NỘI DUNG CHUYỂN KHOẢN (BẮT BUỘC):</span>
+                            <button type="button" class="pay-copy pay-copy-amber" @onclick='() => CopyAsync("content", o.OrderCode)'>
+                                <i class="ph ph-copy" aria-hidden="true"></i> @(copied == "content" ? "Đã copy" : "Copy")
+                            </button>
+                        </div>
+                        <div class="pay-code">@o.OrderCode</div>
+                        <p>* Giữ nguyên mã đơn để hệ thống tự động nhận diện và mở khóa ngay lập tức!</p>
+                    </div>
+
+                    <dl class="pay-bank">
+                        <div><dt>Ngân hàng:</dt><dd>@o.BankName</dd></div>
+                        <div>
+                            <dt>Số tài khoản:</dt>
+                            <dd>
+                                <span class="pay-mono">@o.AccountNumber</span>
+                                <button type="button" class="pay-link" @onclick='() => CopyAsync("account", o.AccountNumber)'>@(copied == "account" ? "Đã copy" : "Copy")</button>
+                            </dd>
+                        </div>
+                        <div><dt>Chủ tài khoản:</dt><dd>@o.AccountName</dd></div>
+                    </dl>
+                </section>
+            </div>
+
+            <footer class="pay-foot">
+                @if (isExpired)
+                {
+                    <button type="button" class="pay-btn pay-btn-primary" @onclick="CreateOrderAsync">Tạo đơn mới</button>
+                }
+                else
+                {
+                    <button type="button" class="pay-cancel" @onclick="CancelAsync" disabled="@cancelling">
+                        <i class="ph ph-x" aria-hidden="true"></i> Hủy đơn hàng này
+                    </button>
+                    <span class="pay-listening"><i class="pay-dot pay-dot-green" aria-hidden="true"></i>Đang lắng nghe thanh toán từ ngân hàng...</span>
+                }
+            </footer>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string PlanCode { get; set; } = string.Empty;
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public EventCallback<PaymentOrderDto> OnPaid { get; set; }
+
+    private PaymentOrderDto? order;
+    private bool loading = true;
+    private bool cancelling;
+    private string? error;
+    private string? copied;
+    private TimeSpan remaining;
+    private CancellationTokenSource? loopCts;
+
+    protected override async Task OnInitializedAsync() => await CreateOrderAsync();
+
+    private async Task CreateOrderAsync()
+    {
+        StopLoop();
+        loading = true;
+        error = null;
+        order = null;
+
+        try
+        {
+            order = await Api.CreatePaymentOrderAsync(PlanCode);
+            UpdateRemaining();
+            StartLoop();
+        }
+        catch (Exception ex)
+        {
+            error = ex is InvalidOperationException
+                ? ex.Message
+                : "Không kết nối được máy chủ thanh toán. Vui lòng thử lại sau ít phút.";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void StartLoop()
+    {
+        loopCts = new CancellationTokenSource();
+        _ = RunLoopAsync(loopCts.Token);
+    }
+
+    private void StopLoop()
+    {
+        loopCts?.Cancel();
+        loopCts?.Dispose();
+        loopCts = null;
+    }
+
+    /// <summary>Ticks the countdown every second and asks the API whether the money has arrived every 3 seconds.</summary>
+    private async Task RunLoopAsync(CancellationToken ct)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(1));
+        var tick = 0;
+
+        try
+        {
+            while (await timer.WaitForNextTickAsync(ct))
+            {
+                tick++;
+                var current = tick;
+                await InvokeAsync(() => TickAsync(current, ct));
+
+                if (order is { Status: "paid" or "canceled" })
+                    return;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Dialog closed or a new order replaced this one.
+        }
+        catch (ObjectDisposedException)
+        {
+            // The circuit went away.
+        }
+    }
+
+    private async Task TickAsync(int tick, CancellationToken ct)
+    {
+        UpdateRemaining();
+
+        // An expired order keeps being checked: a transfer that lands a little late still activates the plan.
+        if (order is { Status: "pending" or "expired" } && tick % 3 == 0)
+            await PollAsync(ct);
+
+        StateHasChanged();
+    }
+
+    private async Task PollAsync(CancellationToken ct)
+    {
+        if (order is null) return;
+
+        try
+        {
+            var latest = await Api.GetPaymentOrderAsync(order.Id, ct);
+            order = latest;
+
+            if (latest.Status == "paid")
+            {
+                await Usage.RefreshAsync();
+                await OnPaid.InvokeAsync(latest);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception)
+        {
+            // A failed check is retried on the next round; the countdown keeps running.
+        }
+    }
+
+    private void UpdateRemaining()
+        => remaining = order is null ? TimeSpan.Zero : order.ExpiresAt - DateTimeOffset.UtcNow;
+
+    private string Countdown()
+    {
+        var left = remaining < TimeSpan.Zero ? TimeSpan.Zero : remaining;
+        return string.Create(CultureInfo.InvariantCulture, $"{(int)left.TotalMinutes:00}:{left.Seconds:00}");
+    }
+
+    private async Task CancelAsync()
+    {
+        if (order is null) return;
+
+        cancelling = true;
+        try
+        {
+            await Api.CancelPaymentOrderAsync(order.Id);
+        }
+        catch (Exception)
+        {
+            // The order simply expires on its own if the cancel did not reach the server.
+        }
+
+        cancelling = false;
+        await CloseAsync();
+    }
+
+    private async Task CloseAsync()
+    {
+        StopLoop();
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task CopyAsync(string key, string text)
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            copied = key;
+            StateHasChanged();
+            await Task.Delay(1500);
+            if (copied == key) copied = null;
+        }
+        catch (Exception)
+        {
+            // Clipboard blocked (insecure origin or permission): the text stays selectable on screen.
+        }
+    }
+
+    // InvariantGlobalization is on, so the Vietnamese "49.000đ" grouping is built by hand.
+    private static string FormatMoney(decimal amount)
+        => Digits(amount, grouped: true) + "đ";
+
+    private static string Digits(decimal amount, bool grouped = false)
+    {
+        var text = decimal.Truncate(amount).ToString("N0", CultureInfo.InvariantCulture);
+        return grouped ? text.Replace(',', '.') : text.Replace(",", string.Empty, StringComparison.Ordinal);
+    }
+
+    public void Dispose() => StopLoop();
+}

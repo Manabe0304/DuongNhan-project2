@@ -64,6 +64,9 @@ builder.Services.AddPwnedServices(options =>
         ?? "DuongNhan-SkinAnalysis/1.0";
 });
 
+// ── Payment (VietQR bank transfer + SePay webhook) ─────────────
+builder.Services.Configure<PaymentOptions>(builder.Configuration.GetSection(PaymentOptions.SectionName));
+
 // ── Application services ───────────────────────────────────────
 builder.Services.AddScoped<BreachedPasswordValidator>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
@@ -194,7 +197,7 @@ app.Use(async (context, next) =>
 // EF migrations when the API starts. Development always migrates and seeds, see below.
 if (!app.Environment.IsDevelopment() && app.Configuration.GetValue("Database:MigrateOnStartup", false))
 {
-        using var migrationScope = app.Services.CreateScope();
+    using var migrationScope = app.Services.CreateScope();
     var migrationDb = migrationScope.ServiceProvider.GetRequiredService<AppDbContext>();
     await migrationDb.Database.MigrateAsync();
 }

@@ -50,6 +50,75 @@ else if (stats is { } s)
     </div>
 
     <div class="row g-3 mb-4">
+        <div class="col-6 col-xl-3" data-reveal>
+            <div class="dn-kpi">
+                <div class="ico"><i class="ph ph-coins" aria-hidden="true"></i></div>
+                <small>Tổng doanh thu</small><strong>@Money(s.TotalRevenue)</strong>
+                <span>@s.PaidOrders đơn đã thanh toán</span>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3" data-reveal style="--dn-delay:80ms">
+            <div class="dn-kpi">
+                <div class="ico"><i class="ph ph-chart-line-up" aria-hidden="true"></i></div>
+                <small>Doanh thu 7 ngày</small><strong>@Money(s.RevenueLast7Days)</strong>
+                <span>14 ngày: @Money((s.RevenuePerDay ?? []).Sum(d => d.Amount))</span>
+            </div>
+        </div>
+        <div class="col-6 col-xl-3" data-reveal style="--dn-delay:160ms">
+            <div class="dn-kpi">
+                <div class="ico"><i class="ph ph-crown-simple" aria-hidden="true"></i></div>
+                <small>Gói đang hoạt động</small><strong>@s.ActiveSubscriptions</strong>
+                <span>Pro / VIP còn hạn</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-8" data-reveal>
+            <div class="dn-panel">
+                <h5>Doanh thu 14 ngày gần nhất</h5>
+                <div class="sub">Theo ngày (giờ Việt Nam), đơn vị nghìn đồng</div>
+                @{
+                    var revMax = Math.Max(1m, (s.RevenuePerDay ?? []).Select(d => d.Amount).DefaultIfEmpty(0m).Max());
+                }
+                <div class="dn-bars" role="img" aria-label="Biểu đồ doanh thu theo ngày">
+                    @foreach (var d in s.RevenuePerDay ?? [])
+                    {
+                        <div title="@d.Day.ToString("dd/MM"): @Money(d.Amount)">
+                            <span class="small fw-semibold">@(d.Amount > 0 ? ShortMoney(d.Amount) : "")</span>
+                            <div class="bar" style="height:@((int)Math.Max(3m, d.Amount * 100m / revMax))%"></div>
+                            <small><span class="d-none d-sm-inline">@d.Day.ToString("dd/MM")</span><span class="d-sm-none">@d.Day.ToString("dd")</span></small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4" data-reveal style="--dn-delay:100ms">
+            <div class="dn-panel">
+                <h5>Thanh toán gần đây</h5>
+                <div class="sub">6 đơn mới nhất đã nhận tiền</div>
+                @if ((s.RecentPayments ?? []).Count == 0)
+                {
+                    <p class="text-secondary small mb-0">Chưa có thanh toán nào.</p>
+                }
+                else
+                {
+                    foreach (var pay in s.RecentPayments!)
+                    {
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div class="min-w-0">
+                                <div class="fw-semibold text-truncate">@pay.Email</div>
+                                <small class="text-secondary">@pay.PlanName · @pay.PaidAt.ToVn().ToString("dd/MM HH:mm")</small>
+                            </div>
+                            <span class="dn-pill ok">@Money(pay.Amount)</span>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
         @* Ẩn biểu đồ lượt scan 14 ngày gần nhất
         <div class="col-lg-8" data-reveal>
             <div class="dn-panel">
@@ -193,6 +262,13 @@ else if (stats is { } s)
         catch (Exception ex) { error = $"Không tải được số liệu: {ex.Message}"; }
         finally { loading = false; }
     }
+
+    // InvariantGlobalization is on, so the Vietnamese "1.234.000đ" grouping is built by hand.
+    private static string Money(decimal amount)
+        => decimal.Truncate(amount).ToString("N0", System.Globalization.CultureInfo.InvariantCulture).Replace(',', '.') + "đ";
+
+    private static string ShortMoney(decimal amount)
+        => (decimal.Truncate(amount) / 1000m).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture) + "k";
 
     private static string StatusLabel(string status) => status switch
     {

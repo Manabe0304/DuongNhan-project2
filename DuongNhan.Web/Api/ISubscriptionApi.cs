@@ -7,7 +7,9 @@ namespace DuongNhan.Web.Api;
 public interface ISubscriptionApi
 {
     [Get(ApiRoutes.Subscriptions.Current)]
-    Task<SubscriptionDto> GetCurrentAsync(CancellationToken ct = default);
+    Task<SubscriptionDto> GetCurrentAsync(
+        [Header("Authorization")] string authorization,
+        CancellationToken ct = default);
 
     [Get(ApiRoutes.Subscriptions.Plans)]
     Task<List<PlanDto>> GetPlansAsync(CancellationToken ct = default);

@@ -3,13 +3,21 @@
 @inject UiSessionService Session
 @inject NavigationService Navigation
 @inject AnalyticsService Analytics
+@using DuongNhan.Shared.Dtos.Payments
 
 <PageTitle>Bảng giá — Dưỡng Nhan</PageTitle>
 
 <div class="container dn-container dn-page">
     <div class="text-center dn-page-heading"><span class="dn-kicker">Plans</span><h1>Bảng giá đơn giản, minh bạch</h1><p>Chọn gói phù hợp với nhu cầu phân tích và theo dõi làn da.</p></div>
-    @if (loading) { <div class="text-center py-5"><div class="spinner-border text-success"></div></div> }
-    else if (!string.IsNullOrWhiteSpace(error)) { <div class="alert alert-warning">@error</div> }
+    @if (loading)
+    {
+        <div class="text-center py-5"><div class="spinner-border text-success"></div></div>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+
+        <div class="alert alert-warning">@error</div>
+    }
     else
     {
         <div class="dn-plan-grid">
@@ -21,27 +29,80 @@
     }
 </div>
 
+@if (!string.IsNullOrEmpty(checkoutPlanCode))
+{
+    <PaymentModal PlanCode="@checkoutPlanCode" OnClose="CloseCheckout" OnPaid="OnPaid" />
+}
+
 @code {
     private List<System.Text.Json.JsonElement> plans = [];
     private bool loading = true;
     private string? error;
+    private string currentPlanCode = "plan_free";
+    private string? checkoutPlanCode;
 
     protected override async Task OnInitializedAsync()
     {
         try { plans = await Api.GetPlansAsync(); }
         catch (Exception ex) { error = $"Không tải được danh sách gói: {ex.Message}"; }
         finally { loading = false; }
+
+        // The user's own plan needs the token from browser storage, which cannot be read while prerendering.
+        if (RendererInfo.IsInteractive && Session.IsAuthenticated)
+            await LoadCurrentPlanAsync();
     }
 
-    // Subscriptions aren't tracked server-side yet, so every signed-in account is on the free plan.
+    private async Task LoadCurrentPlanAsync()
+    {
+        try
+        {
+            if (await Api.GetCurrentSubscriptionAsync() is { } sub)
+                currentPlanCode = Text(sub, "code", currentPlanCode);
+        }
+        catch (Exception)
+        {
+            // Keep showing the free plan as current; the badge is cosmetic.
+        }
+    }
+
     private bool IsCurrentPlan(System.Text.Json.JsonElement plan)
-        => Session.IsAuthenticated && Text(plan, "code", "").Contains("free", StringComparison.OrdinalIgnoreCase);
+        => Session.IsAuthenticated
+           && string.Equals(Text(plan, "code", string.Empty), currentPlanCode, StringComparison.OrdinalIgnoreCase);
 
     private async Task Choose(System.Text.Json.JsonElement plan)
     {
-        await Analytics.EventAsync("select_plan", new { plan_name = Text(plan, "name", ""), plan_code = Text(plan, "code", "") });
-        Navigation.NavigateTo(Session.IsAuthenticated ? "/subscription/current" : "/register");
+        var code = Text(plan, "code", "");
+        await Analytics.EventAsync("select_plan", new { plan_name = Text(plan, "name", ""), plan_code = code });
+
+        var isFree = Price(plan) <= 0;
+        if (isFree)
+        {
+            Navigation.NavigateTo(Session.IsAuthenticated ? "/subscription/current" : "/register");
+            return;
+        }
+
+        // Paid plans are bought by bank transfer in the QR dialog below.
+        if (!Session.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        checkoutPlanCode = code;
     }
+
+    private void CloseCheckout() => checkoutPlanCode = null;
+
+    private async Task OnPaid(PaymentOrderDto order)
+    {
+        currentPlanCode = order.PlanCode;
+        await Analytics.EventAsync("purchase", new { transaction_id = order.Id.ToString(), value = order.Amount, currency = "VND", plan_code = order.PlanCode });
+    }
+
+    private static decimal Price(System.Text.Json.JsonElement plan)
+        => plan.TryGetProperty("price", out var p) && p.ValueKind == System.Text.Json.JsonValueKind.Number
+            ? p.GetDecimal()
+            : 0m;
 
     private static string Text(System.Text.Json.JsonElement item, string name, string fallback)
     {

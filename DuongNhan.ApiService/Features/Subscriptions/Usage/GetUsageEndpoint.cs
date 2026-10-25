@@ -10,8 +10,7 @@ namespace DuongNhan.ApiService.Features.Subscriptions.Usage;
 
 /// <summary>
 /// Scans used vs. allowed for the current user's package this calendar month (UTC).
-/// There is no subscription table yet, so every account is on the entry-level (cheapest active) plan;
-/// when paid subscriptions exist, only the plan lookup below needs to change.
+/// The plan is the user's running paid subscription (Pro / VIP) or, without one, the entry-level (cheapest active) plan.
 /// </summary>
 internal sealed class GetUsageEndpoint(AppDbContext db, TimeProvider clock) : EndpointWithoutRequest<UsageCounterDto>
 {
@@ -41,11 +40,8 @@ internal sealed class GetUsageEndpoint(AppDbContext db, TimeProvider clock) : En
             return;
         }
 
-        var plan = await db.Plans
-            .AsNoTracking()
-            .Where(p => p.IsActive)
-            .OrderBy(p => p.Price)
-            .FirstOrDefaultAsync(ct);
+        // The plan the user paid for while the subscription runs, otherwise the free (cheapest active) plan.
+        var plan = await PlanAccess.GetEffectivePlanAsync(db, clock, userId, ct);
 
         // The month runs from 00:00 on the 1st to 00:00 on the 1st of the next month, Vietnam time (GMT+7).
         var (start, end) = ScanQuota.CurrentMonth(clock);

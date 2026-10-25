@@ -17,6 +17,7 @@ public sealed class DuongNhanApiService(
     ISkinApi skin,
     IProductApi products,
     ISubscriptionApi subscriptions,
+    IPaymentApi payments,
     TokenStorage tokens) : IDisposable
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
@@ -140,7 +141,21 @@ public sealed class DuongNhanApiService(
         => ToJsonList(await subscriptions.GetPlansAsync(ct));
 
     public async Task<JsonElement?> GetCurrentSubscriptionAsync(CancellationToken ct = default)
-        => await ToJsonAsync(await subscriptions.GetCurrentAsync(ct));
+        => await ToJsonAsync(await subscriptions.GetCurrentAsync(await BearerAsync(), ct));
+
+    /// <summary>Creates (or re-opens) the bank-transfer order for a plan such as "plan_pro".</summary>
+    public async Task<DuongNhan.Shared.Dtos.Payments.PaymentOrderDto> CreatePaymentOrderAsync(
+        string planCode, CancellationToken ct = default)
+        => await payments.CreateOrderAsync(
+            new DuongNhan.Shared.Dtos.Payments.CreatePaymentOrderRequest(planCode), await BearerAsync(), ct);
+
+    public async Task<DuongNhan.Shared.Dtos.Payments.PaymentOrderDto> GetPaymentOrderAsync(
+        Guid id, CancellationToken ct = default)
+        => await payments.GetOrderAsync(id, await BearerAsync(), ct);
+
+    public async Task<DuongNhan.Shared.Dtos.Payments.PaymentOrderDto> CancelPaymentOrderAsync(
+        Guid id, CancellationToken ct = default)
+        => await payments.CancelOrderAsync(id, await BearerAsync(), ct);
 
     public async Task<DuongNhan.Shared.Dtos.Subscriptions.UsageCounterDto> GetUsageTypedAsync(CancellationToken ct = default)
         => await subscriptions.GetUsageAsync(await BearerAsync(), ct);
